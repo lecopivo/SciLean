@@ -57,37 +57,37 @@ instance [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₁ X₂
   TensorProductGetX R Y₁ (X₁ × X₂) (ProdMatrixRow YX₁₁ YX₁₂) := ⟨⟩
 
 
-open TensorProductType in
-instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) where
-  equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd := fun r ⟨y₁,y₂⟩ ⟨x₁,x₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ =>
-    {
-      A₁₁ := tmulAdd r y₁ x₁ A₁₁
-      A₁₂ := tmulAdd r y₁ x₂ A₁₂
-      A₂₁ := tmulAdd r y₂ x₁ A₂₁
-      A₂₂ := tmulAdd r y₂ x₂ A₂₂
-    }
-  matVecMulAdd := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨x₁,x₂⟩ b ⟨y₁,y₂⟩ =>
-    {
-      fst := matVecMulAdd a A₁₁ x₁ b (matVecMulAdd a A₁₂ x₂ b y₁)
-      snd := matVecMulAdd a A₂₁ x₁ b (matVecMulAdd a A₂₂ x₂ b y₂)
-    }
-  vecMatMulAdd := fun a ⟨y₁,y₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ b ⟨x₁,x₂⟩ =>
-    {
-      fst := vecMatMulAdd a y₁ A₁₁ b (vecMatMulAdd a y₂ A₂₁ b x₁)
-      snd := vecMatMulAdd a y₁ A₁₂ b (vecMatMulAdd a y₂ A₂₂ b x₂)
-    }
-  tmulAdd_eq_tmul := sorry_proof
+-- open TensorProductType in
+-- instance : TensorProductType R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) where
+--   equiv := ⟨fun _ => True, sorry_proof⟩
+--   tmulAdd := fun r ⟨y₁,y₂⟩ ⟨x₁,x₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ =>
+--     {
+--       A₁₁ := tmulAdd r y₁ x₁ A₁₁
+--       A₁₂ := tmulAdd r y₁ x₂ A₁₂
+--       A₂₁ := tmulAdd r y₂ x₁ A₂₁
+--       A₂₂ := tmulAdd r y₂ x₂ A₂₂
+--     }
+--   matVecMulAdd := fun a ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ ⟨x₁,x₂⟩ b ⟨y₁,y₂⟩ =>
+--     {
+--       fst := matVecMulAdd a A₁₁ x₁ b (matVecMulAdd a A₁₂ x₂ b y₁)
+--       snd := matVecMulAdd a A₂₁ x₁ b (matVecMulAdd a A₂₂ x₂ b y₂)
+--     }
+--   vecMatMulAdd := fun a ⟨y₁,y₂⟩ ⟨A₁₁,A₁₂,A₂₁,A₂₂⟩ b ⟨x₁,x₂⟩ =>
+--     {
+--       fst := vecMatMulAdd a y₁ A₁₁ b (vecMatMulAdd a y₂ A₂₁ b x₁)
+--       snd := vecMatMulAdd a y₁ A₁₂ b (vecMatMulAdd a y₂ A₂₂ b x₂)
+--     }
+--   tmulAdd_eq_tmul := sorry_proof
 
-instance
-  [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂]
-  [TensorProductGetYX R Y₂ X₁ YX₂₁] [TensorProductGetYX R Y₂ X₂ YX₂₂] :
-  TensorProductGetYX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
-instance
-  [TensorProductGetY R Y₁ X₁ YX₁₁] [TensorProductGetY R Y₁ X₂ YX₁₂]
-  [TensorProductGetY R Y₂ X₁ YX₂₁] [TensorProductGetY R Y₂ X₂ YX₂₂] :
-  TensorProductGetY R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
-instance
-  [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₁ X₂ YX₁₂]
-  [TensorProductGetX R Y₂ X₁ YX₂₁] [TensorProductGetX R Y₂ X₂ YX₂₂] :
-  TensorProductGetX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+-- instance
+--   [TensorProductGetYX R Y₁ X₁ YX₁₁] [TensorProductGetYX R Y₁ X₂ YX₁₂]
+--   [TensorProductGetYX R Y₂ X₁ YX₂₁] [TensorProductGetYX R Y₂ X₂ YX₂₂] :
+--   TensorProductGetYX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+-- instance
+--   [TensorProductGetY R Y₁ X₁ YX₁₁] [TensorProductGetY R Y₁ X₂ YX₁₂]
+--   [TensorProductGetY R Y₂ X₁ YX₂₁] [TensorProductGetY R Y₂ X₂ YX₂₂] :
+--   TensorProductGetY R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩
+-- instance
+--   [TensorProductGetX R Y₁ X₁ YX₁₁] [TensorProductGetX R Y₁ X₂ YX₁₂]
+--   [TensorProductGetX R Y₂ X₁ YX₂₁] [TensorProductGetX R Y₂ X₂ YX₂₂] :
+--   TensorProductGetX R (Y₁ × Y₂) (X₁ × X₂) (ProdMatrix YX₁₁ YX₁₂ YX₂₁ YX₂₂) := ⟨⟩

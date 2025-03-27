@@ -1,3 +1,4 @@
+
 import Mathlib.LinearAlgebra.TensorProduct.Basic
 import Mathlib.Data.Erased
 
@@ -153,33 +154,41 @@ variable {R : Type*} [RCLike R]
 
 -- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
 open ComplexConjugate
-instance : TensorProductType R R X X where
+instance tpScalarLeft : TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*x) • /- star -/ y + A
+  tmulAdd a x y A := a•(x•y) + A
   matVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
-  vecMatMulAdd a y A b x := (a*/- conj -/y)•A + b • x
+  vecMatMulAdd a y A b x := a•(star y•A) + b • x
   tmulAdd_eq_tmul := sorry_proof
 
 -- this creates a diamond with the previous for `ttmul` on `R ⊗'[R] R`
 -- what to do about this?
 -- TODO: !!!Fix this for complex `R`!!! it is missing complex conjugates
-instance (priority:=low) : TensorProductType R X R X where
+open MulOpposite in
+instance (priority:=low) tpScalarRight
+  [Module (Rᵐᵒᵖ) X] [Star X] :
+  TensorProductType R X R X where
   equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := (a*/- conj -/ y)•x + A
-  matVecMulAdd a A y b x := (a*y)• /- star -/ A + b • x
-  vecMatMulAdd a x A b y := a*⟪A,x⟫[R] + b*y
+  tmulAdd a x y A := a•(op y•x) + A
+  matVecMulAdd a A y b x := a•(op y • star A) + b • x
+  vecMatMulAdd a x A b y := a*⟪x,A⟫[R] + b*y
   tmulAdd_eq_tmul := sorry_proof
 
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
 instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
 
+example : (tpScalarLeft : TensorProductType R R R R)
+          =
+          (tpScalarRight : TensorProductType R R R R) := by rfl
+
 @[simp, simp_core]
 theorem tmul_scalar_left (a : R) (x : X) :
   a ⊗[R] x = a • x := by simp[tmul,tmulAdd]
 
+open MulOpposite in
 @[simp, simp_core]
-theorem tmul_scalar_right (a : R) (x : X) :
-  x ⊗[R] a = a • x := by simp[tmul,tmulAdd]
+theorem tmul_scalar_right [Module (Rᵐᵒᵖ) X] [Star X] (a : R) (x : X) :
+  x ⊗[R] a = (op a) • x := by simp[tmul,tmulAdd]
 
 end Identity
 
@@ -196,6 +205,11 @@ variable
   [AddCommGroup YX] [Module R YX]
   [TensorProductType R Y X YX]
 
+@[simp, simp_core]
+theorem tmul_zero (y : Y) : y ⊗[R] (0 : X) = 0 := by sorry_proof
+
+@[simp, simp_core]
+theorem zero_tmul (x : X) : (0 : Y) ⊗[R] x = 0 := by sorry_proof
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :

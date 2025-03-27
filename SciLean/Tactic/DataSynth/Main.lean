@@ -602,6 +602,10 @@ def compGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g : Expr) : DataSynthM (O
   -- for thm in thms do
     let .comp gId fId hgId hfId := thm.data | throwError m!"invalid composition theorem {thm.thmName}"
     let info ← getConstInfo thm.thmName
+
+    let args : Array (Option Expr) :=
+      Array.mkArray (max gId fId) none |>.set! gId g |>.set! fId f
+
     let (xs, _, statment) ← forallMetaTelescope (← inferType (← thm.getProof))
     try
       withMainTrace (fun _ => return m!"assigning data") do
@@ -619,8 +623,21 @@ def compGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g : Expr) : DataSynthM (O
     if ¬(← isDefEq statment rhs) then
       trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statment} =?= {← ppExpr rhs}"
       return none
+
+    -- synthesize any possbile class, there might be `outParam` that nees to be filled by those
+    -- classes
+    for x in xs do
+      if ¬(← x.mvarId!.isAssigned) then
+        if let some _ ← isClass? (← inferType x) then
+          try
+            x.mvarId!.inferInstance
+          catch _ =>
+            pure ()
+
     let hg ← inferType xs[hgId]! >>= instantiateMVars
     let hf ← inferType xs[hfId]! >>= instantiateMVars
+    trace[Meta.Tactic.data_synth] "comp subgoal hg: {hg}"
+    trace[Meta.Tactic.data_synth] "comp subgoal hf: {hf}"
     let some ggoal ← isDataSynthGoal? hg | return none
     let some fgoal ← isDataSynthGoal? hf | return none
     return .some (thm, fgoal, ggoal)
@@ -661,6 +678,16 @@ def letGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) : DataSynthM (O
   if ¬(← isDefEq statement rhs) then
     trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
     return none
+
+  -- synthesize any possbile class, there might be `outParam` that nees to be filled by those
+  -- classes
+  for x in xs do
+    if ¬(← x.mvarId!.isAssigned) then
+      if let some _ ← isClass? (← inferType x) then
+        try
+          x.mvarId!.inferInstance
+        catch _ =>
+          pure ()
 
   let hg ← inferType xs[hgId]! >>= instantiateMVars
   let hf ← inferType xs[hfId]! >>= instantiateMVars
@@ -707,6 +734,16 @@ def letSkipGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) (y : Expr) 
     trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
     return none
 
+  -- synthesize any possbile class, there might be `outParam` that nees to be filled by those
+  -- classes
+  for x in xs do
+    if ¬(← x.mvarId!.isAssigned) then
+      if let some _ ← isClass? (← inferType x) then
+        try
+          x.mvarId!.inferInstance
+        catch _ =>
+          pure ()
+
   let hf ← inferType xs[hfId]! >>= instantiateMVars
   let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
   let hf := hf.instantiate1 y
@@ -741,6 +778,16 @@ def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option (LambdaTheo
       trace[Meta.Tactic.data_synth] "failed to unify {← ppExpr statement} =?= {← ppExpr rhs}"
       return none
 
+    -- synthesize any possbile class, there might be `outParam` that nees to be filled by those
+    -- classes
+    for x in xs do
+      if ¬(← x.mvarId!.isAssigned) then
+        if let some _ ← isClass? (← inferType x) then
+          try
+            x.mvarId!.inferInstance
+          catch _ =>
+            pure ()
+
     let hf ← inferType xs[hfId]! >>= instantiateMVars
     let .forallE _ _ hf _ := hf | throwError "expected forall {← ppExpr hf}"
     let hf := hf.instantiate1 i
@@ -773,6 +820,16 @@ def projGoals (thm : LambdaTheorem) (fGoal : Goal) (f g p₁ p₂ q : Expr) : Da
   let (_,rhs) ← fGoal.mkFreshProofGoal
   if ¬(← isDefEq statement rhs) then
     return none
+
+  -- synthesize any possbile class, there might be `outParam` that nees to be filled by those
+  -- classes
+  for x in xs do
+    if ¬(← x.mvarId!.isAssigned) then
+      if let some _ ← isClass? (← inferType x) then
+        try
+          x.mvarId!.inferInstance
+        catch _ =>
+          pure ()
 
   let hg ← inferType xs[hgId]! >>= instantiateMVars
   let some ggoal ← isDataSynthGoal? hg | return none
@@ -836,7 +893,8 @@ def compCase (goal : Goal) (f g : FunData) : DataSynthM (Option Result) := do
       let some r ← compResults goal thm (← f.toExpr) (← g.toExpr) hf hg | continue
       let r ← r.normalize
       return r
-    catch _ =>
+    catch e =>
+      trace[Meta.Tactic.data_synth] e.toMessageData
       continue
   return none
 
@@ -931,15 +989,14 @@ partial def mainFun (goal : Goal) (f : FunData) : DataSynthM (Option Result) := 
   trace[Meta.Tactic.data_synth] "function case {repr h}"
 
   match h with
-  | .app =>
+  | .app  | .fvar _ | .bvar _ =>
     if let .some r ← mainCached goal (initialTrace:=false) then
       return r
     else if let .some (f,g) ← f.nontrivialAppDecomposition then
+      trace[Meta.Tactic.data_synth] "decomposition {← f.toExpr} ∘ {← g.toExpr}"
       compCase goal f g
     else
       return none
-  | .fvar n => mainCached goal (initialTrace:=false)
-  | .bvar n => mainCached goal (initialTrace:=false)
   | .letE =>
     match ← f.getBodyLetCase with
     | .comp f g => compCase goal f g

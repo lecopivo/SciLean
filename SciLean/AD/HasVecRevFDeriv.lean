@@ -432,7 +432,8 @@ open ComplexConjugate TensorProductType
 
 
 @[data_synth]
-theorem HSMul.hSMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule :
+theorem HSMul.hSMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W] :
     HasVecRevFDerivUpdate 𝕜 W
       (fun x : 𝕜 × X => x.1 • x.2)
       (fun x =>
@@ -443,7 +444,8 @@ theorem HSMul.hSMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule :
   sorry_proof
 
 @[data_synth]
-theorem HMul.hMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule :
+theorem HMul.hMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W] :
     HasVecRevFDerivUpdate 𝕜 W
       (fun x : 𝕜 × 𝕜 => x.1 * x.2)
       (fun x =>
@@ -456,6 +458,7 @@ theorem HMul.hMul.arg_a0a1.HasVecRevFDerivUpdate_comp_rule :
 
 @[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasVecRevFDerivUpdate_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     {f g : X → 𝕜} {f' g'}
     (hf : HasVecRevFDerivUpdate 𝕜 W f f') (hg : HasVecRevFDerivUpdate 𝕜 W g g')
     (hg' : ∀ x, g x ≠ 0) :
@@ -479,7 +482,8 @@ theorem HDiv.hDiv.arg_a0a1.HasVecRevFDerivUpdate_comp_rule
   -- case simp => intros; simp_all
 
 @[data_synth]
-theorem HDiv.hDiv.arg_a0.HasVecRevFDerivUpdate_comp_rule (y : 𝕜) :
+theorem HDiv.hDiv.arg_a0.HasVecRevFDerivUpdate_comp_rule [Module 𝕜ᵐᵒᵖ W] [Star W]
+    (y : 𝕜) :
     HasVecRevFDerivUpdate 𝕜 W
       (fun x : 𝕜 => x / c)
       (fun x =>
@@ -492,6 +496,7 @@ theorem HDiv.hDiv.arg_a0.HasVecRevFDerivUpdate_comp_rule (y : 𝕜) :
 
 @[data_synth]
 theorem HInv.hInv.arg_a0.HasVecRevFDeriv_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     {f : X → 𝕜} {f'}
     (hf : HasVecRevFDeriv 𝕜 W f f')
     (hf' : ∀ x, f x ≠ 0) :
@@ -509,6 +514,7 @@ theorem HInv.hInv.arg_a0.HasVecRevFDeriv_comp_rule
 
 @[data_synth]
 theorem HInv.hInv.arg_a0.HasVecRevFDerivUpdate_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     {f : X → 𝕜} {f'}
     (hf : HasVecRevFDerivUpdate 𝕜 W f f')
     (hf' : ∀ x, f x ≠ 0) :
@@ -526,6 +532,7 @@ theorem HInv.hInv.arg_a0.HasVecRevFDerivUpdate_comp_rule
 
 @[data_synth]
 theorem HPow.hPow.arg_a0.HasVecRevFDeriv_rule_nat
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     {f : X → 𝕜} {f'}
     (hf : HasVecRevFDeriv 𝕜 W f f') (n : ℕ) :
     HasVecRevFDeriv 𝕜 W
@@ -540,6 +547,7 @@ theorem HPow.hPow.arg_a0.HasVecRevFDeriv_rule_nat
 
 @[data_synth]
 theorem HPow.hPow.arg_a0.HasVecRevFDerivUpdate_rule_nat
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     {f : X → 𝕜} {f'}
     (hf : HasVecRevFDerivUpdate 𝕜 W f f') (n : ℕ) :
     HasVecRevFDerivUpdate 𝕜 W
@@ -607,7 +615,8 @@ open ComplexConjugate TensorProductType
 set_default_scalar 𝕜
 
 @[data_synth]
-theorem Inner.inner.arg_a0a1.HasVecRevFDeriv_simple_rule :
+theorem Inner.inner.arg_a0a1.HasVecRevFDeriv_simple_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W] :
     HasVecRevFDeriv 𝕜 W
       (fun x : X×X => ⟪x.1, x.2⟫[𝕜])
       (fun x =>
@@ -616,7 +625,8 @@ theorem Inner.inner.arg_a0a1.HasVecRevFDeriv_simple_rule :
   sorry_proof
 
 @[data_synth]
-theorem Inner.inner.arg_a0a1.HasVecRevFDerivUpdate_simple_rule :
+theorem Inner.inner.arg_a0a1.HasVecRevFDerivUpdate_simple_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W] :
     HasVecRevFDerivUpdate 𝕜 W
       (fun x : X×X => ⟪x.1, x.2⟫[𝕜])
       (fun x =>
@@ -626,7 +636,8 @@ theorem Inner.inner.arg_a0a1.HasVecRevFDerivUpdate_simple_rule :
   sorry_proof
 
 @[data_synth]
-theorem Norm2.norm2.arg_a0.HasVecRevFDerivUpdate_simple_rule :
+theorem Norm2.norm2.arg_a0.HasVecRevFDerivUpdate_simple_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W] :
     HasVecRevFDerivUpdate 𝕜 W
       (fun x : X => ‖x‖₂²[𝕜])
       (fun x =>
@@ -637,6 +648,7 @@ theorem Norm2.norm2.arg_a0.HasVecRevFDerivUpdate_simple_rule :
 
 @[data_synth]
 theorem SciLean.norm₂.arg_x.HasVecRevFDeriv_comp_rule
+    [Module 𝕜ᵐᵒᵖ W] [Star W]
     (f : X → Y) {f'} (hf : HasVecRevFDeriv 𝕜 W f f') (hf' : ∀ x, f x ≠ 0) :
     HasVecRevFDeriv 𝕜 W (fun x => ‖f x‖₂[𝕜])
       (fun x =>

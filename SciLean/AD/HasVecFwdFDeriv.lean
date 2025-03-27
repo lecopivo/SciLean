@@ -167,20 +167,22 @@ theorem pi_rule {I nI} [IndexType I nI] [Fold I] [Fold I]
       (fun x dx => (fun i => f x i, fun i => (f' i x dx).2)) := by
   sorry_proof
 
--- set_option linter.unusedVariables false in
--- theorem proj_rule
---     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace 𝕜 X₁]
---     {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace 𝕜 X₂]
---     (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
---     (hg : HasVecFwdFDeriv 𝕜 W g g') (hf : f = fun x => g (p₁ x) := by rfl)
---     (hp₁ : IsContinuousLinearMap K p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
---     HasVecFwdFDeriv 𝕜 W f
---       (fun x dx =>
---         let x₁ := p₁ x
---         let dx₁ := dx.map p₁
---         let ydy := g' x₁ dx₁
---         ydy) := by
---   sorry_proof
+
+theorem proj_rule
+    {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace 𝕜 X₁]
+    {X₂ : Type*} [NormedAddCommGroup X₂] [AdjointSpace 𝕜 X₂]
+    {XW₁ : Type*} [NormedAddCommGroup XW₁] [AdjointSpace 𝕜 XW₁]
+    [TensorProductType 𝕜 X₁ W XW₁] [TensorProductCurry 𝕜 X W XW₁]
+    (f : X → Y) (g : X₁ → Y) (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) {g'}
+    (hg : HasVecFwdFDeriv 𝕜 W g g') (hf : f = fun x => g (p₁ x) := by rfl)
+    (hp₁ : IsContinuousLinearMap 𝕜 p₁ := by fun_prop) /- (hdec : Decomposition p₁ p₂ q) -/ :
+    HasVecFwdFDeriv 𝕜 W f
+      (fun x dx =>
+        let x₁ := p₁ x
+        let dx₁ := tmap (fun x =>L[𝕜] p₁ x) (fun w : W =>L[𝕜] w) dx
+        let ydy := g' x₁ dx₁
+        ydy) := by
+  sorry_proof
 
 -- set_option linter.unusedVariables false in
 -- theorem let_skip_rule
@@ -210,10 +212,10 @@ open Lean Meta
       (← getConstArgId ``let_rule `hg) (← getConstArgId ``let_rule `hf)⟩
    Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``pi_rule⟩, .pi
       (← getConstArgId ``pi_rule `f) (← getConstArgId ``pi_rule `hf)⟩
-   -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``proj_rule⟩, .proj
-   --    (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
-   --    (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
-   --    (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
+   Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``proj_rule⟩, .proj
+      (← getConstArgId ``proj_rule `f) (← getConstArgId ``proj_rule `g)
+      (← getConstArgId ``proj_rule `p₁) (← getConstArgId ``proj_rule `p₂)
+      (← getConstArgId ``proj_rule `q) (← getConstArgId ``proj_rule `hg)⟩
    -- Tactic.DataSynth.addLambdaTheorem ⟨⟨``HasVecFwdFDeriv,``let_skip_rule⟩, .letSkip
    --    (← getConstArgId ``let_skip_rule `g) (← getConstArgId ``let_skip_rule `f)
    --    (← getConstArgId ``let_skip_rule `hf)⟩
@@ -254,7 +256,6 @@ theorem Prod.mk.arg_a0a1.HasVecFwdFDeriv_comp_rule
   -- apply HasVecFwdFDeriv_from_hasFDerivAt
   -- case deriv => intros; data_synth
   -- case simp => intros; simp_all
-
 
 @[data_synth]
 theorem Prod.fst.arg_self.HasVecFwdFDeriv_proj_rule :
@@ -340,6 +341,27 @@ theorem HSMul.hSMul.arg_a0a1.HasVecFwdFDeriv_comp_rule
         (y • z, y • dz + z ⊗ dy)) := by
   sorry_proof
 
+@[data_synth]
+theorem HSMul.hSMul.arg_a0a1.HasVecFwdFDeriv_rule_nat
+    {g : X → Y} {g'} (n : ℕ)
+    (hg : HasVecFwdFDeriv 𝕜 W g g') :
+    HasVecFwdFDeriv 𝕜 W
+      (fun x => n • g x)
+      (fun x dx =>
+        let' (z, dz) := g' x dx
+        (n • z, n • dz)) := by
+  sorry_proof
+
+@[data_synth]
+theorem HSMul.hSMul.arg_a0a1.HasVecFwdFDeriv_rule_int
+    {g : X → Y} {g'} (n : ℤ)
+    (hg : HasVecFwdFDeriv 𝕜 W g g') :
+    HasVecFwdFDeriv 𝕜 W
+      (fun x => n • g x)
+      (fun x dx =>
+        let' (z, dz) := g' x dx
+        (n • z, n • dz)) := by
+  sorry_proof
 
 @[data_synth]
 theorem HMul.hMul.arg_a0a1.HasVecFwdFDeriv_comp_rule

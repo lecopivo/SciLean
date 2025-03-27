@@ -81,5 +81,6 @@ open Lean Meta Elab Tactic
 @[tactic to_ssa_conv] unsafe def toSSAConv : Tactic
 | `(conv| to_ssa) => do
   let e ← Conv.getLhs
-  Conv.changeLhs (← toSSA e #[])
+  -- for some reason we often need to call `to_ssa` twice so let's call it twice right away
+  Conv.changeLhs (← toSSA (← toSSA e #[]) #[])
 | _ => throwUnsupportedSyntax
