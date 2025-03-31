@@ -6,7 +6,6 @@ import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.CanonicalBasis
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Algebra.TensorProduct.AbstractRowCol
 
 namespace SciLean
 

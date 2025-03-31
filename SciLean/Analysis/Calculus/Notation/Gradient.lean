@@ -58,10 +58,10 @@ macro_rules
 | `(∇ ($x:term := $val:term), $f) => `(∇ (fun $x => $f) $val)
 
 macro_rules
-| `(∇! $f)                       => `((∇ $f) rewrite_by dsimp (config:={zeta:=false}) [adjointFDeriv, fgradient]; autodiff; autodiff; autodiff)
+| `(∇! $f)                       => `((∇ $f) rewrite_by autodiff)
 | `(∇! $x:term, $f)              => `(∇! fun $x => $f)
 | `(∇! $x:term : $type:term, $f) => `(∇! fun $x : $type => $f)
-| `(∇! $x:term := $val:term, $f) => `(∇! (fun $x => $f) $val)
+| `(∇! $x:term := $val:term, $f) => `((∇ (fun $x => $f) $val) rewrite_by autodiff)
 -- with brackets
 | `(∇! ($x:term := $val:term), $f) => `(∇! (fun $x => $f) $val)
 

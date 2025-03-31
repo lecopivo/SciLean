@@ -124,8 +124,6 @@ theorem tmap_snd_id
 --   -- (f : X →L[𝕜] X') (g : Y →L[𝕜] X')
 --   (x : (X×Y)⊗[𝕜]Z) :
 --   tmap (fun xy : X×Y =>L[𝕜] xy.2) (fun z : Z =>L[𝕜] z) x = x.2 := sorry_proof
-attribute [vector_optimize] smul_smul smul_neg one_mul neg_mul
-attribute [vector_optimize ←] neg_smul pow_succ pow_succ'
 
 
 /-- info: fun x => -(‖x‖₂ ^ 3)⁻¹ • x ⊗ x + ‖x‖₂⁻¹ • 𝐈 : Float^[3] → Float^[3, 3] -/

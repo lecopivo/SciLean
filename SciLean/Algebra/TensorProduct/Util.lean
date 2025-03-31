@@ -1,7 +1,4 @@
 import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Assoc
-import SciLean.Algebra.TensorProduct.Curry
-import SciLean.Algebra.TensorProduct.Swap
 
 set_option linter.unusedSectionVars false
 

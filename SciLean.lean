@@ -32,9 +32,7 @@ import SciLean.Algebra.IsAddGroupHom
 import SciLean.Algebra.IsAffineMap
 import SciLean.Algebra.IsLinearMap
 import SciLean.Algebra.MatrixType.Basic
-import SciLean.Algebra.TensorProduct.Assoc
 import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Curry
 import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Algebra.TensorProduct.Pi
 import SciLean.Algebra.TensorProduct.Prod
@@ -42,7 +40,6 @@ import SciLean.Algebra.TensorProduct.ProdMatrix
 import SciLean.Algebra.TensorProduct.ProdMatrixCol
 import SciLean.Algebra.TensorProduct.ProdMatrixRow
 import SciLean.Algebra.TensorProduct.Self
-import SciLean.Algebra.TensorProduct.Swap
 import SciLean.Algebra.TensorProduct.Transpose
 import SciLean.Algebra.TensorProduct.Util
 import SciLean.Algebra.VectorOptimize.Basic
