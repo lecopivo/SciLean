@@ -21,39 +21,13 @@ open TSyntax.Compat
 
 initialize registerTraceClass `getElem_notation
 
-open Lean Elab Term Meta in
--- @[inherit_doc ArrayType.get]
-elab:max (priority:=high+1) x:term noWs "[" i:term "]" : term => do
-  try
-    let x ← elabTermAndSynthesize x none
-    let X ← inferType x
-    let Idx ← mkFreshTypeMVar
-    let Elem ← mkFreshTypeMVar
-    let Valid ← mkFreshExprMVar none
-    let cls := (mkAppN (← mkConstWithFreshMVarLevels ``DefaultIndex) #[X, Idx])
-    let _ ← synthInstance cls
-    trace[getElem_notation] "Default index type {Idx} for {X}"
-    let getElemCls := mkAppN (← mkConstWithFreshMVarLevels ``GetElem) #[X, Idx, Elem, Valid]
-    let inst ← synthInstance getElemCls
-    let i ← elabTerm i Idx
-    return ← mkAppOptM ``getElem #[X,Idx,Elem,Valid,inst,x,i,Expr.const ``True.intro []]
-  catch e =>
-    trace[getElem_notation] "Failed to infer default index type with error:\n{e.toMessageData}"
-    return ← elabTerm (← `(getElem $x $i (by get_elem_tactic))) none
 
 /-- Turn an array of terms in into a tuple. -/
 private def mkTuple (xs : Array (TSyntax `term)) : MacroM (TSyntax `term) :=
   `(term| ($(xs[0]!), $(xs[1:]),*))
 
-
-/-- Element index can either be an index or a range. -/
-syntax elemIndex := (term)? (":" (term)?)?
-
 /--
-The syntax `x[i,j,k]` gets the element of `x : X` indexed by `(i,j,k)`. It is required that there is
-an instance `Indexed X I E` and `(i,j,k)` has type `I`.
-
-This notation also support ranges, `x[:i,j₁:j₂,k]` returns a slice of `x`.
+The syntax `x[i,j,k]` gets the element of `x : X` indexed by `(i,j,k)`.
 
 Note that product is right associated thus `x[i,j,k]`, `x[i,(j,k)]` and `x[(i,j,k)]` result in
 the same expression.
@@ -62,10 +36,40 @@ macro:max (name:=indexedGet) (priority:=high+1) x:term noWs "[" i:term ", " is:t
   let idx ← mkTuple (#[i] ++ is.getElems)
   `($x[$idx])
 
+
+
+open Lean Elab Term Meta in
+@[inherit_doc indexedGet]
+elab:max (priority:=high+2) x:term noWs "[" is:term,* "]" : term => do
+  try
+    let rank := is.getElems.size
+    let x ← elabTermAndSynthesize x none
+    let X ← inferType x
+    let Idx ← mkFreshTypeMVar
+    let Elem ← mkFreshTypeMVar
+    let Valid ← mkFreshExprMVar none
+    let cls := (mkAppN (← mkConstWithFreshMVarLevels ``DefaultIndexOfRank) #[X, mkNatLit rank, Idx])
+    let _ ← synthInstance cls
+    trace[getElem_notation] "Default index type {Idx} of rank {rank} for {X}"
+    let getElemCls := mkAppN (← mkConstWithFreshMVarLevels ``GetElem) #[X, Idx, Elem, Valid]
+    let inst ← synthInstance getElemCls
+    let i ← elabTerm (← liftMacroM (mkTuple is.getElems)) Idx
+    return ← mkAppOptM ``getElem #[X,Idx,Elem,Valid,inst,x,i,Expr.const ``True.intro []]
+  catch e =>
+    let i ← liftMacroM (mkTuple is.getElems)
+    trace[getElem_notation] "Failed to infer default index type with error:\n{e.toMessageData}"
+    return ← elabTerm (← `(getElem $x $i (by get_elem_tactic))) none
+
+
+
+-- /-- Element index can either be an index or a range. -/
+-- syntax elemIndex := (term)? (":" (term)?)?
+
+
 -- todo: merge with `indexedGet`
 --       right now I could not figure out how to correctly write down the corresponding macro_rules
-@[inherit_doc indexedGet]
-syntax:max (name:=indexedGetRanges) (priority:=high) term noWs "[" elemIndex "," elemIndex,* "]" : term
+-- @[inherit_doc indexedGet]
+-- syntax:max (name:=indexedGetRanges) (priority:=high) term noWs "[" elemIndex "," elemIndex,* "]" : term
 
 macro (priority:=high) x:ident noWs "[" ids:term,* "]" " := " xi:term : doElem => do
   let i ← mkTuple ids.getElems

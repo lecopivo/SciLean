@@ -1,5 +1,4 @@
 import SciLean
-import SciLean.AD.Rules.DataArrayN.RSum
 
 open SciLean Scalar
 

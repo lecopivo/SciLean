@@ -54,10 +54,9 @@ fun {n k d} [NeZero k] points centroids =>
 def objective' {n k d : ℕ} (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) :=
   ∑ᴵ (i : Idx n), minᴵ (j : Idx k), ∑ᴵ (l : Idx d), (points[i,l] - centroids[j,l])^2
 
-
 def direction' {n k d : ℕ} [NeZero k] (points : Float^[d]^[n]) (centroids : Float^[d]^[k]) : Float^[d]^[k] :=
   (let' ((_a,J),(_b,Hdiag)) :=
-    ∂> (c:=centroids;⊞ (i : Idx k) (j : Idx d) => 1.0),
+    ∂> (c:=centroids;⊞ (i : Idx k) => ⊞ (j : Idx d) => 1.0),
       let' (y,df) := <∂ (objective' points) c
       (y,df 1)
   J.rmap2 (·/·) Hdiag)

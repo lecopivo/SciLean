@@ -67,6 +67,7 @@ namespace Float2
     getElem v i _ := if i = 0 then v.x else v.y
 
   instance : DefaultIndex Float2 (Idx 2) where
+  instance : DefaultIndexOfRank Float2 1 (Idx 2) where
 
   instance : InjectiveGetElem Float2 (Idx 2) where
     getElem_injective := by
@@ -108,6 +109,7 @@ namespace Float2
   --- Default Operations
   -- we prefer indexing `Float2` by `Float2.Index`
   instance : DefaultIndex Float2 Index where
+  instance : DefaultIndexOfRank Float2 1 Index where
   instance {I n} [IndexType I n] : HasRnEquiv (Float2^[I]) (I × Index) Float where
 
   instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
@@ -147,6 +149,7 @@ namespace Float3
     getElem v i _ := if i = 0 then v.x else if i = 1 then v.y else v.z
 
   instance : DefaultIndex Float3 (Idx 3) where
+  instance : DefaultIndexOfRank Float3 1 (Idx 3) where
 
   instance : InjectiveGetElem Float3 (Idx 3) where
     getElem_injective := by
@@ -240,6 +243,7 @@ namespace Float4
     getElem v i _ := if i = 0 then v.x else if i = 1 then v.y else if i = 2 then v.z else v.w
 
   instance : DefaultIndex Float4 (Idx 4) where
+  instance : DefaultIndexOfRank Float4 1 (Idx 4) where
 
   instance : InjectiveGetElem Float4 (Idx 4) where
     getElem_injective := by

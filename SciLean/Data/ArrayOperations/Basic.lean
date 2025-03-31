@@ -24,6 +24,8 @@ class InjectiveGetElem (coll : Type*) (idx : Type*) {elem : outParam Type*}
 has  unknown type. -/
 class DefaultIndex (coll : Type*) (idx : outParam Type*) where
 
+class DefaultIndexOfRank (coll : Type*) (r : Nat) (idx : outParam Type*) where
+
 /-- Index under which we can access `coll` and get elements of type `elem`. -/
 class ValueIndex (coll elem : Type*) (idx : outParam Type*) where
 

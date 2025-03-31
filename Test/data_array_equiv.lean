@@ -54,3 +54,73 @@ example : GetElem' (Float^[k]^[n]^[m]) (Idx m×Idx n) (Float^[k]) := by infer_in
 
 example : GetElem' (Float^[k]^[n]^[m]) (Idx m×Idx n×Idx k) (Float) := by infer_instance
 example : IsModuleGetElem Float (Float^[k]^[n]^[m]) (Idx m×Idx n×Idx k) := by infer_instance
+
+
+
+
+example (i : Idx 10) (j : Idx 5) :
+  (⊞ (_ : Idx 10) => ⊞ (_ : Idx 5) => 1.0)[i,j] = 1.0 := by simp only [simp_core]
+
+example (ij : Idx 10×Idx 5) :
+  (⊞ (_ : Idx 10) => ⊞ (_ : Idx 5) => 1.0)[ij] = 1.0 := by simp only [simp_core]
+
+
+
+----------------------------------------------------------------------------------------------------
+-- test index type inference -----------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+variable (x : Float^[4,5]^[2,3])
+
+/-- info: fun ij => x[ij] : Idx 2 × Idx 3 → Float^[4, 5] -/
+#guard_msgs in
+#check fun ij => x[ij]
+
+/-- info: fun i j => x[(i, j)] : Idx 2 → Idx 3 → Float^[4, 5] -/
+#guard_msgs in
+#check fun i j => x[i,j]
+
+/-- info: fun ij kl => x[ij][kl] : Idx 2 × Idx 3 → Idx 4 × Idx 5 → Float -/
+#guard_msgs in
+#check fun ij kl => x[ij][kl]
+
+/-- info: fun i j kl => x[(i, j)][kl] : Idx 2 → Idx 3 → Idx 4 × Idx 5 → Float -/
+#guard_msgs in
+#check fun i j kl => x[i,j][kl]
+
+/-- info: fun ij k l => x[ij][(k, l)] : Idx 2 × Idx 3 → Idx 4 → Idx 5 → Float -/
+#guard_msgs in
+#check fun ij k l => x[ij][k,l]
+
+/-- info: fun i j k l => x[(i, j)][(k, l)] : Idx 2 → Idx 3 → Idx 4 → Idx 5 → Float -/
+#guard_msgs in
+#check fun i j k l => x[i,j][k,l]
+
+/-- info: fun ij k l => x[(ij, k, l)] : Idx 2 × Idx 3 → Idx 4 → Idx 5 → Float -/
+#guard_msgs in
+#check fun ij k l => x[ij,k,l]
+
+/-- info: fun i j k l => x[((i, j), k, l)] : Idx 2 → Idx 3 → Idx 4 → Idx 5 → Float -/
+#guard_msgs in
+#check fun i j k l => x[(i,j),k,l]
+
+-- "broken" as it clashes with `fun (i : Idx 2) (j : Idx 3) => x[i,j]`
+/--
+error: application type mismatch
+  Prod.mk ij
+argument
+  ij
+has type
+  Idx 2 × Idx 3 : Type
+but is expected to have type
+  Idx 2 : Type
+---
+info: fun ij kl => x[(sorry, sorry)] : Idx 2 × Idx 3 → Idx 4 × Idx 5 → Float^[4, 5]
+-/
+#guard_msgs in
+#check fun (ij : Idx 2 × Idx 3) (kl : Idx 4 × Idx 5) => x[ij,kl]
+
+-- not using index notation works
+/-- info: fun ij kl => x[(ij, kl)] : Idx 2 × Idx 3 → Idx 4 × Idx 5 → Float -/
+#guard_msgs in
+#check fun (ij : Idx 2 × Idx 3) (kl : Idx 4 × Idx 5) => getElem x (ij,kl) .intro

@@ -11,11 +11,11 @@ set_option linter.unusedVariables false
 
 namespace SciLean
 
-def _root_.ByteArray.replicate (n : Nat) (v : UInt8) : ByteArray := Id.run do
-  let mut a : ByteArray := .mkEmpty n
-  for i in fullRange (Idx n) do
-    a := a.push v
-  a
+-- def _root_.ByteArray.replicate (n : Nat) (v : UInt8) : ByteArray := Id.run do
+--   let mut a : ByteArray := .mkEmpty n
+--   for i in fullRange (Idx n) do
+--     a := a.push v
+--   a
 
 -- TODO: Quotient it out by trailing bits
 structure DataArray (α : Type*) [pd : PlainDataType α] where
@@ -30,7 +30,7 @@ instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, by sorry_proo
 @[inline]
 def DataArray.size (xs : DataArray α) : Nat := xs.byteData.size / pd.btype.bytes.toNat
 
-@[inline, irreducible]
+@[inline]
 def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α :=
   pd.btype.fromByteArray arr.byteData (pd.btype.bytes * i) sorry_proof
 
@@ -51,7 +51,7 @@ def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α :=
 instance : GetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
   getElem := fun x i h => x.get ⟨i,h⟩
 
-@[inline,irreducible]
+@[inline]
 def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
   ⟨pd.btype.toByteArray arr.byteData (pd.btype.bytes * i) sorry_proof val, sorry_proof⟩
 
@@ -147,7 +147,7 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   arr
 
 
-@[irreducible, inline, specialize]
+@[inline, specialize]
 def DataArray.intro {ι n} [IndexType ι n] [Fold ι]
     (f : ι → α) : DataArray α := Id.run do
   let mut d' : DataArray α := .mkZero n
@@ -201,6 +201,8 @@ instance : InjectiveGetElem (α^[ι]) ι where
   getElem_injective := sorry_proof
 
 instance : DefaultIndex (α^[ι]) ι where
+instance : DefaultIndexOfRank (α^[ι]) 1 ι where
+instance {r} [DefaultIndexOfRank (α^[κ]) r κ] : DefaultIndexOfRank (α^[ι,κ]) (r+1) (ι×κ) where
 
 instance : SetElem (α^[ι]) ι α (fun _ _ => True) where
   setElem x i v _ := x.set i v
@@ -373,14 +375,9 @@ def DataArrayN.col (x : X^[I,J]) (j : J) : X^[I] := Id.run do
   let offset := (toIdx j).1
   let width := (pd.bytes 1).toUSize
   let stride := (pd.bytes nJ).toUSize
-  dbg_trace s!"offset: {offset}"
-  dbg_trace s!"width:  {width}"
-  dbg_trace s!"stride: {stride}"
   for i in fullRange (Idx nI) do
     let srcIdx := i.1*stride + offset*width
     let dstIdx := i.1*width
-    dbg_trace s!"srcIdx: {srcIdx}"
-    dbg_trace s!"dstIdx: {dstIdx}"
     data := xdata.copySlice srcIdx.toNat data dstIdx.toNat width.toNat
   return ⟨⟨data,sorry_proof⟩,sorry_proof⟩
 

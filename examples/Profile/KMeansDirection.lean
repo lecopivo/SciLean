@@ -118,13 +118,13 @@ def kmeansDirSciLeanNoBLAS {n k d : ℕ} [NeZero k]
 
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I] [IndexType I n]
+def _root_.SciLean.DataArrayN.idxGet {X} [pd : PlainDataType X] {I n} [IndexType I n]
     (xs : X^[I]) (i : I) : X :=
   xs[i]
   -- pd.fromByteArray xs.1.1 (toIdx i) sorry_proof
 
 @[inline]
-def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I] [IndexType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
+def _root_.SciLean.DataArrayN.idxSet {I n} [IndexType I n] (x : Float^[I]) (i : I) (val : Float) : Float^[I] :=
   setElem x i val .intro
   -- let data := x.1.1.toFloatArray sorry_proof
   -- let data := data.uset (toIdx i) val sorry_proof

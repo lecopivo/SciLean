@@ -137,5 +137,14 @@ lean_exe ProfileKMeansDirection {
   root := `examples.Profile.KMeansDirection
 }
 
+lean_exe ProfileTensorOps {
+  root := `examples.Profile.TensorOps
+}
+
+lean_exe ProfileGMM {
+  root := `examples.Profile.GMM
+}
+
+
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier

@@ -47,9 +47,14 @@ theorem Idx.val_eq_of_eq {n} {i j : Idx n} (h : Eq i j) : Eq i.val j.val :=
 
 instance (n : Nat) : DecidableEq (Idx n) :=
   fun i j =>
-    match decEq i.val j.val with
-    | isTrue h  => isTrue (Idx.eq_of_val_eq h)
-    | isFalse h => isFalse (fun h' => absurd (Idx.val_eq_of_eq h') h)
+    if i.val == j.val then
+      .isTrue sorry_proof
+    else
+      .isFalse sorry_proof
+    -- probably too slow
+    -- match decEq i.val j.val with
+    -- | isTrue h  => isTrue (Idx.eq_of_val_eq h)
+    -- | isFalse h => isFalse (fun h' => absurd (Idx.val_eq_of_eq h') h)
 
 instance {n} : LT (Idx n) where
   lt a b := LT.lt a.val b.val
@@ -57,8 +62,17 @@ instance {n} : LT (Idx n) where
 instance {n} : LE (Idx n) where
   le a b := LE.le a.val b.val
 
-instance Idx.decLt {n} (a b : Idx n) : Decidable (LT.lt a b) := Nat.decLt ..
-instance Idx.decLe {n} (a b : Idx n) : Decidable (LE.le a b) := Nat.decLe ..
+instance Idx.decLt {n} (a b : Idx n) : Decidable (LT.lt a b) := -- Nat.decLt .. -- too slow
+  if a.val < b.val then
+    .isTrue sorry_proof
+  else
+    .isFalse sorry_proof
+instance Idx.decLe {n} (a b : Idx n) : Decidable (LE.le a b) :=  -- Nat.decLe .. -- too slow
+  if a.val ≤ b.val then
+    .isTrue sorry_proof
+  else
+    .isFalse sorry_proof
+
 
 /--
 `Idx n` is equivalent to `Fin n`
@@ -136,15 +150,15 @@ which does the operations with `Nat` rather than with `USize` which is bad.
 instance (priority:=high) instHModUSizeNatFast : HMod USize Nat USize := ⟨fun x y => x % y.toUSize⟩
 
 /-- Addition modulo `n` -/
-protected def add : Idx n → Idx n → Idx n
+@[inline] protected def add : Idx n → Idx n → Idx n
   | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a + b) % n, by sorry_proof⟩
 
 /-- Multiplication modulo `n` -/
-protected def mul : Idx n → Idx n → Idx n
-  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a * b) % n, by sorry_proof⟩
+@[inline] protected def mul : Idx n → Idx n → Idx n
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a * b) % n.toUSize, by sorry_proof⟩
 
 /-- Subtraction modulo `n` -/
-protected def sub : Idx n → Idx n → Idx n
+@[inline] protected def sub : Idx n → Idx n → Idx n
   /-
   The deidxition of `Idx.sub` has been updated to improve performance.
   The right-hand-side of the following `match` was originally
@@ -162,7 +176,7 @@ protected def sub : Idx n → Idx n → Idx n
   using recursion on the second argument.
   See issue #4413.
   -/
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨((n.toUSize - b) + a) % n, sorry_proof⟩
+  | ⟨a, _⟩, ⟨b, _⟩ => ⟨((n.toUSize - b) + a) % n.toUSize, sorry_proof⟩
 
 /-!
 Remark: land/lor can be deidxed without using (% n), but
@@ -170,28 +184,28 @@ we are trying to minimize the number of Nat theorems
 needed to bootstrap Lean.
 -/
 
-protected def mod : Idx n → Idx n → Idx n
+@[inline] protected def mod : Idx n → Idx n → Idx n
   | ⟨a, h⟩, ⟨b, _⟩ => ⟨a % b,  Nat.lt_of_le_of_lt (Nat.mod_le _ _) h⟩
 
-protected def div : Idx n → Idx n → Idx n
+@[inline] protected def div : Idx n → Idx n → Idx n
   | ⟨a, h⟩, ⟨b, _⟩ => ⟨a / b, Nat.lt_of_le_of_lt (Nat.div_le_self _ _) h⟩
 
-def modn : Idx n → Nat → Idx n
+@[inline] def modn : Idx n → Nat → Idx n
   | ⟨a, h⟩, m => ⟨a % m, Nat.lt_of_le_of_lt (Nat.mod_le _ _) h⟩
 
-def land : Idx n → Idx n → Idx n
+@[inline] def land : Idx n → Idx n → Idx n
   | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.land a b) % n, sorry_proof⟩
 
-def lor : Idx n → Idx n → Idx n
+@[inline] def lor : Idx n → Idx n → Idx n
   | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.lor a b) % n, sorry_proof⟩
 
-def xor : Idx n → Idx n → Idx n
+@[inline] def xor : Idx n → Idx n → Idx n
   | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.xor a b) % n, sorry_proof⟩
 
-def shiftLeft : Idx n → Idx n → Idx n
+@[inline] def shiftLeft : Idx n → Idx n → Idx n
   | ⟨a, _⟩, ⟨b, _⟩ => ⟨(a <<< b) % n, sorry_proof⟩
 
-def shiftRight : Idx n → Idx n → Idx n
+@[inline] def shiftRight : Idx n → Idx n → Idx n
   | ⟨a, _⟩, ⟨b, _⟩ => ⟨(a >>> b) % n, sorry_proof⟩
 
 instance : Add (Idx n) where

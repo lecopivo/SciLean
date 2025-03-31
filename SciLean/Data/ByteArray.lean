@@ -38,3 +38,6 @@ opaque ByteArray.mkExclusive (a : ByteArray) (uniqueName : Name) : ByteArray := 
 This function is unsafe! It mutates the array without checking the array -/
 @[extern c inline "((((double*)(lean_sarray_cptr(#1)))[#2] = #3), #1)"]
 unsafe opaque ByteArray.usetFloatUnsafe (a : ByteArray) (i : USize) (v : Float) (h : i.toNat*8 + 7 < a.size) : ByteArray
+
+@[extern "scilean_byte_array_replicate"]
+opaque ByteArray.replicate (n : @& Nat) (v : UInt8) : ByteArray

@@ -123,6 +123,12 @@ instance instGetElemUncurry
     let scalarArray := toKn (I×J) K xs
     scalarArray[ij]
 
+instance {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]
+    {K} [PlainDataType K]
+    {X} [PlainDataType X] [DefaultIndexOfRank X r J] [DataArrayEquiv X J K] :
+    DefaultIndexOfRank (X^[I]) (r+1) (I×J) where
+
+
 /-- `x[i,j] = x[i][j]` for `x : X^[I]` -/
 instance instIsGetElemCurry
     {I J} {nI} [IndexType I nI] {nJ} [IndexType J nJ]

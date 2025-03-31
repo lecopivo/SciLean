@@ -131,6 +131,7 @@ variable (X : Type*)
 
 
 /-- Transfers `AddCommGroup` structure from `R^[I]` to `X` together with all operations. -/
+@[inline]
 def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
   toAdd := Add.ofRnEquiv X
   toSub := Sub.ofRnEquiv X
@@ -158,7 +159,7 @@ def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
   eq_of_dist_eq_zero := sorry_proof
 }
 
-
+@[inline]
 def _root_.AdjointSpace.ofRnEquiv [NormedAddCommGroup X] : AdjointSpace R X := {
   toSMul := SMul.ofRnEquiv X
   toInner := Inner.ofRnEquiv X
