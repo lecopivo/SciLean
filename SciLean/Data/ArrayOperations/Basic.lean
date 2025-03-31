@@ -144,6 +144,16 @@ theorem getElem_uncurry {X Y Z I J : Type*}
     (x : X) (i : I) (j : J) : x[i][j] = x[(i,j)] := by
   rw [h.getElem_curry]
 
+@[simp, simp_core]
+theorem getElem_ofFn_curry
+    [GetElem' X I Y] [GetElem' X (I×J) Z] [GetElem' Y J Z]
+    [OfFn X I Y] [LawfulOfFn X I]
+    [IsGetElemCurry X I J]
+    (f : I → Y) (ij : I×J) :
+    (ofFn (coll:=X) f)[ij] = (f ij.1)[ij.2] := by
+  rw[← getElem_uncurry]
+  simp
+
 
 ----------------------------------------------------------------------------------------------------
 -- Instances
