@@ -121,7 +121,7 @@ instance : IndexType (Idx n) n where
   left_inv := sorry_proof
   right_inv := sorry_proof
 
-
+@[inline]
 instance {I J nI nJ} [IndexType I nI] [IndexType J nJ] : IndexType (I × J) (nI*nJ) where
   -- this choice will result in row major matrices/tensors
   toIdx := fun (a,b) => ⟨nJ.toUSize * toIdx a + toIdx b, by sorry_proof⟩

@@ -15,7 +15,6 @@ theorem sadf
  HasRevFDeriv R (fun f : I → J → X => ↿f) (fun f => (↿f, fun df i j => df (i,j))) := sorry_proof
 
 
-/-- unlack `logdiag` and `lt` to lower triangular matrix -/
 def unpackQ {d : Nat} (logdiag : Float^[d]) (lt : Float^[((d-1)*d/2)]) : Float^[d,d]  :=
   ⊞ (i : Idx d) (j : Idx d) =>
     if h : i < j then 0
@@ -94,10 +93,6 @@ abbrev_data_synth gmmObjective in alphas means logdiag lt : HasRevFDeriv Float b
   data_synth => enter[3]; lsimp
 
 
-#check Nat
-
-
-#check uniformI
 
 def gradient {d k n : Nat}
       (alphas: Float^[k]) (means: Float^[k,d])

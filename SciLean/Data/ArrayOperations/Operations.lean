@@ -34,7 +34,7 @@ An example of higer arity function
 def mulAdd (x y z : X) := mapIdxMono2 (fun i (xi,yi) zi => xi*yi + zi) (fun i => (x[i],y[i])) z
 ```
 -/
-@[inline, specialize]
+@[inline, specialize, macro_inline]
 def mapIdxMonoAcc (f : I → Z → Y → Y) (g : I → Z) (xs : X) : X :=
   IndexType.fold (init:=xs) .full (fun (i : I) xs  =>
     let xi := xs[i]
@@ -54,8 +54,8 @@ Note: Consider using `mapIdxMono2` if `f` is accesing element of another array,
       like `f := fun i xi => xi + y[i]`. Reverse mode AD is able to produce better gradients for
       `mapIdxMono2`.
 -/
-@[inline, specialize]
-abbrev mapIdxMono (f : I → Y → Y) (xs : X) : X :=
+@[reducible, inline, specialize, macro_inline]
+def mapIdxMono (f : I → Y → Y) (xs : X) : X :=
   mapIdxMonoAcc (fun i _ y => f i y) (fun _ => ()) xs
 
 
@@ -66,6 +66,6 @@ Maps elements of `xs` by `f`.
 (mapIdxMono2 f xs)[i] = f x[i]
 ```
 -/
-@[inline, specialize]
-abbrev mapMono [DefaultIndex X I] (f : Y → Y) (xs : X) : X :=
+@[reducible, inline, specialize, macro_inline]
+def mapMono [DefaultIndex X I] (f : Y → Y) (xs : X) : X :=
   mapIdxMono (fun _ : I => f) xs

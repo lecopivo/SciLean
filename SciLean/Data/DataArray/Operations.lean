@@ -70,8 +70,8 @@ The function `f` provides two indices `(i : X)` and `(j : ι)`
 
 Note that calling this function on `R^[n]` will give you `j : Unit`.
 -/
-@[inline, specialize]
-abbrev rmapIdx (f : I → ι → R → R) (x : X^[I]) : X^[I] :=
+@[reducible, inline, specialize, macro_inline]
+def rmapIdx (f : I → ι → R → R) (x : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMono
     (fun ij : I×ι =>
       let' (i,j) := ij
@@ -82,8 +82,8 @@ Map real scalars of `x : X^[I]` by `f : R → R`.
 
 It is required that `X ≃ R^[ι]` for some `ι`
 -/
-@[inline, specialize]
-abbrev rmap (f : R → R) (x : X^[I]) : X^[I] :=
+@[reducible, inline, specialize, macro_inline]
+def rmap (f : R → R) (x : X^[I]) : X^[I] :=
   rmapIdx (fun _ _ => f) x
 
 /--
@@ -101,8 +101,8 @@ Note that calling this function on `R^[n]` will give you `j : Unit`.
 
 TODO: make this function to decide whether to mutate `x` or `y`
 -/
-@[inline, specialize]
-abbrev rmapIdx2 (f : I → ι → R → R → R) (x y : X^[I]) : X^[I] :=
+@[reducible, inline, specialize, macro_inline]
+def rmapIdx2 (f : I → ι → R → R → R) (x y : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMonoAcc
     (fun (idx : Idx (nI*nι)) xi =>
       let (i,j) := fromIdx idx
@@ -120,6 +120,6 @@ It is required that `X ≃ R^[J]` for some `J`
 
 TODO: make this function to decide whether to mutate `x` or `y`
 -/
-@[inline, specialize]
-abbrev rmap2 (f : R → R → R) (x y : X^[I]) : X^[I] :=
+@[reducible, inline, specialize, macro_inline]
+def rmap2 (f : R → R → R) (x y : X^[I]) : X^[I] :=
   rmapIdx2 (fun _ _ => f) x y

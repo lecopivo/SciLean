@@ -40,12 +40,12 @@ class HasRnEquiv (X : Type*) (I R : outParam Type*) {nI : outParam ℕ}
   where
 
 
-@[inline]
-abbrev toKn {X : Type*} (I K : Type*) {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+@[reducible, inline, macro_inline]
+def toKn {X : Type*} (I K : Type*) {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
   (x : X) : K^[I] := DataArrayEquiv.toKn x
 
-@[inline]
-abbrev fromKn (X : Type*) {I K : Type*} {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
+@[reducible, inline, macro_inline]
+def fromKn (X : Type*) {I K : Type*} {nI} [IndexType I nI] [PlainDataType K] [DataArrayEquiv X I K]
   (x : K^[I]) : X := DataArrayEquiv.fromKn x
 
 /--
@@ -53,7 +53,7 @@ Converts `X` to `R^[I]`
 
 Similar to `toKn` but can infere `R` and `I` automatically.
 -/
-@[inline]
+@[macro_inline]
 def toRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IndexType I nI] [HasRnEquiv X I R]
   (x : X) : R^[I] := DataArrayEquiv.toKn x
 
@@ -62,7 +62,7 @@ Converts `R^[I]` to `X`
 
 Similar to `fromKn` can infere `R` and `I` automatically.
 -/
-@[inline]
+@[macro_inline]
 def fromRn {X I R : Type*} [RealScalar R] [PlainDataType R] {nI} [IndexType I nI] [HasRnEquiv X I R]
   (x : R^[I]) : X := DataArrayEquiv.fromKn x
 

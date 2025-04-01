@@ -147,13 +147,24 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   arr
 
 
-@[inline, specialize]
+-- @[inline, specialize]
+-- def DataArray.intro {ι n} [IndexType ι n] [Fold ι]
+--     (f : ι → α) : DataArray α := Id.run do
+--   let mut d' : DataArray α := .mkZero n
+--   for i in fullRange ι do
+--     d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
+--   d'
+
+@[inline]
 def DataArray.intro {ι n} [IndexType ι n] [Fold ι]
-    (f : ι → α) : DataArray α := Id.run do
-  let mut d' : DataArray α := .mkZero n
-  for i in fullRange ι do
-    d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
-  d'
+    (f : ι → α) : DataArray α := aux toIdx
+where
+  @[specialize]
+  aux (toIdx : ι → Idx n) : DataArray α := Id.run do
+    let mut d' : DataArray α := .mkZero n
+    for i in fullRange ι do
+      d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
+    d'
 
 
 instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
@@ -169,7 +180,7 @@ instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
   s ++ "]"⟩
 
 
-structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [IndexType ι n] : Type where
+structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [Size' ι n] : Type where
   data : DataArray α
   h_size : n = data.size
 

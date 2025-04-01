@@ -8,7 +8,7 @@ namespace SciLean
 
 Note: This function is not part of `IndexType` because of the two universe parameters `v` and `w`
 which were causing lot of issues during type class synthesis. -/
-class FoldM (I : Type u) (m : Type v → Type w) {n : outParam ℕ} [IndexType I n] where
+class FoldM (I : Type u) (m : Type v → Type w) where
   forIn {β} [Monad m] (r : IndexType.Range I) (init : β) (f : I → β → m (ForInStep β)) : m β
 
   -- TODO: some property that the forIn and foldM are doing the right thing in *the* order aligned
@@ -22,29 +22,29 @@ Implementation of a fold over index type `I`.
 Warning: This class has an universe parameter `v` that is not deducible from the its parameters.
   Sometimes you might have to specify the universe parameter manually e.g. `Fold.{_,0} I`
 -/
-abbrev Fold.{u,v} (I : Type u) [IndexType I n] := FoldM.{u,v,v} I Id
+abbrev Fold.{u,v} (I : Type u) := FoldM.{u,v,v} I Id
 
-attribute [specialize, inline] FoldM.forIn
+-- attribute [specialize, inline] FoldM.forIn
 
 namespace IndexType
 
 export FoldM (forIn)
 
-@[inline, specialize]
+@[inline, specialize, macro_inline]
 def foldM {I n m β} [IndexType I n] [FoldM I m] [Monad m]
     (r : IndexType.Range I) (init : β) (f : I → β → m β) : m β :=
   forIn r init (fun i x => do return .yield (← f i x))
 
-@[inline, specialize]
+@[inline, specialize, macro_inline]
 def fold {I n β} [IndexType I n] [FoldM I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
   foldM (m:=Id) r init (fun i x => pure (f i x))
 
-instance {m : Type v → Type w} {n} [IndexType I n] [FoldM I m] :
+instance {m : Type v → Type w} [FoldM I m] :
     ForIn m (IndexType.Range I) I where
   forIn := forIn
 
-@[inline, specialize]
+@[inline, macro_inline]
 def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
     [IndexType I n] [FoldM I m] [Monad m]
     (r : IndexType.Range I) (f : I → m β) (op : β → β → m β) (default : β) : m β := do
@@ -58,12 +58,12 @@ def reduceDM {I : Type u} {β : Type v} {m : Type v → Type w} {n : ℕ}
       val ← op val (← f i)
   return val
 
-@[inline, specialize]
+@[inline, macro_inline]
 def reduceD {I n β} [IndexType I n] [FoldM I Id]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) (default : β) : β :=
   reduceDM (m:=Id) r f op default
 
-@[inline, specialize]
+@[inline, macro_inline]
 abbrev reduce {I n β} [IndexType I n] [FoldM I Id] [Inhabited β]
     (r : IndexType.Range I) (f : I → β) (op : β → β → β) : β :=
   reduceD r f op default
@@ -73,6 +73,7 @@ abbrev reduce {I n β} [IndexType I n] [FoldM I Id] [Inhabited β]
 -- Instance for `Unit` -----------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+@[inline]
 instance : FoldM Unit m  where
   forIn r init f :=
     match r with
@@ -92,6 +93,7 @@ instance : FoldM Unit m  where
 -- TODO: This does not break correctly! Fix this!
 --       It is not hard to implement but unclear if it negativelly impacts performance.
 --       It will require careful testing.
+@[inline]
 instance
     {I nI} [IndexType I nI] [fi : FoldM I m]
     {J nJ} [IndexType J nJ] [fj : FoldM J m] :
@@ -109,6 +111,7 @@ instance
 
 -- TODO: this does not break correctly! fix this!
 --       not hard to implement but unclear if it negativelly impacts performance
+@[inline]
 instance {I J n n'}
     [FirstLast I I] [IndexType I n] [FoldM I m]
     [FirstLast J J] [IndexType J n'] [FoldM J m] :
@@ -132,7 +135,7 @@ instance {I J n n'}
 ----------------------------------------------------------------------------------------------------
 
 /-- Run `f` for all `Idx n` -/
-@[inline, specialize]
+@[inline]
 partial def Idx.forInFull {β} [Monad m]
     (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
   loop init 0
@@ -147,7 +150,7 @@ where
 
 
 /-- Run `f` starting at `a` up to `a`(inclusive) -/
-@[inline, specialize]
+@[inline]
 partial def Idx.forInIntervalUp {β} [Monad m]
     (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
   loop init a.1
@@ -162,7 +165,7 @@ where
 
 
 /-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
-@[inline, specialize]
+@[inline]
 partial def Idx.forInIntervalDown {β} [Monad m]
     (a b : Idx n) (init : β) (f : Idx n → β → m (ForInStep β)) : m β :=
   loop init b
@@ -177,6 +180,7 @@ where
     | .done x => pure x
 
 
+@[inline]
 instance : FoldM (Idx n) m  where
   forIn r init f :=
     match r with
@@ -194,7 +198,7 @@ instance : FoldM (Idx n) m  where
 ----------------------------------------------------------------------------------------------------
 
 /-- Run `f` for all `Fin n` -/
-@[inline, specialize]
+@[inline]
 partial def Fin.forInFull {β} [Monad m]
     (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
   loopSmall init 0
@@ -209,7 +213,7 @@ where
 
 
 /-- Run `f` starting at `a` up to `a`(inclusive) -/
-@[inline, specialize]
+@[inline]
 partial def Fin.forInIntervalUp {β} [Monad m]
     (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
   loop init a.1.toUSize
@@ -224,7 +228,7 @@ where
 
 
 /-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
-@[inline, specialize]
+@[inline]
 partial def Fin.forInIntervalDown {β} [Monad m]
     (a b : Fin n) (init : β) (f : Fin n → β → m (ForInStep β)) : m β :=
   loop init b
@@ -238,6 +242,7 @@ where
         loop x ⟨i-1, sorry_proof⟩
     | .done x => pure x
 
+@[inline]
 instance : FoldM (Fin n) m  where
   forIn r init f :=
     match r with
