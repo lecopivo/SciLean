@@ -104,8 +104,8 @@ TODO: make this function to decide whether to mutate `x` or `y`
 @[reducible, inline, specialize, macro_inline]
 def rmapIdx2 (f : I → ι → R → R → R) (x y : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMonoAcc
-    (fun (idx : Idx (nI*nι)) xi =>
-      let (i,j) := fromIdx idx
+    (fun (idx : I×ι) xi =>
+      let' (i,j) := idx
       (f i j · xi))
     (fun idx => y[idx])
     x
