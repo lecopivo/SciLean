@@ -284,7 +284,7 @@ open Scalar in
 def logsumexp (x : X^[I]) : R :=
   let x := toRn x
   let m := x.rmax
-  log (∑ᴵ i, exp (x[i] - m))
+  log (∑ᴵ i, exp (x[i] - m)) + m
 
 -- ugh universes require additional `Fold` :/
 open Scalar in
@@ -301,4 +301,4 @@ def logsumexpSoftmax [Fold ι] [Fold I] (x : X^[I]) : (R × X^[I]) :=
   let m := x.rmax
   let w := ∑ᴵ i, exp (x[i] - m)
   let x := x.rmap (fun xi => w⁻¹ * exp (xi - m))
-  (log w, fromRn x)
+  (log w + m, fromRn x)

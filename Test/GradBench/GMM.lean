@@ -187,3 +187,24 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
 -/
 #guard_msgs in
 #check gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule
+
+
+
+
+/-- info: -1788.051617 -/
+#guard_msgs in
+#eval show IO Unit from do
+
+  let k := 3
+  let d := 2
+  let n := 5
+
+  let alphas: Float^[k] := ⊞[1.023,34.35,34]
+  let means: Float^[k,d] :=  ⊞[1.34,1;22,34;-34,32]
+  let logdiag : Float^[k,d] := ⊞[1.23,0.12;0.23,0.23;-0.534,1.23]
+  let lt : Float^[k,((d-1)*d)/2] := (⊞[2.0;3;3] : Float^[3,(1*2)/2])
+  let x : Float^[n,d] := ⊞[0.23,3.23; 1.0,23; 0.23,12; 23,0.3; -10,20]
+  let wishartGamma : Float := 1
+  let wishartM: Nat := 1
+
+  IO.println (gmmObjective alphas means logdiag lt x wishartGamma wishartM)
