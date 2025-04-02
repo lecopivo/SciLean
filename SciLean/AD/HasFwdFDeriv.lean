@@ -1,6 +1,7 @@
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.FwdFDeriv
 import SciLean.Logic.Function.Constant
+import SciLean.Data.Nat
 
 namespace SciLean
 
@@ -511,3 +512,25 @@ theorem SciLean.norm₂.arg_x.HasFwdFDeriv_comp_rule
   sorry_proof
 
 end OverReals
+
+
+----------------------------------------------------------------------------------------------------
+-- Recursion theorems ------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+theorem hasFwdFDeriv_nat_induction
+   {X : ℕ → Type*} [∀ n, NormedAddCommGroup (X n)] [∀ n, NormedSpace K (X n)]
+   {Y : ℕ → Type*} [∀ n, NormedAddCommGroup (Y n)] [∀ n, NormedSpace K (Y n)]
+   (n : ℕ) (f : (n : ℕ) → X n → Y n)
+   {f₀' : X 0 → X 0 → Y 0 × Y 0}
+   {F' : {m : ℕ} → (X m →  X m → Y m × Y m) → X (m+1) → X (m+1) → Y (m+1) × Y (m+1)}
+   (zero : HasFwdFDeriv K (f 0) (fun x dx => f₀' x dx))
+   (succ : ∀ n (fn' : X n → X n → Y n×Y n),
+             (HasFwdFDeriv K (f n) fn')
+             →
+             HasFwdFDeriv K (f (n+1)) (fun x dx => F' fn' x dx)) :
+   HasFwdFDeriv K (f n)
+     (fun x dx => natRecFun (n:=n) (X:=fun n => X n) F' f₀' x dx) := by
+  induction n
+  case zero => exact zero
+  case succ n hn => exact succ n _ hn

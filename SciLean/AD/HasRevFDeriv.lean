@@ -1,6 +1,7 @@
 import SciLean.Analysis.AdjointSpace.HasAdjoint
 import SciLean.Analysis.Calculus.HasFDeriv
 import SciLean.Analysis.Calculus.RevFDeriv
+import SciLean.Data.Nat
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
 
@@ -1064,3 +1065,42 @@ theorem norm2.arg_a0.HasRevFDerivUpdate_rule
   sorry_proof
 
 end OverReals
+
+
+----------------------------------------------------------------------------------------------------
+-- Recursion theorems ------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
+theorem hasRevFDeriv_nat_induction
+    {X : ℕ → Type*} [∀ n, NormedAddCommGroup (X n)] [∀ n, AdjointSpace K (X n)]
+    {Y : ℕ → Type*} [∀ n, NormedAddCommGroup (Y n)] [∀ n, AdjointSpace K (Y n)]
+    (n) (f : (n : ℕ) → X n → Y n)
+    {f₀' : X 0 → Y 0 × (Y 0 → X 0)}
+    {F' : {m : ℕ} → (X m →  Y m × (Y m → X m)) → X (m+1) → Y (m+1) × (Y (m+1) → X (m+1))}
+    (zero : HasRevFDeriv K (f 0) (fun x => f₀' x))
+    (succ : ∀ n (fn' : X n → Y n × (Y n → X n)),
+             (HasRevFDeriv K (f n) fn')
+             →
+             HasRevFDeriv K (f (n+1)) (fun x => F' fn' x)) :
+    HasRevFDeriv K (f n) (fun x => natRecFun (n:=n) (X:=fun n => X n) F' f₀' x) := by
+  induction n
+  case zero => exact zero
+  case succ n hn => exact succ n _ hn
+
+
+theorem hasRevFDerivUpdate_nat_induction
+    {X : ℕ → Type*} [∀ n, NormedAddCommGroup (X n)] [∀ n, AdjointSpace K (X n)]
+    {Y : ℕ → Type*} [∀ n, NormedAddCommGroup (Y n)] [∀ n, AdjointSpace K (Y n)]
+    (n) (f : (n : ℕ) → X n → Y n)
+    {f₀' : X 0 → Y 0 × (Y 0 → X 0 → X 0)}
+    {F' : {m : ℕ} → (X m →  Y m × (Y m → X m → X m)) → X (m+1) → Y (m+1) × (Y (m+1) → X (m+1) → X (m+1))}
+    (zero : HasRevFDerivUpdate K (f 0) (fun x => f₀' x))
+    (succ : ∀ n (fn' : X n → Y n × (Y n → X n → X n)),
+             (HasRevFDerivUpdate K (f n) fn')
+             →
+             HasRevFDerivUpdate K (f (n+1)) (fun x => F' fn' x)) :
+    HasRevFDerivUpdate K (f n) (fun x => natRecFun (n:=n) (X:=fun n => X n) F' f₀' x) := by
+  induction n
+  case zero => exact zero
+  case succ n hn => exact succ n _ hn

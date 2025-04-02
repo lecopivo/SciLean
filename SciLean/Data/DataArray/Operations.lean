@@ -123,3 +123,44 @@ TODO: make this function to decide whether to mutate `x` or `y`
 @[reducible, inline, specialize, macro_inline]
 def rmap2 (f : R → R → R) (x y : X^[I]) : X^[I] :=
   rmapIdx2 (fun _ _ => f) x y
+
+
+
+
+----------------------------------------------------------------------------------------------------
+-- Linear algebra ----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+def minor
+    {n} (A : R^[n+1,n+1] ) (i j : Idx (n+1)) : R^[n,n] :=
+  ⊞ (i' j' : Idx n) =>
+    let i'' : Idx (n+1) := if i'.1 < i.1 then i'.castSucc else i'.succ
+    let j'' : Idx (n+1) := if j'.1 < j.1 then j'.castSucc else j'.succ
+    A[i'',j'']
+
+def det {n} (A : R^[n,n]) : R :=
+  match n with
+  | 0 => 1
+  | n+1 =>
+    ∑ᴵ (j : Idx (n+1)),
+      let a0j := A[0,j]
+      let M0j := A.minor 0 j
+      let m0j := det M0j
+      (-1)^(j.1.toNat) * a0j * m0j
+
+-- def fromMinor
+--     {n} (M : R^[n,n] ) (i j : Idx (n+1)) : R^[n+1,n+1] :=
+--   (adjoint Float (fun A : Float^[n+1,n+1] => A.minor i j) M)
+--   rewrite_by
+--     unfold DataArrayN.minor
+--     simp -zeta [Function.HasUncurry.uncurry] -- todo: add uncurry theorem for adjoint
+--     lsimp only [simp_core,adjoint_simproc]
+
+
+-- def _root_.SciLean.DataArrayN.addMinor
+--     {n} (A : Float^[n+1,n+1]) (i j : Idx (n+1)) (M : Float^[n,n] ) : Float^[n+1,n+1] :=
+--   (adjointUpdate Float (fun A : Float^[n+1,n+1] => A.minor i j) M A)
+--   rewrite_by
+--     unfold DataArrayN.minor
+--     simp -zeta [Function.HasUncurry.uncurry] -- todo: add uncurry theorem for adjoint
+--     lsimp only [simp_core,adjointUpdate_simproc]
