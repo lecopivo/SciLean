@@ -81,6 +81,30 @@ theorem HasAdjointUpdate.hasAdjoint {f : X → Y} {f' : Y → X → X}
   · intros; rw[h.adjoint (x':=0)]; simp
   · apply h.is_linear
 
+
+set_option linter.unusedVariables false in
+-- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
+theorem adjoint_from_hasAdjoint
+  {f : X → Y} {f'} (hf : HasAdjoint K f f') :
+  adjoint K f = f' := sorry_proof
+
+simproc_decl adjoint_simproc (adjoint _ _) :=
+  mkDataSynthSimproc `adjoint_simproc ``adjoint_from_hasAdjoint
+
+variable (K) in
+noncomputable
+def adjointUpdate (f : X → Y) (y : Y) (x : X) : X := x + adjoint K f y
+
+set_option linter.unusedVariables false in
+-- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
+theorem adjointUpdate_from_hasAdjointUpdate
+  {f : X → Y} {f'} (hf : HasAdjointUpdate K f f') :
+  adjointUpdate K f = f' := sorry_proof
+
+simproc_decl adjointUpdate_simproc (adjointUpdate _ _) :=
+  mkDataSynthSimproc `adjointUpdate_simproc ``adjointUpdate_from_hasAdjointUpdate
+
+
 namespace HasAdjoint
 
 @[data_synth]
