@@ -69,8 +69,16 @@ def HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
     (h : HasRevFDeriv K f f') :
     HasRevFDerivUpdate K f
       (fun x =>
-        let (y,df') := f' x
+        let' (y,df') := f' x
         (y, fun dy dx => dx + df' dy)) := sorry_proof
+
+set_option linter.unusedVariables false in
+def HasRevFDerivUpdate.toHasRevFDeriv {f : X → Y} {f' : X → Y×(Y→X→X)}
+    (h : HasRevFDerivUpdate K f f') :
+    HasRevFDeriv K f
+      (fun x =>
+        let' (y,df') := f' x
+        (y, fun dy => df' dy 0)) := sorry_proof
 
 set_option linter.unusedVariables false in
 def HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
