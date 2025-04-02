@@ -65,7 +65,7 @@ theorem hasRevFDerivUpdate_from_hasRevFDerivUpdate {f : X → Y}
     HasRevFDerivUpdate K f f'' := by rw[simp]; exact deriv
 
 set_option linter.unusedVariables false in
-def HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
+theorem HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
     (h : HasRevFDeriv K f f') :
     HasRevFDerivUpdate K f
       (fun x =>
@@ -73,7 +73,7 @@ def HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
         (y, fun dy dx => dx + df' dy)) := sorry_proof
 
 set_option linter.unusedVariables false in
-def HasRevFDerivUpdate.toHasRevFDeriv {f : X → Y} {f' : X → Y×(Y→X→X)}
+theorem HasRevFDerivUpdate.toHasRevFDeriv {f : X → Y} {f' : X → Y×(Y→X→X)}
     (h : HasRevFDerivUpdate K f f') :
     HasRevFDeriv K f
       (fun x =>
