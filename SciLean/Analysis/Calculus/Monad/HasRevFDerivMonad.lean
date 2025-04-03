@@ -9,13 +9,13 @@ class HasRevFDerivMonad (K : Type) [RCLike K]
     [Monad m] [Monad m'] where
 
   HasRevFDerivM
-    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
     (f : X → m Y) (f' : X → m (Y × (Y → m' X))) : Prop
 
   HasRevFDerivM_pure
-    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
     (f : X → Y) {f'} (hf : HasRevFDeriv K f f') :
     HasRevFDerivM (fun x => pure (f x))
       (fun x =>
@@ -23,9 +23,9 @@ class HasRevFDerivMonad (K : Type) [RCLike K]
         pure (y, fun dy => pure (df dy)))
 
   HasRevFDerivM_bind
-    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
-    {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
+    {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
     (g : X → m Y) {g'} (hg : HasRevFDerivM g g')
     (f : Y → m Z) {f'} (hf : HasRevFDerivM f f') :
     HasRevFDerivM (fun x => g x >>= f)
@@ -41,8 +41,8 @@ class HasRevFDerivMonad (K : Type) [RCLike K]
           pure dx))
 
   HasRevFDerivM_pair
-    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
+    {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+    {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
     (f : X → m Y) {f'} (hf : HasRevFDerivM f f') :
     HasRevFDerivM (fun x => do let y ← f x; pure (x,y))
       (fun x => do
@@ -65,9 +65,9 @@ variable
   {m : Type → Type} {m' : outParam $ Type → Type}
   [Monad m] [Monad m'] [LawfulMonad m] [LawfulMonad m']
   [HasRevFDerivMonad K m m']
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
 
 open HasRevFDerivMonad
 
@@ -206,9 +206,9 @@ variable
   (K : Type _) [RCLike K]
   {m m'} [Monad m] [Monad m'] [LawfulMonad m] [LawfulMonad m']
   [HasRevFDerivMonad K m m']
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
 
 
 --------------------------------------------------------------------------------

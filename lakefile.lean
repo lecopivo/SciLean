@@ -145,6 +145,10 @@ lean_exe ProfileGMM {
   root := `examples.Profile.GMM
 }
 
+lean_exe ProfileLSTM {
+  root := `examples.Profile.LSTM
+}
+
 
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier
