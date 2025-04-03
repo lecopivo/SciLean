@@ -47,6 +47,11 @@ theorem fwdFDeriv_from_hasFwdFDeriv
 simproc_decl fwdFDeriv_simproc (fwdFDeriv _ _) :=
   mkDataSynthSimproc `fwdFDeriv_simproc ``fwdFDeriv_from_hasFwdFDeriv
 
+theorem hasFwdFDeriv_from_hasFwdFDeriv {f : X → Y}
+    {f'} (deriv : HasFwdFDeriv K f f')
+    {f''} (simp : f'' = f') :
+    HasFwdFDeriv K f f'' := by rw[simp]; exact deriv
+
 
 
 ----------------------------------------------------------------------------------------------------
@@ -531,6 +536,24 @@ theorem hasFwdFDeriv_nat_induction
              HasFwdFDeriv K (f (n+1)) (fun x dx => F' fn' x dx)) :
    HasFwdFDeriv K (f n)
      (fun x dx => natRecFun (n:=n) (X:=fun n => X n) F' f₀' x dx) := by
+  induction n
+  case zero => exact zero
+  case succ n hn => exact succ n _ hn
+
+
+theorem hasFwdFDeriv_nat_induction'
+   {X : ℕ → Type*} [∀ n, NormedAddCommGroup (X n)] [∀ n, NormedSpace K (X n)]
+   {Y : ℕ → Type*} [∀ n, NormedAddCommGroup (Y n)] [∀ n, NormedSpace K (Y n)]
+   (n : ℕ) (f : α → (n : ℕ) → X n → Y n)
+   {f₀' : α → X 0 → X 0 → Y 0 × Y 0}
+   {F' : {m : ℕ} → α → (X m →  X m → Y m × Y m) → X (m+1) → X (m+1) → Y (m+1) × Y (m+1)}
+   (zero : ∀ a, HasFwdFDeriv K (f a 0) (fun x dx => f₀' a x dx))
+   (succ : ∀ n (fn' : α → X n → X n → Y n×Y n),
+             (∀ a, HasFwdFDeriv K (f a n) (fn' a))
+             →
+             (∀ a, HasFwdFDeriv K (f a (n+1)) (fun x dx => F' a (fn' a) x dx))) :
+   ∀ a, HasFwdFDeriv K (f a n)
+     (fun x dx => natRecFun (n:=n) (X:=fun n => X n) (F' a) (f₀' a) x dx) := by
   induction n
   case zero => exact zero
   case succ n hn => exact succ n _ hn
