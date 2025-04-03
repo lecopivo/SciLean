@@ -348,12 +348,22 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
     if let .some g ← isDataSynthGoal? X then
       -- try recursive call
       if let .some r ← do dataSynth g then
-        x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
-        return true
+        try
+          x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+          return true
+        catch e =>
+          trace[Meta.Tactic.data_synth] m!"failed to assign {(← mkLambdaFVars ys r.proof)} to {x}"
+          trace[Meta.Tactic.data_synth] e.toMessageData
+          pure ()
 
       if let some r ← g.assumption? then
-        x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
-        return true
+        try
+          x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+          return true
+        catch e =>
+          trace[Meta.Tactic.data_synth] m!"failed to assign {(← mkLambdaFVars ys r.proof)} to {x}"
+          trace[Meta.Tactic.data_synth] e.toMessageData
+          pure ()
 
     return false
   if b then return true
@@ -384,8 +394,12 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
   if (← inferType X).isProp then
     if let .some prf ← discharge? X then
       if ← isDefEq (← inferType prf) X then
-        x.mvarId!.assignIfDefeq prf
-        return true
+        try
+          x.mvarId!.assignIfDefeq prf
+          return true
+        catch _ =>
+          trace[Meta.Tactic.data_synth] m!"failed to assign {prf} to {x}"
+          pure ()
 
   return false
 
@@ -816,11 +830,17 @@ def projGoals (thm : LambdaTheorem) (fGoal : Goal) (f g p₁ p₂ q : Expr) : Da
 
   let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
 
-  xs[fId]!.mvarId!.assignIfDefeq f
-  xs[gId]!.mvarId!.assignIfDefeq g
-  xs[p₁Id]!.mvarId!.assignIfDefeq p₁
-  xs[p₂Id]!.mvarId!.assignIfDefeq p₂
-  xs[qId]!.mvarId!.assignIfDefeq q
+  try
+    xs[fId]!.mvarId!.assignIfDefeq f
+    xs[gId]!.mvarId!.assignIfDefeq g
+    xs[p₁Id]!.mvarId!.assignIfDefeq p₁
+    xs[p₂Id]!.mvarId!.assignIfDefeq p₂
+    xs[qId]!.mvarId!.assignIfDefeq q
+  catch e =>
+    trace[Meta.Tactic.data_synth] s!"failed assigning projection data"
+    trace[Meta.Tactic.data_synth] e.toMessageData
+    pure ()
+
 
   let (_,rhs) ← fGoal.mkFreshProofGoal
   if ¬(← isDefEq statement rhs) then
