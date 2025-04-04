@@ -5,7 +5,6 @@ open SciLean
 set_default_scalar Float
 
 variable {n : Nat}
-set_option synthInstance.maxSize 1000
 
 def _root_.SciLean.Idx.shift (i : Idx n) (j : USize) : Idx n := ⟨(i.1+j)%n, sorry_proof⟩
 
@@ -22,7 +21,7 @@ by
   unfold H
 
   -- compute derivatives
-  lsimp -zeta only [fgradient,revFDeriv_simproc]
+  autodiff [jacobian_reverse_mode]
 
   -- apply RK4 method
   conv in odeSolve _ =>

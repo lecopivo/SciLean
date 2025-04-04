@@ -77,10 +77,18 @@ noncomputable
 def jacobianMat (f : X → Y) (x : X) : Y⊗X :=
   (vecFwdFDeriv 𝕜 X f x (𝐈[𝕜,X])).2
 
--- TOOD:
--- variable (𝕜) in
--- noncomputable
--- def jacobianDet (f : X → Y) (x : X) : 𝕜 := sorry
+/--
+Express `jacobianMat` with vector forward mode AD `vecFwdFDeriv`
+-/
+theorem jacobian_vector_mode (f : X → Y) :
+  jacobianMat 𝕜 f = fun x => (vecFwdFDeriv 𝕜 X f x (𝐈[𝕜,X])).2 := by rfl
+
+/--
+Express `jacobianMat` with reverse mode AD `revFDeriv`
+-/
+theorem jacobian_reverse_mode (f : X → 𝕜) :
+  jacobianMat 𝕜 f = fun x => (revFDeriv 𝕜 f x).2 1 := by sorry_proof
+
 
 end Jacobian
 
