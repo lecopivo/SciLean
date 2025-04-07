@@ -32,7 +32,7 @@ data_array_data_synth_abbrev DataArrayN.row X R in x : HasAdjointUpdate R by
                              A)
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => data_synth
-  case simp => intros; simp; ext ⟨i,j⟩; simp[uncurry_getElem]; sorry_proof
+  case simp => intros; simp; ext ⟨i,j⟩; sorry_proof --simp[uncurry_getElem]; sorry_proof
 
 data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDeriv R by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint

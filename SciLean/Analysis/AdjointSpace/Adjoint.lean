@@ -481,7 +481,7 @@ theorem Inner.inner.arg_a1.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
   simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.conj_symm]
+    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.conj_symm,mul_comm]
 
 
 section OnRealSpace

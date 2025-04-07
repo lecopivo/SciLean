@@ -59,12 +59,12 @@ info: fun y => (y.2.1, y.2.2, y.1)
 
 
 /--
-info: fun x2 y =>
-  let x0' := fun x1 => Function.invFun (fun x0 => x0 + x1) y.2;
-  let x1' := fun x2 => Function.invFun (fun x1 => x0' x1 + x1 + x2) y.1;
-  let x1'' := x1' x2;
-  let x0'' := x0' x1'';
-  (x0'', x1'', x2)
+info: fun x0 y =>
+  let x1' := fun x0 => Function.invFun (fun x1 => x0 + x1) y.2;
+  let x2' := fun x0 => Function.invFun (fun x2 => x0 + x1' x0 + x2) y.1;
+  let x2'' := x2' x0;
+  let x1'' := x1' x0;
+  (x0, x1'', x2'')
 -/
 #guard_msgs in
 #eval show MetaM Unit from do

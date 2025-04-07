@@ -36,12 +36,12 @@ export IsInnerGetElem (inner_eq_sum_getElem)
 attribute [simp, simp_core] getElem_zero getElem_add getElem_neg getElem_smul
 
 class IsModuleGetElem (𝕜 : outParam Type*) (X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
-    [Ring 𝕜] [AddCommGroup X] [Module 𝕜 X] [AddCommGroup Y] [Module 𝕜 Y]
+    [Ring 𝕜] [AddCommGroup X] [Module 𝕜 X] [AddCommGroup Y] [Module 𝕜 Y] : Prop
   extends
     IsZeroGetElem X I,
     IsAddGetElem X I,
     IsNegGetElem X I,
-    IsSMulGetElem 𝕜 X I : Prop
+    IsSMulGetElem 𝕜 X I
 
 class IsContinuousGetElem (X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
     [TopologicalSpace X] [TopologicalSpace Y] : Prop where

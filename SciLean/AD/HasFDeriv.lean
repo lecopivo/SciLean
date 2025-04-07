@@ -76,7 +76,7 @@ theorem hasFDerivAt_let {g : E → F} {f : F → E → G} {g' : E →L[𝕜] F} 
         let dy := g' dx
         let dz := f' (dy,dx)
         dz) x :=
-  hasFDerivAt_comp x (hg.prod (hasFDerivAt_id x)) hf
+  hasFDerivAt_comp x (hg.prodMk (hasFDerivAt_id x)) hf
 
 set_option linter.unusedVariables false in
 theorem hasFDerivAt_proj
@@ -130,7 +130,7 @@ theorem Prod.mk.arg_a0a1.HasFDerivAt_comp_rule (f : X → Y) (g : X → Z) (x : 
         let dy := f' dx
         let dz := g' dx
         (dy,dz)) x :=
-  hf.prod hg
+  hf.prodMk hg
 
 @[data_synth]
 theorem Prod.fst.arg_self.HasFDerivAt_comp_rule (f : X → Y×Z) (x : X)

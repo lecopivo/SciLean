@@ -76,9 +76,9 @@ class ArrayLike (coll : Type u) (idx : Type v) (elem : outParam (Type w)) extend
    SetElem' coll idx elem
 
 class LawfulArrayLike (coll : Type u) (idx : Type v) (elem : outParam (Type w))
-      [ArrayLike coll idx elem] extends
+      [ArrayLike coll idx elem] : Prop extends
    InjectiveGetElem coll idx,
-   LawfulSetElem coll idx : Prop
+   LawfulSetElem coll idx
 
 class OfFn (coll : Type u) (idx : Type v) (elem : outParam (Type w)) where
   ofFn (f : idx → elem) : coll

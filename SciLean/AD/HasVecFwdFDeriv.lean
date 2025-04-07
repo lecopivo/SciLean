@@ -67,6 +67,7 @@ simproc_decl vecFwdFDeriv_simproc (vecFwdFDeriv _ _ _) :=
 section Jacobian
 
 variable
+  [SMul (𝕜ᵐᵒᵖ) X] [Star X]
   {XX : Type*} [NormedAddCommGroup XX] [AdjointSpace 𝕜 XX]
   {YX : Type*} [NormedAddCommGroup YX] [AdjointSpace 𝕜 YX]
   [TensorProductType 𝕜 Y X YX]
@@ -235,7 +236,7 @@ variable
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
   {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
-  {W : Type*} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [SMul (𝕜ᵐᵒᵖ) W] [Star W]
   {XW : Type*} [NormedAddCommGroup XW] [AdjointSpace 𝕜 XW]
   {YW : Type*} [NormedAddCommGroup YW] [AdjointSpace 𝕜 YW]
   {ZW : Type*} [NormedAddCommGroup ZW] [AdjointSpace 𝕜 ZW]
@@ -415,6 +416,7 @@ theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
 
 @[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasVecFwdFDeriv_comp_rule
+    [SMul (𝕜ᵐᵒᵖ) W] [Star W]
     {f g : X → 𝕜} {f' g'}
     (hf : HasVecFwdFDeriv 𝕜 W f f') (hg : HasVecFwdFDeriv 𝕜 W g g')
     (hg' : ∀ x, g x ≠ 0) :
@@ -490,7 +492,7 @@ variable
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace 𝕜 X]
   {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace 𝕜 Y]
   {Z : Type*} [NormedAddCommGroup Z] [AdjointSpace 𝕜 Z]
-  {W : Type*} [NormedAddCommGroup W] [AdjointSpace 𝕜 W]
+  {W : Type*} [NormedAddCommGroup W] [AdjointSpace 𝕜 W] [SMul (𝕜ᵐᵒᵖ) W] [Star W]
   {XW : Type*} [NormedAddCommGroup XW] [AdjointSpace 𝕜 XW]
   {YW : Type*} [NormedAddCommGroup YW] [AdjointSpace 𝕜 YW]
   {ZW : Type*} [NormedAddCommGroup ZW] [AdjointSpace 𝕜 ZW]

@@ -41,33 +41,34 @@ theorem Vector.getElem_map{α β n} (f : α → β) (x : Vector α n) (i : Fin n
 
 
 -- Algebraic Operations
-instance [Add X] : Add (Vector X n) := ⟨fun x y => ⟨x.mapFinIdx fun i xi => xi + y[i], by simp⟩⟩
-instance [Sub X] : Sub (Vector X n) := ⟨fun x y => ⟨x.mapFinIdx fun i xi => xi - y[i], by simp⟩⟩
+instance [Add X] : Add (Vector X n) := ⟨fun x y => x.mapFinIdx fun i xi _ => xi + y[i]⟩
+instance [Sub X] : Sub (Vector X n) := ⟨fun x y => x.mapFinIdx fun i xi _ => xi - y[i]⟩
 instance [Neg X] : Neg (Vector X n) := ⟨fun x => x.map fun xi => -xi⟩
 instance [SMul R X] : SMul R (Vector X n) := ⟨fun r x => x.map fun xi => r • xi⟩
 instance [Zero X] : Zero (Vector X n) := ⟨⟨Array.mkArray n (0:X), by simp⟩⟩
 
 @[simp, simp_core]
-theorem Vector.getElem_add [Add X] (x y : Vector X n) (i : Fin n) : (x + y)[i] = x[i] + y[i] := by
+theorem Vector.getElem_add [Add X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x + y)[i] = x[i] + y[i] := by
   simp[getElem,HAdd.hAdd,Add.add]; unfold Vector.get; simp
 
 @[simp, simp_core]
-theorem Vector.getElem_sub [Sub X] (x y : Vector X n) (i : Fin n) : (x - y)[i] = x[i] - y[i] := by
+theorem Vector.getElem_sub [Sub X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x - y)[i] = x[i] - y[i] := by
   simp[getElem,HSub.hSub,Sub.sub]; unfold Vector.get; simp
 
 @[simp, simp_core]
-theorem Vector.getElem_neg [Neg X] (x : Vector X n) (i : Fin n) : (-x)[i] = -x[i] := by
+theorem Vector.getElem_neg [Neg X] (x : Vector X n) (i : ℕ) (h : i < n) : (-x)[i] = -x[i] := by
   simp[getElem,Neg.neg,Vector.map]; unfold Vector.get; simp
 
 @[simp, simp_core]
-theorem Vector.getElem_smul [SMul R X] (r : R) (x : Vector X n) (i : Fin n) : (r • x)[i] = r • x[i] := by
+theorem Vector.getElem_smul [SMul R X] (r : R) (x : Vector X n) (i : ℕ) (h : i < n) : (r • x)[i] = r • x[i] := by
   simp[getElem,HSMul.hSMul,SMul.smul,Vector.map]; unfold Vector.get; simp
 
 @[simp, simp_core]
-theorem Vector.getElem_zero [Zero X] (i : Fin n) : (0 : Vector X n)[i] = 0 := by
+theorem Vector.getElem_zero [Zero X] (i : ℕ) (h : i < n) : (0 : Vector X n)[i] = 0 := by
   simp[getElem,Zero.zero,OfNat.ofNat]; unfold Vector.get; simp
 
-
+-- set_option pp.fieldNotation false
+-- set_option pp.notation false
 -- Algebraic instances
 instance [AddCommGroup X] : AddCommGroup (Vector X n) where
   add_assoc := by intros; ext i; simp[add_assoc]

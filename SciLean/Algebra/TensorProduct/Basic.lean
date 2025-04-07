@@ -157,43 +157,50 @@ section Identity
 variable {R : Type*} [RCLike R]
   {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X]
 
+open scoped RightActions
 
-open ComplexConjugate
-instance tpScalarLeft : TensorProductType R R X X where
+open ComplexConjugate MulOpposite
+instance tpScalarLeft [SMul (Rᵐᵒᵖ) X] [Star X] :
+    TensorProductType R R X X where
   equiv := ⟨fun _ => True, sorry_proof⟩
   tmulAdd a x y A := a•(x•y) + A
   matVecMulAdd a A x b y := a*⟪A,x⟫[R] + b*y
-  vecMatMulAdd a y A b x := a•(conj y•A) + b • x
+  vecMatMulAdd a y A b x := a•(A <• (conj y)) + b • x
   tmulAdd_eq_tmul := sorry_proof
+
 
 /-
 Note: `op y • x` is the way todo right scalar multiplication of `x : X` by `y : R`.
 -/
 open MulOpposite in
 instance (priority:=low) tpScalarRight
-  [Module (Rᵐᵒᵖ) X] [Star X] :
+  [SMul (Rᵐᵒᵖ) X] [Star X] :
   TensorProductType R X R X where
   equiv := ⟨fun _ => True, sorry_proof⟩
-  tmulAdd a x y A := a•(op y•x) + A
-  matVecMulAdd a A y b x := a•(op y • star A) + b • x
-  vecMatMulAdd a x A b y := a*⟪x,A⟫[R] + b*y
+  tmulAdd a x y A := a•(x <• y) + A
+  matVecMulAdd a A y b x := a•(y • star A) + b • x
+  vecMatMulAdd a x A b y := a*⟪x, A⟫[R] + b*y
   tmulAdd_eq_tmul := sorry_proof
 
 instance {R} [RCLike R] : TensorProductGetYX R R X X := ⟨⟩
 instance {R} [RCLike R] : TensorProductGetYX R X R X := ⟨⟩
+
+attribute [ext] TensorProductType
 
 -- This is crucual defeq that prevents potential TC diamond!
 example : (tpScalarLeft : TensorProductType R R R R)
           =
           (tpScalarRight : TensorProductType R R R R) := by rfl
 
+
+
 @[simp, simp_core]
-theorem tmul_scalar_left (a : R) (x : X) :
+theorem tmul_scalar_left [SMul (Rᵐᵒᵖ) X] [Star X] (a : R) (x : X) :
   a ⊗[R] x = a • x := by simp[tmul,tmulAdd]
 
 open MulOpposite in
 @[simp, simp_core]
-theorem tmul_scalar_right [Module (Rᵐᵒᵖ) X] [Star X] (a : R) (x : X) :
+theorem tmul_scalar_right [SMul (Rᵐᵒᵖ) X] [Star X] (a : R) (x : X) :
   x ⊗[R] a = (op a) • x := by simp[tmul,tmulAdd]
 
 end Identity

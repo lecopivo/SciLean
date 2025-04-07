@@ -1,7 +1,7 @@
 import SciLean.Meta.SimpAttr
 import Mathlib.Algebra.Group.Prod
 import Mathlib.GroupTheory.GroupAction.Basic
-import Mathlib.Algebra.SMulWithZero
+import Mathlib.Algebra.GroupWithZero.Action.Defs
 import Mathlib.Data.Complex.Basic
 import Mathlib.LinearAlgebra.Dimension.Constructions
 

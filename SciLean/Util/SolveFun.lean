@@ -23,7 +23,7 @@ open Classical
 structure HasSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop where
   ex : ∃ xs, uncurryAll P xs
 
-structure HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) extends HasSolution P : Prop where
+structure HasUniqueSolution {F Xs} [UncurryAll F Xs Prop] (P : F) : Prop extends HasSolution P where
   uniq : ∀ xs xs', uncurryAll P xs → uncurryAll P xs' → xs = xs'
 
 /-- Finds unique `(x₁, ..., xₙ)` such that `P x₁ ... xₙ` holds.

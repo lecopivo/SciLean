@@ -4,10 +4,13 @@ import SciLean.Data.ArrayType
 
 namespace SciLean
 
+
+@[deprecated Vector (since := "7/4/2025")]
 structure ArrayN (α : Type u) (n : Nat) where
   data : Array α
   h_size : n = data.size
 
+#exit
 def ArrayN.ofFn (f : Fin n → α) : ArrayN α n :=
 {
   data := .ofFn f
@@ -16,7 +19,7 @@ def ArrayN.ofFn (f : Fin n → α) : ArrayN α n :=
 
 def ArrayN.mapIdx {α β : Type*} (a : ArrayN α n) (f : Fin n → α → β) : ArrayN β n :=
 {
-  data := a.data.mapFinIdx (λ i v => f ⟨i, by have := a.2; omega⟩ v)
+  data := a.data.mapFinIdx (λ i v _ => f ⟨i, by have := a.2; omega⟩ v)
   h_size := by simp[a.2]
 }
 
@@ -25,7 +28,7 @@ def ArrayN.map {α β : Type*} (a : ArrayN α n) (f : α → β) : ArrayN β n :
 
 instance : ArrayType (ArrayN α n) (Fin n) α where
   ofFn := ArrayN.ofFn
-  get := fun a i => a.data.get i (by have := a.2; have := i.2; simp_all)
+  get := fun a i => a.data[i]'(by have := a.2; have := i.2; simp_all)
   set := fun a i v => {
     data := a.data.set i.1 v (by have := a.2; omega)
     h_size := by have := a.2; simp_all

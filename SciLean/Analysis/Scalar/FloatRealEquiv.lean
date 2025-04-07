@@ -1,6 +1,6 @@
 import Mathlib.Data.Real.Basic
-import Mathlib.AlgebraicGeometry.EllipticCurve.Weierstrass
-import Mathlib.AlgebraicGeometry.EllipticCurve.Projective
+-- import Mathlib.AlgebraicGeometry.EllipticCurve.Weierstrass
+-- import Mathlib.AlgebraicGeometry.EllipticCurve.Projective
 
 import SciLean.Analysis.Scalar.FloatAsReal
 import SciLean.Tactic.DataSynth.Elab

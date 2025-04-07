@@ -31,9 +31,9 @@ abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup �
 
 abbrev ContinuousAdd.mkSorryProofs {α} [Add α] [TopologicalSpace α] : ContinuousAdd α := ContinuousAdd.mk sorry_proof
 abbrev ContinuousNeg.mkSorryProofs {α} [Neg α] [TopologicalSpace α] : ContinuousNeg α := ContinuousNeg.mk sorry_proof
-abbrev TopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
- @TopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
-abbrev UniformAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [UniformSpace α] :=
- @UniformAddGroup.mk α _ (AddGroup.mkSorryProofs) sorry_proof -- (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
+abbrev IsTopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
+ @IsTopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
+abbrev IsUniformAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [UniformSpace α] :=
+ @IsUniformAddGroup.mk α _ (AddGroup.mkSorryProofs) sorry_proof -- (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
 
 abbrev ContinuousSMul.mkSorryProofs {α} [SMul K α] [TopologicalSpace α] : ContinuousSMul K α := ContinuousSMul.mk sorry_proof

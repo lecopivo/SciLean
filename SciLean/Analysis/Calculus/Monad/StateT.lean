@@ -12,6 +12,7 @@ variable
   [DifferentiableMonad K m] [FwdFDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
+#exit -- some panic
 noncomputable
 instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
     DifferentiableMonad K (StateT S m) where

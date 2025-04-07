@@ -83,7 +83,7 @@ class Scalar (R : outParam (Type _)) (K : (Type _)) extends RCLike K where
       toComplex (pow x y) = toComplex x ^ toComplex y
 
   abs (x : K) : R
-  abs_def : ∀ x, toReal (abs x) = Complex.abs (toComplex x)
+  abs_def : ∀ x, toReal (abs x) = ‖(toComplex x)‖
 
   tgamma (x : K) : K
   tgamma_def (x : K) :
@@ -91,7 +91,7 @@ class Scalar (R : outParam (Type _)) (K : (Type _)) extends RCLike K where
 
   lgamma (x : K) : R
   lgamma_def (x : K) :
-    toReal (lgamma x) = Real.log (Complex.Gamma (toComplex x)).abs
+    toReal (lgamma x) = Real.log ‖Complex.Gamma (toComplex x)‖
 
   /-- Is `x` finite number? For `ℝ` and `ℂ` this should be always true.
   TODO: make dedicated class `FloatLike` that has this and `Scalar` derives from. -/
@@ -223,13 +223,13 @@ instance : Scalar ℝ ℂ where
   pow x y := x.cpow y
   pow_def := by intros; simp
 
-  abs x := Complex.abs x
+  abs x := ‖x‖
   abs_def := by intros; simp
 
   tgamma x := x.Gamma
   tgamma_def := by intros; simp
 
-  lgamma x := x.Gamma.abs.log
+  lgamma x := ‖x.Gamma‖.log
   lgamma_def := by intros; simp
 
   isFinite x := true
@@ -285,7 +285,7 @@ noncomputable instance : RealScalar ℝ where
   pow_def := by intros; simp; rfl
 
   abs x := abs x
-  abs_def := by intros; simp[Complex.abs]; sorry_proof
+  abs_def := by intros; simp; sorry_proof
 
   tgamma x := x.Gamma
   tgamma_def := by intros; simp; sorry_proof

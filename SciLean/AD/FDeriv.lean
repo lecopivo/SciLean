@@ -115,8 +115,8 @@ by
   conv =>
     lhs
     rw[h]
-    rw[fderiv_comp x hf (DifferentiableAt.prod (by simp) hg)]
-    rw[DifferentiableAt.fderiv_prod (by simp) hg]
+    rw[fderiv_comp x hf (DifferentiableAt.prodMk (by simp) hg)]
+    rw[DifferentiableAt.fderiv_prodMk (by simp) hg]
   ext dx; simp[ContinuousLinearMap.comp]
 
 
@@ -186,7 +186,7 @@ theorem Prod.mk.arg_fstsnd.fderiv_rule_at  (x : X)
       let dy := fderiv K g x dx
       let dz := fderiv K f x dx
       (dy, dz) := by
-  apply DifferentiableAt.fderiv_prod hg hf
+  apply DifferentiableAt.fderiv_prodMk hg hf
 
 
 

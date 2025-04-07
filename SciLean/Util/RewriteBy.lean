@@ -26,7 +26,7 @@ def elabConvRewrite (e : Expr) (assumptions : Array Syntax) (stx : TSyntax `conv
   if goals.length > 1 then
     throwError s!"error in `rewriteByConv`, unsolved goals {← goals.mapM (fun g => do ppExpr (← g.getType))}"
 
-  (goals.get! 0).refl
+  (goals[0]!).refl
 
   return (← instantiateMVars rhs, ← mkLambdaFVars as (← instantiateMVars eq))
 

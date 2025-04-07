@@ -178,8 +178,8 @@ class NegStruct (X I XI) [StructType X I XI] [Neg X] [∀ i, Neg (XI i)] : Prop 
 class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)] : Prop where
   structProj_smul : ∀ (i : I) (k : K) (x : X), structProj (k • x) i = k • structProj x i
 
-class ModuleStruct (K X I XI) [StructType X I XI] [RCLike K] [AddCommGroup X] [Module K X] [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)]
-  extends ZeroStruct X I XI, AddStruct X I XI, NegStruct X I XI, SMulStruct K X I XI : Prop where
+class ModuleStruct (K X I XI) [StructType X I XI] [RCLike K] [AddCommGroup X] [Module K X] [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] : Prop
+  extends ZeroStruct X I XI, AddStruct X I XI, NegStruct X I XI, SMulStruct K X I XI where
     structProj_neg := sorry_proof -- todo: infer this from `structProj_add` and `structProj_smul`
 
 class TopologicalStruct (X I XI) [StructType X I XI] [TopologicalSpace X] [∀ i, TopologicalSpace (XI i)] : Prop
@@ -190,8 +190,8 @@ class TopologicalStruct (X I XI) [StructType X I XI] [TopologicalSpace X] [∀ i
 
 class VecStruct (K X I XI) [StructType X I XI] [RCLike K]
     [AddCommGroup X] [Module K X] [TopologicalSpace X]
-    [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] [∀ i, TopologicalSpace (XI i)]
-  extends TopologicalStruct X I XI, ModuleStruct K X I XI : Prop
+    [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] [∀ i, TopologicalSpace (XI i)] : Prop
+  extends TopologicalStruct X I XI, ModuleStruct K X I XI
 
 
 --------------------------------------------------------------------------------
@@ -469,9 +469,9 @@ end StructType
 
 open StructType in
 class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I NI]
-    [NormedAddCommGroup X] [AdjointSpace K X] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)]
+    [NormedAddCommGroup X] [AdjointSpace K X] [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] : Prop
   extends
-    VecStruct K X I XI : Prop
+    VecStruct K X I XI
   where
     inner_structProj : ∀ (x x' : X), ⟪x,x'⟫[K] = ∑ (i : I), ⟪structProj x i, structProj x' i⟫[K]
 

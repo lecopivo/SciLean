@@ -23,18 +23,18 @@ def sortPermutation {I X} [PartialOrder I] [PartialOrder X] (x : I → X) : I �
 def _root_.Array.qsortPermutation [LinearOrder X] (xs : Array X) : Fin xs.size ≃ Fin xs.size :=
 
   let n := xs.size
-  let xs := xs.mapFinIdx (fun i x => (i,x))
+  let xs := xs.mapFinIdx (fun i x h => ((⟨i,h⟩ : Fin _),x))
   let xs := xs.qsort (fun (_,x) (_,x') => x < x')
   let (is,_) := xs.unzip
   let is : Array (Fin n) := cast sorry_proof is
   let js := is.foldl (init:=Array.finRange n)
     (fun js i =>
-      let i' := is.get i.1 sorry_proof
+      let i' := is[i.1]'sorry_proof
       js.set i' i sorry_proof)
 
   {
-    toFun := fun i => is.get i sorry_proof
-    invFun := fun j => js.get j sorry_proof
+    toFun := fun i => is[i]'sorry_proof
+    invFun := fun j => js[j]'sorry_proof
     left_inv := sorry_proof
     right_inv := sorry_proof
   }

@@ -226,7 +226,7 @@ theorem Prod.snd.arg_self.IsContinuousLinearMap_rule
 theorem Neg.neg.arg_a0.IsContinuousLinearMap_rule
     {R : Type _} [Ring R]
     {X : Type _} [TopologicalSpace X] [AddCommGroup X] [Module R X]
-    {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [TopologicalAddGroup Y]
+    {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [IsTopologicalAddGroup Y]
     (f : X → Y) (hf : IsContinuousLinearMap R f) :
     IsContinuousLinearMap R fun x => - f x
 :=
@@ -255,7 +255,7 @@ theorem HAdd.hAdd.arg_a0a1.IsContinuousLinearMap_rule [ContinuousAdd Y]
 theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule
   {R : Type _} [Ring R]
   {X : Type _} [TopologicalSpace X] [AddCommGroup X] [Module R X]
-  {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [TopologicalAddGroup Y]
+  {Y : Type _} [TopologicalSpace Y] [AddCommGroup Y] [Module R Y] [IsTopologicalAddGroup Y]
   (f g : X → Y) (hf : IsContinuousLinearMap R f) (hg : IsContinuousLinearMap R g)
   : IsContinuousLinearMap R fun x => f x - g x
 :=
@@ -269,7 +269,7 @@ theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule
 
 def ContinuousLinearMap.mul_left
   {R : Type _} [CommSemiring R]
-  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X]
+  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [IsTopologicalSemiring X]
   (x' : X)
   : X →L[R] X :=
   ⟨⟨⟨fun x => x' * x,
@@ -280,7 +280,7 @@ def ContinuousLinearMap.mul_left
 
 def ContinuousLinearMap.mul_right
   {R : Type _} [CommSemiring R]
-  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [TopologicalSemiring X]
+  {X : Type _} [TopologicalSpace X] [Semiring X] [Algebra R X] [IsTopologicalSemiring X]
   (x' : X)
   : X →L[R] X :=
   ⟨⟨⟨fun x => x * x',
@@ -293,7 +293,7 @@ def ContinuousLinearMap.mul_right
 theorem HMul.hMul.arg_a0.IsContinuousLinearMap_rule
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y]
+  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y]
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   (y' : Y)
   : IsContinuousLinearMap R fun x => f x * y'
@@ -306,7 +306,7 @@ theorem HMul.hMul.arg_a0.IsContinuousLinearMap_rule
 theorem HMul.hMul.arg_a1.IsContinuousLinearMap_rule
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
-  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [TopologicalSemiring Y]
+  {Y : Type _} [TopologicalSpace Y] [Semiring Y] [Algebra R Y] [IsTopologicalSemiring Y]
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   (y' : Y)
   : IsContinuousLinearMap R fun x => y' * f x

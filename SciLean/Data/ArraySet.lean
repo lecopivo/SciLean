@@ -23,7 +23,7 @@ namespace ArraySet
   def size (as : ArraySet α) : Nat := as.data.size
 
   instance : GetElem (ArraySet α) Nat α (λ as i => i < as.size) where
-    getElem as i h := as.data.get i h
+    getElem as i h := as.data[i]
 
   def toArray (as : ArraySet α) : Array α := as.data
   def toList (as : ArraySet α) : List α := as.data.toList

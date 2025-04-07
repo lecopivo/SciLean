@@ -262,8 +262,8 @@ instance : AdjointSpace 𝕜 𝕜 where
     apply Exists.intro 1
     simp [norm_sq_eq_def]
   conj_symm := by simp[mul_comm]
-  add_left := by simp[add_mul]
-  smul_left := by simp[mul_assoc]
+  add_left := by simp[mul_add]
+  smul_left := by simp; intros; ac_rfl
 
 instance : Inner 𝕜 Unit where
   inner _ _ := 0

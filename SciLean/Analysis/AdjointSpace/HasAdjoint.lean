@@ -436,7 +436,7 @@ theorem HSmul.hSMul.arg_a0.HasAdjoint_simp_rule (x : X) :
       (fun k : K => k • x)
       (fun y => ⟪x,y⟫[K]) := by
   constructor
-  case adjoint => intro k y; simp [AdjointSpace.inner_smul_left]
+  case adjoint => intro k y; simp [AdjointSpace.inner_smul_left,mul_comm]
   case is_linear => sorry_proof
 
 @[data_synth]
@@ -788,7 +788,7 @@ theorem Inner.inner.arg_a1.HasAdjoint_simple_rule (x : X) :
       (fun y : X => ⟪x,y⟫[K])
       (fun k => k • x) := by
   constructor
-  case adjoint => intro y z; simp[AdjointSpace.inner_smul_right]; ac_rfl
+  case adjoint => intro y z; simp[AdjointSpace.inner_smul_right]
   case is_linear => fun_prop
 
 @[data_synth]
@@ -812,7 +812,6 @@ theorem Inner.inner.arg_a1.HasAdjointUpdate_simple_rule (x : X) :
   constructor
   case adjoint =>
     intro y z; simp[AdjointSpace.inner_smul_right, AdjointSpace.inner_add_right]
-    intros; ring
   case is_linear => fun_prop
 
 @[data_synth]

@@ -25,16 +25,14 @@ package scilean {
 }                               --
 
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.16.0"
-require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "master"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.18.0"
+require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.18.0"
 
 
 @[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
-
-#check IO.Process.SpawnArgs
 
 @[test_driver]
 lean_lib Test {
