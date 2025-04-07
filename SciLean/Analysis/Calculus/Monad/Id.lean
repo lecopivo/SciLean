@@ -101,12 +101,12 @@ section OnAdjointSpace
 
 variable
   {K : Type} [RCLike K]
-  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
-  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z] [CompleteSpace Z]
+  {X : Type} [NormedAddCommGroup X] [AdjointSpace K X]
+  {Y : Type} [NormedAddCommGroup Y] [AdjointSpace K Y]
+  {Z : Type} [NormedAddCommGroup Z] [AdjointSpace K Z]
 
 @[fun_trans]
-theorem Id'.run.arg_x.revFDeriv_rule (a : X → Id' Y) :
+theorem Id'.run.arg_x.revFDeriv_rule [CompleteSpace X] [CompleteSpace Y] (a : X → Id' Y) :
     revFDeriv K (fun x => Id'.run (a x))
     =
     fun x =>
