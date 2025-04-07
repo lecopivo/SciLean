@@ -138,7 +138,7 @@ scoped notation "π" => @RealScalar.pi defaultScalar% inferInstance
 instance {R} [RealScalar R] : MetricSpace (WithLp p R) := (by infer_instance : MetricSpace R)
 
 instance {R} [RealScalar R] : Inner ℝ R where
-  inner x y := Scalar.toReal R (x*y)
+  inner x y := Scalar.toReal R (y*x)
 
 noncomputable
 instance {R} [RealScalar R] : AdjointSpace ℝ R where

@@ -28,9 +28,6 @@ info: fun x dx =>
          x := x+x
          return x) rewrite_by autodiff
 
-#check Id'.run.arg_x.HasRevFDeriv_rule
-#check forIn
-
 instance [NormedAddCommGroup X] : NormedAddCommGroup (ForInStep X) := sorry
 instance {𝕜} [RCLike 𝕜] [NormedAddCommGroup X] [AdjointSpace 𝕜 X] : AdjointSpace 𝕜 (ForInStep X) := sorry
 
@@ -206,30 +203,30 @@ theorem MProd.mk.HasRevFDerivUpdate_rule
        let' (z,dg') := g' x
        (⟨y,z⟩, fun dyz dx => dg' dyz.2 (df' dyz.1 dx))) := sorry_proof
 
-
 set_option pp.proofs false
-#check show (HasRevFDeriv R (fun (x : R) => Id'.run do
-         let mut x := x
-         for i in [:10] do
-           x += x^i.1.toNat
-         return x) _) from by
-  apply Id'.run.arg_x.HasRevFDeriv_rule
-  case hf =>
-    lsimp
-    data_synth => enter[3]; lsimp
+
+-- #check show (HasRevFDeriv R (fun (x : R) => Id'.run do
+--          let mut x := x
+--          for i in [:10] do
+--            x += x^i.1.toNat
+--          return x) _) from by
+--   apply Id'.run.arg_x.HasRevFDeriv_rule
+--   case hf =>
+--     lsimp
+--     data_synth => enter[3]; lsimp
 
 
-#check show (HasRevFDeriv Float (fun (x : Float^[10]) => Id'.run do
-         let mut s : Float := 0
-         let mut p : Float := 1
-         for i in [:10] do
-           s += x[i]^2
-           p *= x[i]
-         return (s,p)) _) from by
-  apply Id'.run.arg_x.HasRevFDeriv_rule
-  case hf =>
-    lsimp
-    data_synth => enter[3]; lsimp
+-- #check show (HasRevFDeriv Float (fun (x : Float^[10]) => Id'.run do
+--          let mut s : Float := 0
+--          let mut p : Float := 1
+--          for i in [:10] do
+--            s += x[i]^2
+--            p *= x[i]
+--          return (s,p)) _) from by
+--   apply Id'.run.arg_x.HasRevFDeriv_rule
+--   case hf =>
+--     lsimp
+--     data_synth => enter[3]; lsimp
 
 attribute [simp_core]
   bind_pure_comp

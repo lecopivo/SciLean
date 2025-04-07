@@ -52,7 +52,7 @@ def rungeKutta4 (f : R → X → X) (tₙ Δt : R) (xₙ : X) : X :=
 
 
 variable
-  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X]
+  {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X] [SMul (Rᵐᵒᵖ) X] [Star X]
   {Y : Type _} [NormedAddCommGroup Y] [AdjointSpace R Y]
   {Z : Type _} [NormedAddCommGroup Z] [AdjointSpace R Z]
   {XX : Type _} [NormedAddCommGroup XX] [AdjointSpace R XX]

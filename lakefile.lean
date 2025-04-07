@@ -42,9 +42,9 @@ lean_lib Test {
 -- Files that should be compile, either to get fast tactic or to make FFI functions work in editor
 lean_lib CompiledFiles where
   precompileModules := true
-  roots := #[`SciLean.Tactic.LSimp.LetNormalize,
-             `SciLean.Tactic.CompiledTactics,
-             `SciLean.Data.Float,
+  roots := #[--`SciLean.Tactic.LSimp.LetNormalize,
+             --`SciLean.Tactic.CompiledTactics,
+             `SciLean.Data.FloatExtern,
              `SciLean.Data.FloatArray,
              `SciLean.Data.ByteArray]
 

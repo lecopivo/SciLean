@@ -23,6 +23,8 @@ variable
   [BLAS (DataArray R) R R] [ToString R]
   {X : Type} [NormedAddCommGroup X] [AdjointSpace R X] [ToString X] [CompleteSpace X]
 
+-- the compiler is broken :(
+noncomputable section
 
 variable (R X)
 

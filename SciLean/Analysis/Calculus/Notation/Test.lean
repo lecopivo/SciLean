@@ -82,7 +82,7 @@ end CDeriv
 section Gradient
 
 variable (K) [RCLike K]
-  {X} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X]
+  {X} [NormedAddCommGroup X] [AdjointSpace K X] [CompleteSpace X] [SMul (Kᵐᵒᵖ) X] [Star X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace K Y] [CompleteSpace Y]
   {XX} [NormedAddCommGroup XX] [AdjointSpace K XX] [TensorProductType K X X XX] [TensorProductSelf K X XX]
   {YX} [NormedAddCommGroup YX] [AdjointSpace K YX] [TensorProductType K Y X YX]

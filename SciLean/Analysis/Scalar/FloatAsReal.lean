@@ -96,7 +96,7 @@ instance : SeminormedRing Float where
   dist_triangle := sorry_proof
   edist_dist := sorry_proof
   dist_eq := sorry_proof
-  norm_mul := sorry_proof
+  norm_mul_le := sorry_proof
 
 instance : StarRing Float where
   star := fun x => x
@@ -107,7 +107,7 @@ instance : StarRing Float where
 instance : DenselyNormedField Float where
   eq_of_dist_eq_zero := sorry_proof
   dist_eq := sorry_proof
-  norm_mul' := sorry_proof
+  norm_mul := sorry_proof
   lt_norm_lt := sorry_proof
 
 instance : StarRing Float where
@@ -122,7 +122,7 @@ instance : Algebra ℝ Float where
 
 instance : NormedField Float where
   dist_eq := sorry_proof
-  norm_mul' := sorry_proof
+  norm_mul := sorry_proof
 
 instance : NormedAlgebra ℝ Float where
   norm_smul_le := sorry_proof

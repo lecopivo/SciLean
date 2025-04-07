@@ -14,6 +14,9 @@ set_default_scalar Float
   rewrite_by
     lsimp -zeta only [simp_core, ↓vecFwdFDeriv_simproc]
 
+-- todo: make these instances general
+instance {I nI} [IndexType I nI]  : SMul Floatᵐᵒᵖ (Float^[I]) := ⟨fun x v => x.1 • v⟩
+instance {I nI} [IndexType I nI]  : Star (Float^[I]) := ⟨fun x => x⟩
 
 /--
 info: fun x dx => (‖x‖₂², vecMatMulAdd 2 x dx 0 0) : Float^[3] → Float^[3, 3] → Float × Float^[3]

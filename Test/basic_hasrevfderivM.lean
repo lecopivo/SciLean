@@ -34,7 +34,8 @@ info: HasRevFDeriv ℝ
            let mut x := x
            x := x * x
            x := x * exp (exp x)
-           return x) _) rewrite_by data_synth; lsimp
+           return x) _)
+  rewrite_by data_synth; lsimp
 
 
 -- bug in data synth

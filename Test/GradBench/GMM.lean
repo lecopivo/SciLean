@@ -165,9 +165,9 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
                   let dxi := dxi[i];
                   let dx₁ := dx.2;
                   let dx₂ := dx.1;
-                  let xi := dx₁[{ val := d.toUSize * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }];
+                  let xi := dx₁[{ val := USize.ofNat d * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }];
                   let x :=
-                    setElem dx₁ { val := d.toUSize * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }
+                    setElem dx₁ { val := USize.ofNat d * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }
                       (xi + dxi) True.intro;
                   (dx₂, x);
           let dy := dx_2.1;

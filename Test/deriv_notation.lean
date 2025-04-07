@@ -140,6 +140,7 @@ set_default_scalar K
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -148,17 +149,9 @@ Additional diagnostic information may be available using the `set_option diagnos
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
----
-error: ❌️ Docstring on `#guard_msgs` does not match generated message:
 
-error: failed to synthesize
-  TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
-#guard_msgs in
-
-/-- info: fun x => (0, 1) : K × K → K × K -/
 #guard_msgs in
 #check ∇! x : (K×K), x.2
 
@@ -167,6 +160,7 @@ variable (y : K × K)
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -179,6 +173,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -187,6 +182,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -195,6 +191,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 /--
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -217,6 +214,7 @@ set_default_scalar Float
 /--
 error: failed to synthesize
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
@@ -225,6 +223,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 /--
 error: failed to synthesize
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
+
 Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
