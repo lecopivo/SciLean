@@ -53,6 +53,13 @@ instance [HasRnEquiv X K R] : Module R (X^[I]) := by infer_instance
 instance [HasRnEquiv X K R] : TopologicalSpace (X^[I]) := by infer_instance
 
 
+-- TODO: change definitino of `AdjointSpace` to require `SMul (Rᵐᵒᵖ) X` and
+--       complex conjugation fow which I use `Star X` right now but it is not a good choice
+--       as it would clash with conjugate-transpose for matrices
+instance [HasRnEquiv X K R] : SMul (Rᵐᵒᵖ) (X^[I]) := ⟨fun r x => r.1•x⟩
+instance [HasRnEquiv X K R] : Star (X^[I]) := ⟨fun x => x⟩
+
+
 instance [HasRnEquiv X K R] : Axpby R (X^[I]) where
   axpby a x b y :=
     let data := BLAS.LevelOneDataExt.axpby nI a (toRn x).1 0 1 b (toRn y).1 0 1
