@@ -1,6 +1,5 @@
 import SciLean.Data.FinProd
 import SciLean.Data.ListN
-import SciLean.Data.ArrayN
 import SciLean.Data.DataArray
 import Mathlib.Tactic.Ring
 import SciLean.Tactic.CompiledTactics
@@ -10,32 +9,32 @@ namespace SciLean
 /-- Dimensions of rank `r` tensor `#[d₁,...,dᵣ]'`.
 
 Each dimension has indices in the range `0,...,dᵢ-1` -/
-abbrev Dims (rank : ℕ) := ArrayN ℤ rank
+abbrev Dims (rank : ℕ) := Vector ℤ rank
 
 /-- Dimensions of rank `r` tensor `#[(a₁,b₁),...,(aᵣ,bᵣ)]'`.
 
 Each dimension has indices in the range `-aᵢ,...,bᵢ` -/
-abbrev DimsI (rank : ℕ) := ArrayN (ℤ×ℤ) rank
+abbrev DimsI (rank : ℕ) := Vector (ℤ×ℤ) rank
 
 /-- Padding of rank `r` tensor `#[(l₁,h₁),...,(lᵣ,hᵣ)]'`
 
 Tensors dimensions are padded to yiled
   - `-lᵢ,...,dᵢ+hᵢ-1`
   - `aᵢ-lᵢ,...,bᵢ+hᵢ` -/
-abbrev Padding (rank : ℕ) := ArrayN (ℤ×ℤ) rank
+abbrev Padding (rank : ℕ) := Vector (ℤ×ℤ) rank
 
 
 /-- Tensor index of rank `r` tensor with dimensions `dims := #[d₁,...,dᵣ]'`. -/
 @[ext]
 structure TensorIndex {r} (dims : Dims r) where
-  val : ArrayN ℤ r
+  val : Vector ℤ r
   bounds : ∀ (i : Fin r), 0 ≤ val[i] ∧ val[i] < dims[i]
 
 
 /-- Tensor index of rank `r` tensor with dimensions `dims := #[(a₁,b₁),...,(aᵣ,bᵣ)]'`. -/
 @[ext]
 structure TensorIndexI {r} (dims : DimsI r) where
-  val : ArrayN ℤ r
+  val : Vector ℤ r
   bounds : ∀ (i : Fin r), dims[i].1 ≤ val[i] ∧ val[i] ≤ dims[i].2
 
 instance {r} {dim : Dims r} : GetElem (TensorIndex dim) (Fin r) ℤ (fun _ _ => True) where
@@ -269,8 +268,8 @@ def TensorIndexI.convMap' {kerDim : DimsI r}
 #eval ({1,2,3} : Finset ℕ).card
 
 
-def ArrayN.removeIds {n α} (a : ArrayN α n) (ids : Finset (Fin n))
-    {m} (h : m = n - ids.card := by (try simp); (try infer_var)) : ArrayN α m :=
+def Vector.removeIds {n α} (a : Vector α n) (ids : Finset (Fin n))
+    {m} (h : m = n - ids.card := by (try simp); (try infer_var)) : Vector α m :=
 {
   data :=
     let d := ids.map ⟨fun i => i.1, by intro i; aesop⟩
@@ -351,36 +350,36 @@ def DimMap.indexMap {r} (map : DimMap r) (dims : Dims (r+2))
 
 section ArraNMissing
 
-instance : HMul (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi * y[i]⟩
-instance : HDiv (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
-instance : HMod (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
--- instance : HAdd (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi + y[i]⟩
--- instance : HSub (ArrayN ℤ n) (ArrayN ℕ+ n) (ArrayN ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi - y[i]⟩
+instance : HMul (Vector ℤ n) (Vector ℕ+ n) (Vector ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi * y[i]⟩
+instance : HDiv (Vector ℤ n) (Vector ℕ+ n) (Vector ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
+instance : HMod (Vector ℤ n) (Vector ℕ+ n) (Vector ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
+-- instance : HAdd (Vector ℤ n) (Vector ℕ+ n) (Vector ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi + y[i]⟩
+-- instance : HSub (Vector ℤ n) (Vector ℕ+ n) (Vector ℤ n) := ⟨fun x y => x.mapIdx fun i xi => xi - y[i]⟩
 
-instance [Sup α] : Sup (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi ⊔ y[i]⟩
-instance [Mod α] : Mod (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
-instance [Div α] : Div (ArrayN α r) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
+instance [Sup α] : Sup (Vector α r) := ⟨fun x y => x.mapIdx fun i xi => xi ⊔ y[i]⟩
+instance [Mod α] : Mod (Vector α r) := ⟨fun x y => x.mapIdx fun i xi => xi % y[i]⟩
+instance [Div α] : Div (Vector α r) := ⟨fun x y => x.mapIdx fun i xi => xi / y[i]⟩
 
-def ArrayN.toNat [CoeHTCT α Nat] (x : ArrayN α n) : ArrayN ℕ n := .ofFn fun i => x[i]
-def ArrayN.toInt [CoeHTCT α Int] (x : ArrayN α n) : ArrayN ℤ n := .ofFn fun i => x[i]
+def Vector.toNat [CoeHTCT α Nat] (x : Vector α n) : Vector ℕ n := .ofFn fun i => x[i]
+def Vector.toInt [CoeHTCT α Int] (x : Vector α n) : Vector ℤ n := .ofFn fun i => x[i]
 
-
-@[simp]
-theorem ArrayN.hmul_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul, ArrayN.mapIdx]
 
 @[simp]
-theorem ArrayN.hdiv_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv, ArrayN.mapIdx]
+theorem Vector.hmul_apply (x : Vector ℤ n) (y : Vector ℕ+ n) (i : Fin n) :
+    (x * y)[i] = x[i] * y[i] := by simp[HMul.hMul, Vector.mapIdx]
 
 @[simp]
-theorem ArrayN.hmod_apply (x : ArrayN ℤ n) (y : ArrayN ℕ+ n) (i : Fin n) :
-    (x % y)[i] = x[i] % y[i] := by simp[HMod.hMod, ArrayN.mapIdx]
+theorem Vector.hdiv_apply (x : Vector ℤ n) (y : Vector ℕ+ n) (i : Fin n) :
+    (x / y)[i] = x[i] / y[i] := by simp[HDiv.hDiv, Vector.mapIdx]
+
+@[simp]
+theorem Vector.hmod_apply (x : Vector ℤ n) (y : Vector ℕ+ n) (i : Fin n) :
+    (x % y)[i] = x[i] % y[i] := by simp[HMod.hMod, Vector.mapIdx]
 
 @[simp]
 def Dims.rank {r} (dims : Dims r) : ℕ := r
 @[simp]
-def _root_.SciLean.ArrayN.size {n α} (a : ArrayN α n) : ℕ := n
+def _root_.SciLean.Vector.size {n α} (a : Vector α n) : ℕ := n
 
 
 end ArraNMissing

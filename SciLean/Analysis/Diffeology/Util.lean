@@ -1,4 +1,3 @@
--- import SciLean.Data.ArrayN
 import SciLean.Analysis.Calculus.ContDiff
 
 namespace SciLean.Diffeology.Util

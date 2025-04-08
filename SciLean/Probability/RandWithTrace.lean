@@ -1,6 +1,5 @@
 import SciLean.Tactic.InferVar
 import SciLean.Util.RewriteBy
-import SciLean.Data.ArrayN
 
 import SciLean.Probability.Rand
 import SciLean.Probability.Distributions.Flip
@@ -27,7 +26,7 @@ def Trace.type : (trace : Trace) → Type
   | .nil => Unit
   | .single n T => T
   | .pair t s => t.type × s.type
-  | .array t n => ArrayN t.type n -- {a : Array t.type // a.size = n}
+  | .array t n => Vector t.type n -- {a : Array t.type // a.size = n}
 
 def Trace.tags : (trace : Trace) → List Name
   | .nil => []
@@ -153,7 +152,7 @@ open MeasureTheory
 
 
 def forLoop (f : Nat → X → RandWithTrace X t T) (init : X) (n : Nat) :
-    RandWithTrace X (.array t n) (ArrayN T n) where
+    RandWithTrace X (.array t n) (Vector T n) where
   rand := do
     let mut x := init
     for i in [0:n] do

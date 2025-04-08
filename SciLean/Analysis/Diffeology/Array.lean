@@ -7,7 +7,6 @@ import SciLean.Analysis.Diffeology.ArrayTangentSpace
 
 import SciLean.Analysis.Calculus.ContDiff
 import SciLean.Algebra.IsLinearMap
-import SciLean.Data.ArrayN
 import SciLean.Tactic.IfPull
 
 namespace SciLean

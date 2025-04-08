@@ -1,6 +1,5 @@
 -- import SciLean.Algebra
 import SciLean.Data.FinProd
-import SciLean.Data.ArrayN
 import SciLean.Data.DataArray
 import SciLean.Data.Mesh.PrismRepr
 
@@ -270,7 +269,7 @@ def listProd (Ps : List (Prism × Nat)) : Prism :=
     | (P, n+1) :: Ps => P.1 * prod ((P,n) :: Ps)
   ⟨prod Ps |>.toCanonical, by simp⟩
 
-def primePowers (P : Prism) : ArrayN Nat (primePrismCumCount P.dim) :=
+def primePowers (P : Prism) : Vector Nat (primePrismCumCount P.dim) :=
   match P with
   -- 0D
   | ⟨.point, _⟩ => ⟨#[], by simp[dim]⟩

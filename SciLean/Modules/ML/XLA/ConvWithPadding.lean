@@ -5,7 +5,6 @@ import SciLean.Tactic.InferVar
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Analysis.Scalar.FloatAsReal
 import SciLean.Data.ArrayType
-import SciLean.Data.ArrayN
 
 namespace SciLean
 
@@ -26,11 +25,11 @@ macro "tensor_index_bounds" i:term : tactic =>
       · apply ArrayType.le_elemwise; intro d; simp; have := ($i).2 d; omega;
       · apply ArrayType.lt_elemwise; intro d; simp; have := ($i).2 d; omega))
 
-instance {r} {dim : Dims r} : GetElem (DataArrayN R (TensorIndex dim)) (ArrayN ℤ r) R (fun _ i => 0 ≤ i ∧ i < dim) where
+instance {r} {dim : Dims r} : GetElem (DataArrayN R (TensorIndex dim)) (Vector ℤ r) R (fun _ i => 0 ≤ i ∧ i < dim) where
   getElem x i h := x[⟨i, by intro d; have h1 := h.1 d; have h2 := h.2 d; simp_all⟩]
 
 @[fun_prop]
-theorem getElem_clm {r} {dim : Dims r} (i : ArrayN ℤ r) (h : 0 ≤ i ∧ i < dim) :
+theorem getElem_clm {r} {dim : Dims r} (i : Vector ℤ r) (h : 0 ≤ i ∧ i < dim) :
     IsContinuousLinearMap R (fun x : DataArrayN R (TensorIndex dim) => x[i]'h) := sorry
 
 macro "reduce_dim" : tactic => `(tactic|
@@ -38,7 +37,7 @@ macro "reduce_dim" : tactic => `(tactic|
 
 
 def convWithPadding {spDims kerDims : Dims r}
-    (x : R^[TensorIndex spDims]) (y : R^[TensorIndex kerDims]) (low high : ArrayN ℤ r)
+    (x : R^[TensorIndex spDims]) (y : R^[TensorIndex kerDims]) (low high : Vector ℤ r)
     {outDim : Dims r} (houtDim : outDim = (spDims - kerDims + low + high + 1):= by reduce_dim) :
     R^[TensorIndex outDim] :=
   ⊞ (i : TensorIndex outDim) =>
@@ -53,7 +52,7 @@ def convWithPadding {spDims kerDims : Dims r}
 
 @[fun_trans]
 theorem convWithPadding.arg_y.adjoint_rule {r} {spDims kerDims : Dims r}
-    (x : R^[TensorIndex spDims]) (l h : ArrayN ℤ r)
+    (x : R^[TensorIndex spDims]) (l h : Vector ℤ r)
     {outDim : Dims r} (houtDim : outDim = (spDims - kerDims + l + h + 1)) :
     (adjoint R (fun (y : R^[TensorIndex kerDims]) => convWithPadding x y l h houtDim))
     =
@@ -102,7 +101,7 @@ def rev {r} {dim : Dims r} (x : R^[TensorIndex dim]) :
 
 @[fun_trans]
 theorem convWithPadding.arg_x.adjoint_rule {r} {spDims kerDims : Dims r}
-    (y : R^[TensorIndex kerDims]) (l h : ArrayN ℤ r)
+    (y : R^[TensorIndex kerDims]) (l h : Vector ℤ r)
     {outDim : Dims r} (houtDim : outDim = (spDims - kerDims + l + h + 1)) :
     (adjoint R (fun (x : R^[TensorIndex spDims]) => convWithPadding x y l h houtDim))
     =

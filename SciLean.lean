@@ -316,7 +316,6 @@ import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.old.VariationalCalculus.Examples
 -- import SciLean.Core_old.old.Vec
 import SciLean.Data.ArrayLike
-import SciLean.Data.ArrayN
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
 import SciLean.Data.ArrayOperations.Operations

@@ -24,7 +24,7 @@ def IsOdeSolution (f : R → X → X) (t₀ : R) (x₀ : X) (x : R → X) : Prop
 structure HasOdeSolution (f : R → X → X) : Prop where
   ex : ∀ t₀ x₀, ∃ x, IsOdeSolution f t₀ x₀ x
 
-structure HasUniqueOdeSolution (f : R → X → X) extends HasOdeSolution f : Prop where
+structure HasUniqueOdeSolution (f : R → X → X) : Prop extends HasOdeSolution f where
   uniq : ∀ t₀ x₀ x x', IsOdeSolution f t₀ x₀ x → IsOdeSolution f t₀ x₀ x' → x = x'
 
 open Classical in

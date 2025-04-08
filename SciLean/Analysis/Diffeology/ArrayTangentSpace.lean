@@ -3,7 +3,6 @@ import SciLean.Analysis.Diffeology.TangentSpace
 import SciLean.Analysis.Diffeology.VecDiffeology
 import SciLean.Analysis.Diffeology.Option
 import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Data.ArrayN
 import SciLean.Util.RewriteBy
 
 namespace SciLean

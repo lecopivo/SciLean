@@ -6,13 +6,13 @@ namespace SciLean
 
 section FwdFDerivMonad
 
+
 variable
   {K : Type} [RCLike K]
   {m : Type → Type} {m' : outParam $ Type → Type} [Monad m] [Monad m']
   [DifferentiableMonad K m] [FwdFDerivMonad K m m']
   [LawfulMonad m] [LawfulMonad m']
 
-#exit -- some panic
 noncomputable
 instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
     DifferentiableMonad K (StateT S m) where
@@ -27,13 +27,13 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
   DifferentiableM_bind f g hf hg :=
     by
       simp; simp at hf; simp at hg
-      simp[bind, StateT.bind, StateT.bind.match_1]
+      simp[bind, StateT.bind]
       fun_prop
 
   DifferentiableM_pair f hf :=
     by
       simp; simp at hf
-      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure, Functor.map]
+      simp[bind, StateT.bind, pure, StateT.pure, Functor.map]
       simp only [StateT.map]
       fun_prop
 
@@ -59,14 +59,14 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
     by
       funext x dx sds
       simp [DifferentiableM] at hf; simp [DifferentiableM] at hg
-      simp[fwdFDeriv, bind, StateT.bind, StateT.bind.match_1]
+      simp[fwdFDeriv, bind, StateT.bind]
       fun_trans
 
   fwdFDerivM_pair f hf :=
     by
       funext x dx sds
       simp [DifferentiableM] at hf
-      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure, Functor.map]
+      simp[bind, StateT.bind, pure, StateT.pure, Functor.map]
       fun_trans only
       simp
 
@@ -216,7 +216,7 @@ instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] 
     by
       funext x s
       simp [DifferentiableM] at hf; simp [DifferentiableM] at hg
-      simp[revFDeriv, bind, StateT.bind, StateT.bind.match_1, StateT.pure, pure,Functor.map]
+      simp[revFDeriv, bind, StateT.bind, StateT.pure, pure,Functor.map]
       fun_trans
       rfl
 
@@ -224,7 +224,7 @@ instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] 
     by
       funext x s
       simp [DifferentiableM] at hf
-      simp[bind, StateT.bind, StateT.bind.match_1, pure, StateT.pure]
+      simp[bind, StateT.bind, pure, StateT.pure]
       fun_trans only
       simp
       congr; funext ysdf; congr; funext (dx,dy) ds; simp only [← bind_pure_comp]

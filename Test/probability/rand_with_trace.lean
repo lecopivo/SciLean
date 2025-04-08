@@ -30,7 +30,7 @@ def tt :=
 /--
 info: tt :
   RandWithTrace Float ((Trace.single `v1 Float ++ Trace.nil).array 50 ++ (Trace.single `y Float ++ Trace.nil))
-    (ArrayN (Float × Unit) 50 × Float × Unit)
+    (Vector (Float × Unit) 50 × Float × Unit)
 -/
 #guard_msgs in
 #check tt
