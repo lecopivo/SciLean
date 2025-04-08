@@ -10,40 +10,87 @@ Lean is an expressive functional programming language that allows to formalize t
 - Catalogization of numerical methods.
 
   In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerful and extensible library for scientific computing.
-  
-# Documentation
 
-Manual:
-- [Scientific Computing in Lean](https://lecopivo.github.io/scientific-computing-lean/)
-  
-  Working in progress book on scientific computing in Lean.
 
-Presentations:
-- [Automatic Differentiation in Lean - Lean Together 2024](https://www.youtube.com/watch?v=Kjx5KvB8FL8)(30min)
+## Documentation
 
-  Overview and motivation behind automatic differentiation in Lean, examples of forward and reverse mode AD.
-- [Scientific Computing in Lean - Lean for Scientists and Engineers 2024](https://umbc.webex.com/umbc/ldr.php?RCID=fdb070fac47f174fcecf60a96960eacc)(2h)
+### Manual
+- [Scientific Computing in Lean](https://lecopivo.github.io/scientific-computing-lean/)  
+  _A work-in-progress book on scientific computing in Lean._
 
-  Overview and motivation behind SciLean, working with n-dimensional arrays and symbolic/automatic differentiation.
-  
-# Installation and running examples/tests
+### Presentations
+- [Automatic Differentiation in Lean – Lean Together 2024 (30min)](https://www.youtube.com/watch?v=Kjx5KvB8FL8)  
+  Motivation and examples of forward and reverse mode AD in Lean.
 
-As we are using Lean programming language, you need Lean's version manager =elan=. Follow its installation [instructions](https://github.com/leanprover/elan#installation).
+- [Scientific Computing in Lean – Lean for Scientists and Engineers 2024 (2h)](https://www.youtube.com/watch?v=X1oEV5SsFJ8)  
+  Overview of SciLean, n-dimensional arrays, symbolic computation, and automatic differentiation.
 
-Getting and building SciLean simply:
-```
+- [Scientific Computing in Lean – Seminar at Cambridge University (09 May 2024)](https://www.youtube.com/watch?v=O12SZqIwYCk)  
+  Covers optimization through differential equations, basic probabilistic programming, and the Walk on Spheres algorithm.
+
+
+## Using SciLean
+
+### Prerequisites
+
+SciLean relies on **OpenBLAS** for accelerating numerical computations.  
+You’ll need to have it installed on your system:
+
+- **Ubuntu**:
+  ```bash
+  sudo apt-get install libopenblas-dev
+  ```
+- **macOS**:
+  ```bash
+  brew install openblas
+  ```
+- **Windows**: Currently not officially supported.
+
+
+### Building SciLean
+
+Clone and build the library with:
+
+```bash
 git clone https://github.com/lecopivo/SciLean.git
 cd SciLean
 lake exe cache get
 lake build
 ```
 
-To run examples:
-```
-lake build HarmonicOscillator && .lake/build/bin/HarmonicOscillator
-lake build WaveEquation && .lake/build/bin/WaveEquation 
-```
-Other examples in =examples= directory do not currently work.
 
+### Setting Up Your Project with SciLean
 
-To get an idea how SciLean works have a look at explanation of the harmonic oscillator [example](https://lecopivo.github.io/scientific-computing-lean/Examples/Harmonic-Oscillator/#Scientific-Computing-in-Lean--Examples--Harmonic-Oscillator).
+To use `SciLean` in your own Lean project:
+
+1. Add a `require` statement for `scilean`.
+2. Set `moreLinkArgs` to point to your OpenBLAS library.
+
+Here’s an example `lakefile.lean` for a project named `foo`:
+
+```lean
+import Lake
+open Lake DSL System
+
+def linkArgs :=
+  if System.Platform.isWindows then
+    panic! "Windows is not supported!"
+  else if System.Platform.isOSX then
+    #["-L/opt/homebrew/opt/openblas/lib", "-L/usr/local/opt/openblas/lib", "-lblas"]
+  else -- Linux
+    #["-L/usr/lib/x86_64-linux-gnu/", "-lblas", "-lm"]
+
+package foo {
+  moreLinkArgs := linkArgs
+}
+
+require leanblas from git "https://github.com/lecopivo/SciLean" @ "v4.18.0"
+
+@[default_target]
+lean_lib Foo {
+  roots := #[`Foo]
+}
+```
+
+> **Note:** If your project uses `mathlib`, ensure compatibility with the `scilean` version. Alternatively, omit the explicit `mathlib` requirement, SciLean brings in a compatible version as a transitive dependency.
+
