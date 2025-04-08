@@ -456,7 +456,6 @@ import SciLean.Lean.Expr
 import SciLean.Lean.HashMap
 import SciLean.Lean.MergeMapDeclarationExtension
 import SciLean.Lean.Meta.Basic
-import SciLean.Lean.Meta.LiftLets
 import SciLean.Lean.Meta.Replace
 import SciLean.Lean.Meta.Structure
 import SciLean.Lean.Meta.Uncurry
