@@ -213,15 +213,17 @@ instance : RealScalar Float where
   isInf x := x.isInf
   isFinite x := x.isFinite
 
-  le_total := by sorry_proof
-  decidableLE := inferInstance
-  decidableEq := inferInstance
-  decidableLT := inferInstance
+  order := {
+    le_total := by sorry_proof
+    decidableLE := inferInstance
+    decidableEq := inferInstance
+    decidableLT := inferInstance
 
-  min_def := by sorry_proof
-  max_def := by sorry_proof
-  compare x y := compare x y
-  compare_eq_compareOfLessAndEq := by sorry_proof
+    min_def := by sorry_proof
+    max_def := by sorry_proof
+    compare x y := compare x y
+    compare_eq_compareOfLessAndEq := by sorry_proof
+  }
 
 
 open ComplexConjugate

@@ -25,28 +25,9 @@ package scilean {
 }                               --
 
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.18.0"
-require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.18.0"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.19.0-rc2"
+require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.19.0-rc2"
 
-
-@[default_target]
-lean_lib SciLean {
-  roots := #[`SciLean]
-}
-
-@[test_driver]
-lean_lib Test {
-  globs := #[Glob.submodules `Test]
-}
-
--- Files that should be compile, either to get fast tactic or to make FFI functions work in editor
-lean_lib CompiledFiles where
-  precompileModules := true
-  roots := #[--`SciLean.Tactic.LSimp.LetNormalize,
-             --`SciLean.Tactic.CompiledTactics,
-             `SciLean.Data.FloatExtern,
-             `SciLean.Data.FloatArray,
-             `SciLean.Data.ByteArray]
 
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
@@ -59,7 +40,31 @@ extern_lib libscileanc pkg := do
       let weakArgs := #["-I", (← getLeanIncludeDir).toString]
       oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC", "-O3", "-DNDEBUG"] "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
-  buildStaticLib (pkg.nativeLibDir / name) oFiles
+  buildStaticLib (pkg.sharedLibDir / name) oFiles
+
+
+-- Files that should be compiled, either to get fast tactic or to make FFI functions work in editor
+lean_lib CompiledFiles where
+  precompileModules := true
+  roots := #[--`SciLean.Tactic.LSimp.LetNormalize,
+             --`SciLean.Tactic.CompiledTactics,
+             `SciLean.Data.FloatExtern,
+             `SciLean.Data.FloatArray,
+             `SciLean.Data.ByteArray]
+
+
+
+
+@[default_target]
+lean_lib SciLean {
+  roots := #[`SciLean]
+}
+
+@[test_driver]
+lean_lib Test {
+  globs := #[Glob.submodules `Test]
+}
+
 
 
 

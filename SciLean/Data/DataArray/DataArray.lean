@@ -90,9 +90,9 @@ def DataArray.capacity (arr : DataArray α) : Squash Nat := Quot.mk _ (pd.capaci
   --     arr' := arr'.set ⟨i.1,sorry_proof⟩ (arr.get i)
   --   arr'
 
-def DataArray.mkEmpty (capacity : Nat) : DataArray α := Id.run do
+def DataArray.emptyWithCapacity (capacity : Nat) : DataArray α := Id.run do
   let newBytes := pd.bytes capacity
-  { byteData := .mkEmpty newBytes
+  { byteData := .emptyWithCapacity newBytes
     h_size := by sorry_proof }
 
 def DataArray.mkZero (n : Nat) : DataArray α := Id.run do
@@ -288,7 +288,7 @@ instance {ι α : Type*} {n} [IndexType ι n] [pd : PlainDataType α] :
 
     fromByteArray := λ b i h =>
       let N := pd.bytes n
-      let bi := b.copySlice (i.toNat) (ByteArray.mkEmpty N) 0 N
+      let bi := b.copySlice (i.toNat) (ByteArray.emptyWithCapacity N) 0 N
       ⟨⟨bi,sorry_proof⟩,sorry_proof⟩
     toByteArray   := λ b i h c => Id.run do
       let N := pd.bytes n
@@ -382,7 +382,7 @@ def DataArrayN.row (x : X^[I,J]) (i : I) := x.curry[i]
 
 def DataArrayN.col (x : X^[I,J]) (j : J) : X^[I] := Id.run do
   let xdata := x.1.1
-  let mut data := ByteArray.mkEmpty (pd.bytes nI)
+  let mut data := ByteArray.emptyWithCapacity (pd.bytes nI)
   let offset := (toIdx j).1
   let width := (pd.bytes 1).toUSize
   let stride := (pd.bytes nJ).toUSize

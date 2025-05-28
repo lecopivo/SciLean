@@ -26,15 +26,12 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
 
   DifferentiableM_bind f g hf hg :=
     by
-      simp; simp at hf; simp at hg
       simp[bind, StateT.bind]
       fun_prop
 
   DifferentiableM_pair f hf :=
     by
-      simp; simp at hf
       simp[bind, StateT.bind, pure, StateT.pure, Functor.map]
-      simp only [StateT.map]
       fun_prop
 
 

@@ -45,7 +45,7 @@ instance [Add X] : Add (Vector X n) := ⟨fun x y => x.mapFinIdx fun i xi _ => x
 instance [Sub X] : Sub (Vector X n) := ⟨fun x y => x.mapFinIdx fun i xi _ => xi - y[i]⟩
 instance [Neg X] : Neg (Vector X n) := ⟨fun x => x.map fun xi => -xi⟩
 instance [SMul R X] : SMul R (Vector X n) := ⟨fun r x => x.map fun xi => r • xi⟩
-instance [Zero X] : Zero (Vector X n) := ⟨⟨Array.mkArray n (0:X), by simp⟩⟩
+instance [Zero X] : Zero (Vector X n) := ⟨⟨Array.replicate n (0:X), by simp⟩⟩
 
 @[simp, simp_core]
 theorem Vector.getElem_add [Add X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x + y)[i] = x[i] + y[i] := by

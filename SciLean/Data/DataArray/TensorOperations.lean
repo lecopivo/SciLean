@@ -43,20 +43,20 @@ def sumMiddleR (x : R^[I,J,K]) : R^[I,K] := Id.run do
 
 variable (I) in
 def replicateRowR (r : R^[J]) : R^[I,J] :=
-  let data : DataArray R := DataArray.mkEmpty (nI*nJ)
+  let data : DataArray R := DataArray.emptyWithCapacity (nI*nJ)
   ⟨data.pushArray r.1 nI, sorry_proof⟩
 
 
 variable (J) in
 def replicateColR (r : R^[I]) : R^[I,J] := Id.run do
-  let mut data : DataArray R := DataArray.mkEmpty (nI*nJ)
+  let mut data : DataArray R := DataArray.emptyWithCapacity (nI*nJ)
   for i in fullRange I do
     data := data.push r[i] nJ
   ⟨data, sorry_proof⟩
 
 variable (J) in
 def replicateMiddleR (x : R^[I,K]) : R^[I,J,K] := Id.run do
-  let mut data : DataArray R := DataArray.mkEmpty (nI*nJ*nK)
+  let mut data : DataArray R := DataArray.emptyWithCapacity (nI*nJ*nK)
   for i in fullRange I do
     -- TODO: fix this! it is slow! we make copies of `x`'s rows
     data := data.pushArray (x.curry[i]).1 nJ

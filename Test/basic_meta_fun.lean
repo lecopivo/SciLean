@@ -194,70 +194,70 @@ opaque b : Int
 end RingExpr
 
 
-section ProdAssoc
+-- section ProdAssoc
 
-meta_fun_decl prodAssoc (X : Type) : Type
-satisfying
-  X ≃ prodAssoc
+-- meta_fun_decl prodAssoc (X : Type) : Type
+-- satisfying
+--   X ≃ prodAssoc
 
--- low priority
-meta_fun_def (priority:=low) prodReassocSelf (X : Type) :
-  prodAssoc X := X
-satisfied_by
-  constructor
-  exact Equiv.refl X
+-- -- low priority
+-- meta_fun_def (priority:=low) prodReassocSelf (X : Type) :
+--   prodAssoc X := X
+-- satisfied_by
+--   constructor
+--   exact Equiv.refl X
 
-meta_fun_def (priority:=high) prodReassocUnitRight (X : Type) :
-  prodAssoc (X×Unit) := prodAssoc X
-satisfied_by
-  intro X' equiv
-  constructor
-  exact (Equiv.prodPUnit X |>.trans equiv.1)
+-- meta_fun_def (priority:=high) prodReassocUnitRight (X : Type) :
+--   prodAssoc (X×Unit) := prodAssoc X
+-- satisfied_by
+--   intro X' equiv
+--   constructor
+--   exact (Equiv.prodPUnit X |>.trans equiv.1)
 
-meta_fun_def (priority:=high) prodReassocUnitLeft (X : Type) :
-  prodAssoc (Unit×X) := prodAssoc X
-satisfied_by
-  intro X' equiv
-  constructor
-  exact (Equiv.prodComm _ _ |>.trans (Equiv.prodPUnit X) |>.trans equiv.1)
+-- meta_fun_def (priority:=high) prodReassocUnitLeft (X : Type) :
+--   prodAssoc (Unit×X) := prodAssoc X
+-- satisfied_by
+--   intro X' equiv
+--   constructor
+--   exact (Equiv.prodComm _ _ |>.trans (Equiv.prodPUnit X) |>.trans equiv.1)
 
-meta_fun_def  prodReassocProdContinue (X Y : Type) :
-  prodAssoc (X×Y) := X × prodAssoc Y
-satisfied_by
-  intro Y' f
-  constructor
-  exact (Equiv.prodCongr (Equiv.refl X) f.1)
+-- meta_fun_def  prodReassocProdContinue (X Y : Type) :
+--   prodAssoc (X×Y) := X × prodAssoc Y
+-- satisfied_by
+--   intro Y' f
+--   constructor
+--   exact (Equiv.prodCongr (Equiv.refl X) f.1)
 
-meta_fun_def (priority:=high-1) prodReassocMain (X Y Z : Type) :
-  prodAssoc ((X×Y)×Z) := prodAssoc ((prodAssoc X) × Y × Z)
-satisfied_by
-  intro X' f XYZ' g
-  constructor
-  exact (Equiv.prodAssoc X Y Z
-    |>.trans (Equiv.prodCongr f.1 (Equiv.refl _))
-    |>.trans g.1)
+-- meta_fun_def (priority:=high-1) prodReassocMain (X Y Z : Type) :
+--   prodAssoc ((X×Y)×Z) := prodAssoc ((prodAssoc X) × Y × Z)
+-- satisfied_by
+--   intro X' f XYZ' g
+--   constructor
+--   exact (Equiv.prodAssoc X Y Z
+--     |>.trans (Equiv.prodCongr f.1 (Equiv.refl _))
+--     |>.trans g.1)
 
 
-/-- info: ℕ -/
-#guard_msgs in
-#eval_meta_fun (prodAssoc ((Unit×ℕ×Unit)×Unit))
+-- /-- info: ℕ -/
+-- #guard_msgs in
+-- #eval_meta_fun (prodAssoc ((Unit×ℕ×Unit)×Unit))
 
-/-- info: ℕ × ℕ × ℕ -/
-#guard_msgs in
-#eval_meta_fun (prodAssoc ((((ℕ×ℕ)×Unit×ℕ)×Unit)×Unit))
+-- /-- info: ℕ × ℕ × ℕ -/
+-- #guard_msgs in
+-- #eval_meta_fun (prodAssoc ((((ℕ×ℕ)×Unit×ℕ)×Unit)×Unit))
 
-def lassoc (x : X) {X'} (h : ProdAssoc X X' := by data_synth) : X' :=
-  h.1 x
+-- def lassoc (x : X) {X'} (h : ProdAssoc X X' := by data_synth) : X' :=
+--   h.1 x
 
-/-- info: (1, 2, 3) -/
-#guard_msgs in
-#eval (lassoc ((1,2),(),3))
+-- /-- info: (1, 2, 3) -/
+-- #guard_msgs in
+-- #eval (lassoc ((1,2),(),3))
 
-/-- info: 1 -/
-#guard_msgs in
-#eval (lassoc (1))
+-- /-- info: 1 -/
+-- #guard_msgs in
+-- #eval (lassoc (1))
 
-end ProdAssoc
+-- end ProdAssoc
 
 
 

@@ -8,7 +8,6 @@ https://github.com/GeometryCollective/geometry-processing-js/blob/c7ea47ae808979
 -/
 
 import SciLean.Data.DataArray.FloatN
-import Lean.Data.HashMap
 
 open Lean Data
 

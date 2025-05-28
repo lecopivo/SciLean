@@ -123,7 +123,7 @@ instance (priority:=low+1) instStrucTypePiSimple
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by
-    intro i i'; intros _ _ H; simp
+    intro i i'; intros _ _ H
     if h: i' = i then
       simp [h] at H
     else
@@ -162,7 +162,7 @@ instance instStrucTypeArrowSimple
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by
-    intro j j' f x H; simp
+    intro j j' f x H
     if h: j' = j then
       simp [h] at H
     else

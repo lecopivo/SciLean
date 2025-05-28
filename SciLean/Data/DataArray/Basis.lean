@@ -13,7 +13,7 @@ instance (priority:=high) : CanonicalBasis I R (R^[I]) where
   dualBasis i := setElem (0 : R^[I]) i 1 .intro
   proj i x := x[i]
   dualProj i x := x[i]
-  basis_complete := by intros; ext i; simp[sum_pull]; sorry_proof
+  basis_complete := by intros; ext i; sorry_proof
   proj_basis := by sorry_proof --classical intro i j; by_cases i = j <;> aesop
   dualProj_dualBasis :=  by sorry_proof --classical intro i j; by_cases i = j <;> aesop
   inner_basis_dualBasis := sorry_proof

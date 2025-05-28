@@ -7,7 +7,7 @@ open Lean Meta Qq
 
 /--
 info: fun ij1 y =>
-  let ij0' := fun ij1 => Function.invFun (fun ij0 => ij0 + NatCast.natCast ij1.1) y;
+  let ij0' := fun ij1 => Function.invFun (fun ij0 => ij0 + ↑ij1.1) y;
   let ij0'' := ij0' ij1;
   (ij0'', ij1)
 -/

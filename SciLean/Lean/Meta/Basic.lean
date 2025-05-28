@@ -144,7 +144,7 @@ def mkAppNoTrailingM (constName : Name) (xs : Array Expr) : MetaM Expr := do
   -- number of arguments to apply
   let argCount := explicitArgIds[xs.size]? |>.getD n
 
-  let mut args : Array (Option Expr) := Array.mkArray argCount none
+  let mut args : Array (Option Expr) := Array.replicate argCount none
   for i in [0:xs.size] do
     args := args.set! explicitArgIds[i]! (.some xs[i]!)
 
@@ -203,7 +203,7 @@ def mkProdProj (x : Expr) (i : Nat) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod
 
 
 def mkProdSplitElem (xs : Expr) (n : Nat) (fst := ``Prod.fst) (snd := ``Prod.snd) : MetaM (Array Expr) :=
-  (Array.mkArray n 0)
+  (Array.replicate n 0)
     |>.mapIdx (λ i _ => i)
     |>.mapM (λ i => mkProdProj xs i n fst snd)
 

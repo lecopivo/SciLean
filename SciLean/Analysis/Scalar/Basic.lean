@@ -19,6 +19,7 @@ namespace SciLean
 
 open Classical
 
+
 /-- `K` are real or complex numbers over real numbers `R`
 
 This class allows us to write code independent of particular implementation of real or complex numbers.
@@ -115,7 +116,9 @@ This class allows us to write code independent of particular implementation of r
 
 See `Scalar` for motivation for this class.
 -/
-class RealScalar (R :(Type _)) extends Scalar R R, LinearOrder R where
+class RealScalar (R : Type*) extends Scalar R R where
+  [order : LinearOrder R]
+
   is_real : ∀ x : R, im x = 0
 
   asin (x : R) : R
@@ -126,6 +129,8 @@ class RealScalar (R :(Type _)) extends Scalar R R, LinearOrder R where
 
   atan (x : R) : R
   atan_def : ∀ x, toReal (atan x) = Real.arctan (toReal x)
+
+instance {R : Type*} [RealScalar R] : LinearOrder R := RealScalar.order
 
 def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
 
@@ -282,10 +287,10 @@ noncomputable instance : RealScalar ℝ where
   pow_def := by intros; simp; rfl
 
   abs x := abs x
-  abs_def := by intros; simp; sorry_proof
+  abs_def := by intros; sorry_proof
 
   tgamma x := x.Gamma
-  tgamma_def := by intros; simp; sorry_proof
+  tgamma_def := by intros;sorry_proof
 
   lgamma x := |x.Gamma|.log
   lgamma_def := by intros; simp; sorry_proof
@@ -296,36 +301,7 @@ noncomputable instance : RealScalar ℝ where
   isNaN x := false
   isInf x := false
 
-  le_total := by sorry_proof
-
-  decidableLE x y :=
-    have := Classical.propDecidable
-    if h : x ≤ y then
-      .isTrue h
-    else
-      .isFalse h
-
-  decidableEq x y :=
-    have := Classical.propDecidable
-    if h : x = y then
-      .isTrue h
-    else
-      .isFalse h
-
-  decidableLT x y :=
-    have := Classical.propDecidable
-    if h : x < y then
-      .isTrue h
-    else
-      .isFalse h
-
-  min := fun a b => if a ≤ b then a else b
-  max := fun a b => if a ≤ b then b else a
-  min_def := by sorry_proof
-  max_def := by sorry_proof
-  compare a b := compareOfLessAndEq a b
-  compare_eq_compareOfLessAndEq := by
-    compareOfLessAndEq_rfl
+  order := by infer_instance
 
 
 

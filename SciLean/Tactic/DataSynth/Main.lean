@@ -275,7 +275,7 @@ def isDataSynthGoal? (e : Expr) : MetaM (Option Goal) := do
   let fn := e.getAppFn'
   let args := e.getAppArgs
 
-  let mut outArgs := Array.mkArray args.size false
+  let mut outArgs := Array.replicate args.size false
   for i in dataSynthDecl.outputArgs do
     outArgs := outArgs.set! i true
 
@@ -623,7 +623,7 @@ def compGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g : Expr) : DataSynthM (O
     let info ← getConstInfo thm.thmName
 
     let args : Array (Option Expr) :=
-      Array.mkArray (max gId fId) none |>.set! gId g |>.set! fId f
+      Array.replicate (max gId fId) none |>.set! gId g |>.set! fId f
 
     let (xs, _, statment) ← forallMetaTelescope (← inferType (← thm.getProof))
     try
