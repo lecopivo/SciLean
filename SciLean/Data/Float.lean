@@ -1,6 +1,6 @@
 import Mathlib.Order.Notation
 import Batteries.Lean.Float
-import SciLean.Data.FloatExtern
+import SciLean.FFI.Float
 
 namespace Float
 

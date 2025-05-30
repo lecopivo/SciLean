@@ -7,8 +7,10 @@ import SciLean.AD.HasVecFwdFDeriv
 import SciLean.AD.HasVecRevFDeriv
 import SciLean.AD.RevFDeriv
 import SciLean.AD.Rules.Common
+import SciLean.AD.Rules.DataArrayN.Det
 import SciLean.AD.Rules.DataArrayN.FromRn
 import SciLean.AD.Rules.DataArrayN.Logsumexp
+import SciLean.AD.Rules.DataArrayN.Minor
 import SciLean.AD.Rules.DataArrayN.RSum
 import SciLean.AD.Rules.DataArrayN.Reshape
 import SciLean.AD.Rules.DataArrayN.ScalAdd
@@ -32,7 +34,9 @@ import SciLean.Algebra.IsAddGroupHom
 import SciLean.Algebra.IsAffineMap
 import SciLean.Algebra.IsLinearMap
 import SciLean.Algebra.MatrixType.Basic
+import SciLean.Algebra.TensorProduct.Assoc
 import SciLean.Algebra.TensorProduct.Basic
+import SciLean.Algebra.TensorProduct.Curry
 import SciLean.Algebra.TensorProduct.MatMul
 import SciLean.Algebra.TensorProduct.Pi
 import SciLean.Algebra.TensorProduct.Prod
@@ -40,6 +44,7 @@ import SciLean.Algebra.TensorProduct.ProdMatrix
 import SciLean.Algebra.TensorProduct.ProdMatrixCol
 import SciLean.Algebra.TensorProduct.ProdMatrixRow
 import SciLean.Algebra.TensorProduct.Self
+import SciLean.Algebra.TensorProduct.Swap
 import SciLean.Algebra.TensorProduct.Transpose
 import SciLean.Algebra.TensorProduct.Util
 import SciLean.Algebra.VectorOptimize.Basic
@@ -381,6 +386,7 @@ import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
+import SciLean.Data.FloatExtern
 import SciLean.Data.Function
 import SciLean.Data.Idx
 import SciLean.Data.Idx.Basic
@@ -399,6 +405,7 @@ import SciLean.Data.IndexType.TensorIndex
 import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
+import SciLean.Data.Nat
 import SciLean.Data.Prod
 import SciLean.Data.Random
 import SciLean.Data.SparseMatrix.Basic
@@ -431,12 +438,17 @@ import SciLean.Data.VectorType.Base
 -- import SciLean.Data.VectorType.VectorType_old.Scalar
 -- import SciLean.Data.VectorType.VectorType_old.Subvector
 -- import SciLean.Doodle
+-- import SciLean.Doodle14
 -- import SciLean.Examples.GMM.Main
 -- import SciLean.Examples.GMM.Objective
 -- import SciLean.Examples.GMM.ObjectiveDirect
 -- import SciLean.Examples.GMM.Simps
 -- import SciLean.Examples.GMM.SumSimproc
 -- import SciLean.Examples.GMM.Util
+import SciLean.FFI
+import SciLean.FFI.ByteArray
+import SciLean.FFI.Float
+import SciLean.FFI.FloatArray
 -- import SciLean.Geometry.Bezier
 import SciLean.Geometry.BoundingBall
 import SciLean.Geometry.FrontierSpeed

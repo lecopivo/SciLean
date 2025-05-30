@@ -1,5 +1,4 @@
 import SciLean
-import SciLean.Data.ByteArray
 
 open SciLean
 

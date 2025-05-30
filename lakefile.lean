@@ -29,9 +29,8 @@ require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v
 require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.19.0-rc2"
 
 
-
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
-extern_lib libscileanc pkg := do
+target libscileanc pkg : FilePath := do
   let mut oFiles : Array (Job FilePath) := #[]
   for file in (← (pkg.dir / "C").readDir) do
     if file.path.extension == some "c" then
@@ -43,22 +42,16 @@ extern_lib libscileanc pkg := do
   buildStaticLib (pkg.sharedLibDir / name) oFiles
 
 
--- Files that should be compiled, either to get fast tactic or to make FFI functions work in editor
-lean_lib CompiledFiles where
-  precompileModules := true
-  roots := #[--`SciLean.Tactic.LSimp.LetNormalize,
-             --`SciLean.Tactic.CompiledTactics,
-             `SciLean.Data.FloatExtern,
-             `SciLean.Data.FloatArray,
-             `SciLean.Data.ByteArray]
-
-
-
-
 @[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
+
+-- Files that should be compiled, either to get fast tactic or to make FFI functions work in editor
+lean_lib SciLean.FFI where
+  precompileModules := true
+  moreLinkObjs := #[libscileanc]
+
 
 @[test_driver]
 lean_lib Test {
