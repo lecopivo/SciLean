@@ -70,7 +70,7 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
 
     if let .some _ ← isGTrans? X then
       if let .some prf ← do gtrans X then
-        x.mvarId!.assignIfDefeq prf
+        x.mvarId!.assignIfDefEq prf
         return true
       try
         x.mvarId!.assumption
@@ -81,7 +81,7 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
     if let .some _ ← isClass? X then
       try
         let inst ← synthInstance X
-        x.mvarId!.assignIfDefeq inst
+        x.mvarId!.assignIfDefEq inst
         return true
       catch _ =>
         return false
@@ -91,12 +91,12 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
       trace[Meta.Tactic.gtrans.arg] s!"auto arg tactic {tactic.raw.prettyPrint}"
       let .some prf ← tacticToDischarge ⟨tactic⟩ X.appFn!.appArg! | return false
       if ← isDefEq (← inferType prf) X then
-        x.mvarId!.assignIfDefeq prf
+        x.mvarId!.assignIfDefEq prf
         return true
 
     if let .some prf ← discharge? X then
       if ← isDefEq (← inferType prf) X then
-        x.mvarId!.assignIfDefeq prf
+        x.mvarId!.assignIfDefEq prf
         return true
 
     return false

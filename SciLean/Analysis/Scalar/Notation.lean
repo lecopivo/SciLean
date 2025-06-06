@@ -22,3 +22,24 @@ macro_rules | `(defaultScalar%) => show MacroM (TSyntax `term) from
 
 macro "set_default_scalar" r:term : command =>
   `(local macro_rules | `(defaultScalar%) => do pure (← `($r)).raw)
+
+
+
+∂ (t':=t), ∂ (x':=x t), L t' x'
+
+
+∂ (fun t' => ∂ (fun x' => L t' x') (x t)) t
+
+f : ℝ → ℝ → ℝ
+f : ℝ → ℝ → ℝ
+
+∂ x', f x' y
+∂ y', f x y'
+
+
+∂ᵢ (x':=x), f x' = fderiv ℝ f x (f i)
+
+$$ ∂ f
+
+
+∂ᵢ[ℝ] f = (partialDeriv 𝕜 f · (f (FinEnum.equiv.symm i))

@@ -69,7 +69,7 @@ def synthesizeArgs (thmId : FunProp.Origin) (xs : Array Expr) : SimpM Bool := do
             try
               -- we assign the result at default transparency as we run `fun_prop` at default
               -- transparency, see comment at the function `runFunProp`
-              withDefault <| x.mvarId!.assignIfDefeq r
+              withDefault <| x.mvarId!.assignIfDefEq r
             catch _ =>
               trace[Meta.Tactic.fun_trans.discharge]
                 "{← ppOrigin' thmId}, failed to assign {r} to ({x} : {type})"
@@ -80,7 +80,7 @@ def synthesizeArgs (thmId : FunProp.Origin) (xs : Array Expr) : SimpM Bool := do
           if let .some r ← disch type then
             try
               -- we run this at default transparency just in case too
-              withDefault <| x.mvarId!.assignIfDefeq r
+              withDefault <| x.mvarId!.assignIfDefEq r
             catch _ =>
               trace[Meta.Tactic.fun_trans.discharge]
                 "{← ppOrigin' thmId}, failed to assign {r} to ({x} : {type})"
@@ -146,7 +146,7 @@ def tryTheoremWithHint (e : Expr) (thmOrigin : FunProp.Origin) (hint : Array (Na
 
   try
     for (id,v) in hint do
-      xs[id]!.mvarId!.assignIfDefeq v
+      xs[id]!.mvarId!.assignIfDefEq v
   catch _ =>
     trace[Meta.Tactic.fun_trans.discharge]  "failed to use `{← FunProp.ppOrigin thmOrigin}` on `{e}`"
     return .none

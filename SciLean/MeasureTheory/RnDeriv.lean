@@ -1,4 +1,4 @@
-import Mathlib.MeasureTheory.Decomposition.Lebesgue
+import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
 import Mathlib.MeasureTheory.Measure.Prod
 
 import SciLean.Meta.SimpAttr

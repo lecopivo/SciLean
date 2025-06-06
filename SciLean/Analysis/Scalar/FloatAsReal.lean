@@ -57,16 +57,12 @@ instance : DecidableEq Float := fun x y =>
   then .isTrue sorry_proof
   else .isFalse sorry_proof
 
-instance : LinearOrderedCommRing Float where
+instance : LinearOrder Float where
   le_refl := sorry_proof
   le_trans := sorry_proof
   le_antisymm := sorry_proof
-  add_le_add_left := sorry_proof
-  zero_le_one := sorry_proof
-  mul_pos := sorry_proof
-  mul_comm := sorry_proof
   le_total := sorry_proof
-  decidableLE := fun x y => if h : x≤y then .isTrue h else .isFalse h
+  toDecidableLE := fun x y => if h : x≤y then .isTrue h else .isFalse h
   min := fun a b => if a ≤ b then a else b
   max := fun a b => if a ≤ b then b else a
   min_def := sorry_proof
@@ -78,15 +74,12 @@ instance : LinearOrderedCommRing Float where
   compare_eq_compareOfLessAndEq := sorry_proof
   lt_iff_le_not_le := sorry_proof
 
-instance : LinearOrderedField Float where
-  mul_inv_cancel := sorry_proof
-  inv_zero := sorry_proof
-  div_eq_mul_inv := sorry_proof
-  qsmul q x := (q.num * x) / q.den
-  qsmul_def := sorry_proof
-  nnqsmul q x := (q.num * x) / q.den
-  nnqsmul_def := sorry_proof
-
+instance : IsStrictOrderedRing Float where
+  add_le_add_left := sorry_proof
+  zero_le_one := sorry_proof
+  le_of_add_le_add_left := sorry_proof
+  mul_lt_mul_of_pos_left := sorry_proof
+  mul_lt_mul_of_pos_right := sorry_proof
 
 instance : SeminormedRing Float where
   norm := fun x => floatToReal (Float.abs x)
@@ -215,9 +208,9 @@ instance : RealScalar Float where
 
   order := {
     le_total := by sorry_proof
-    decidableLE := inferInstance
-    decidableEq := inferInstance
-    decidableLT := inferInstance
+    toDecidableLE := inferInstance
+    toDecidableLT := inferInstance
+    toDecidableEq := inferInstance
 
     min_def := by sorry_proof
     max_def := by sorry_proof

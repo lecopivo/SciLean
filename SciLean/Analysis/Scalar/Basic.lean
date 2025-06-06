@@ -530,8 +530,8 @@ instance (priority:=low) instNormedSpaceRK {R K} {_ : RealScalar R} {_ : Scalar 
 
 instance (priority:=low) instInnerProductSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [ScalarInner R K] :
     InnerProductSpace R K where
-  norm_sq_eq_inner := sorry_proof
-  conj_symm := sorry_proof
+  norm_sq_eq_re_inner := sorry_proof
+  conj_inner_symm := sorry_proof
   add_left := sorry_proof
   smul_left := sorry_proof
 

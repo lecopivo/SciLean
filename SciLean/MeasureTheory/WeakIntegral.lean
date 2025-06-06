@@ -1,4 +1,6 @@
-import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
+-- import Mathlib.MeasureTheory.Integral.Bochner.L1
+-- import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
 
 import SciLean.Meta.SimpAttr
 import SciLean.Util.SorryProof

@@ -329,7 +329,7 @@ def synthesizeAutoParam (x X : Expr) : DataSynthM Bool := do
     trace[Meta.Tactic.data_synth] "calling auto param tactic {tacticSyntax.prettyPrint} to prove {X'}"
     let some r ← disch X' | return false
     try
-      x.mvarId!.assignIfDefeq r
+      x.mvarId!.assignIfDefEq r
       trace[Meta.Tactic.data_synth] "auto param success"
       return true
     catch _e =>
@@ -349,7 +349,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
       -- try recursive call
       if let .some r ← do dataSynth g then
         try
-          x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+          x.mvarId!.assignIfDefEq (← mkLambdaFVars ys r.proof)
           return true
         catch e =>
           trace[Meta.Tactic.data_synth] m!"failed to assign {(← mkLambdaFVars ys r.proof)} to {x}"
@@ -358,7 +358,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
 
       if let some r ← g.assumption? then
         try
-          x.mvarId!.assignIfDefeq (← mkLambdaFVars ys r.proof)
+          x.mvarId!.assignIfDefEq (← mkLambdaFVars ys r.proof)
           return true
         catch e =>
           trace[Meta.Tactic.data_synth] m!"failed to assign {(← mkLambdaFVars ys r.proof)} to {x}"
@@ -372,7 +372,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
   if let .some _ ← isClass? X then
     try
       let inst ← synthInstance X
-      x.mvarId!.assignIfDefeq inst
+      x.mvarId!.assignIfDefEq inst
       return true
     catch _ =>
       pure ()
@@ -395,7 +395,7 @@ def synthesizeArgument (x : Expr) : DataSynthM Bool := do
     if let .some prf ← discharge? X then
       if ← isDefEq (← inferType prf) X then
         try
-          x.mvarId!.assignIfDefeq prf
+          x.mvarId!.assignIfDefEq prf
           return true
         catch _ =>
           trace[Meta.Tactic.data_synth] m!"failed to assign {prf} to {x}"
@@ -427,7 +427,7 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr)
     let mvarId := xs[id]!.mvarId!
     if ¬(← mvarId.isAssigned) then
       try
-        mvarId.assignIfDefeq arg
+        mvarId.assignIfDefEq arg
         trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
       catch _e =>
         trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
@@ -441,7 +441,7 @@ def tryTheorem? (e : Expr) (thm : Theorem) (hintPre hintPost : Array (Nat×Expr)
     let mvarId := xs[id]!.mvarId!
     if ¬(← mvarId.isAssigned) then
       try
-        mvarId.assignIfDefeq arg
+        mvarId.assignIfDefEq arg
         trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
       catch _e =>
         trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
@@ -479,7 +479,7 @@ def tryTheorem?' (e : Expr) (thm : Theorem)
     let mvarId := xs[id]!.mvarId!
     if ¬(← mvarId.isAssigned) then
       try
-        mvarId.assignIfDefeq arg
+        mvarId.assignIfDefEq arg
         trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
       catch _e =>
         trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
@@ -494,7 +494,7 @@ def tryTheorem?' (e : Expr) (thm : Theorem)
     let mvarId := xs[id]!.mvarId!
     if ¬(← mvarId.isAssigned) then
       try
-        mvarId.assignIfDefeq arg
+        mvarId.assignIfDefEq arg
         trace[Meta.Tactic.data_synth] "setting {argNames[id]!} to {arg}"
       catch _e =>
         trace[Meta.Tactic.data_synth] "failed to set {Expr.mvar mvarId} to {arg}"
@@ -628,13 +628,13 @@ def compGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g : Expr) : DataSynthM (O
     let (xs, _, statment) ← forallMetaTelescope (← inferType (← thm.getProof))
     try
       withMainTrace (fun _ => return m!"assigning data") do
-      xs[gId]!.mvarId!.assignIfDefeq g
+      xs[gId]!.mvarId!.assignIfDefEq g
     catch _e =>
       throwError s!"failed assigning data {← ppExpr g} to {← ppExpr (xs[gId]!)} of type {← ppExpr (← inferType xs[gId]!)}"
 
     try
       withMainTrace (fun _ => return m!"assigning data") do
-      xs[fId]!.mvarId!.assignIfDefeq f
+      xs[fId]!.mvarId!.assignIfDefEq f
     catch _e =>
       throwError s!"failed assigning data {← ppExpr (xs[fId]!)} to {← ppExpr (xs[fId]!)} of type {← ppExpr (← inferType xs[fId]!)}"
 
@@ -679,7 +679,7 @@ def letGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) : DataSynthM (O
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
-    xs[gId]!.mvarId!.assignIfDefeq g
+    xs[gId]!.mvarId!.assignIfDefEq g
   catch _e =>
     trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
     trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
@@ -688,7 +688,7 @@ def letGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) : DataSynthM (O
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
-    xs[fId]!.mvarId!.assignIfDefeq f
+    xs[fId]!.mvarId!.assignIfDefEq f
   catch _e =>
     trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
     throwError s!"data_synth bug"
@@ -734,7 +734,7 @@ def letSkipGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) (y : Expr) 
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
-    xs[gId]!.mvarId!.assignIfDefeq g
+    xs[gId]!.mvarId!.assignIfDefEq g
   catch _e =>
     trace[Meta.Tactic.data_synth] "failed assigning `{g} : {← inferType g}`  to `{xs[gId]!} :{← inferType xs[gId]!}`"
     trace[Meta.Tactic.data_synth] "{_e.toMessageData}"
@@ -743,7 +743,7 @@ def letSkipGoals (thm : LambdaTheorem) (fgGoal : Goal) (f g  : Expr) (y : Expr) 
 
   try
     withMainTrace (fun _ => return m!"assigning data") do
-    xs[fId]!.mvarId!.assignIfDefeq f
+    xs[fId]!.mvarId!.assignIfDefEq f
   catch _e =>
     trace[Meta.Tactic.data_synth] "failed assigning {f} to {xs[fId]!} of type {← inferType xs[fId]!}"
     throwError s!"data_synth bug"
@@ -788,7 +788,7 @@ def piGoal (fGoal : Goal) (f : Expr) (i : Expr) : DataSynthM (Option (LambdaTheo
 
     try
       withMainTrace (fun _ => return m!"assigning data") do
-      xs[fId]!.mvarId!.assignIfDefeq f
+      xs[fId]!.mvarId!.assignIfDefEq f
     catch _e =>
       throwError s!"{← ppExpr (xs[fId]!)} : {← ppExpr (← inferType xs[fId]!)} := {← ppExpr f}"
 
@@ -831,11 +831,11 @@ def projGoals (thm : LambdaTheorem) (fGoal : Goal) (f g p₁ p₂ q : Expr) : Da
   let (xs, _, statement) ← forallMetaTelescope (← inferType (← mkConstWithFreshMVarLevels thm.thmName))
 
   try
-    xs[fId]!.mvarId!.assignIfDefeq f
-    xs[gId]!.mvarId!.assignIfDefeq g
-    xs[p₁Id]!.mvarId!.assignIfDefeq p₁
-    xs[p₂Id]!.mvarId!.assignIfDefeq p₂
-    xs[qId]!.mvarId!.assignIfDefeq q
+    xs[fId]!.mvarId!.assignIfDefEq f
+    xs[gId]!.mvarId!.assignIfDefEq g
+    xs[p₁Id]!.mvarId!.assignIfDefEq p₁
+    xs[p₂Id]!.mvarId!.assignIfDefEq p₂
+    xs[qId]!.mvarId!.assignIfDefEq q
   catch e =>
     trace[Meta.Tactic.data_synth] s!"failed assigning projection data"
     trace[Meta.Tactic.data_synth] e.toMessageData

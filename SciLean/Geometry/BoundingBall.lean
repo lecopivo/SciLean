@@ -1,5 +1,5 @@
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
-import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 import SciLean.Analysis.AdjointSpace.Basic
 import SciLean.Analysis.AdjointSpace.Geometry

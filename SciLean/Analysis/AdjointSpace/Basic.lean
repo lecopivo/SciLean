@@ -1,7 +1,6 @@
 import Mathlib.Analysis.Normed.Module.Basic
 import Mathlib.Analysis.InnerProductSpace.Basic
 
-
 import SciLean.Util.SorryProof
 import SciLean.Meta.SimpAttr
 
@@ -46,7 +45,7 @@ local notation "IK" => @RCLike.I 𝕜 _
 
 local postfix:90 "†" => starRingEnd _
 
-export InnerProductSpace (norm_sq_eq_inner)
+export InnerProductSpace (norm_sq_eq_re_inner)
 
 open RCLike ComplexConjugate InnerProductSpace
 

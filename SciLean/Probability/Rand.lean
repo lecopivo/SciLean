@@ -1,6 +1,6 @@
 import Mathlib.Data.Erased
-import Mathlib.MeasureTheory.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.GiryMonad
 
 import SciLean.Algebra.IsAffineMap
