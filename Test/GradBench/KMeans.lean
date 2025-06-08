@@ -20,7 +20,7 @@ rewrite_by
 
 
 /--
-info: def direction : {n k d : ℕ} → [inst : NeZero k] → Float^[d]^[n] → Float^[d]^[k] → Float^[d]^[k] :=
+info: def direction : {n k d : ℕ} → [NeZero k] → Float^[d]^[n] → Float^[d]^[k] → Float^[d]^[k] :=
 fun {n k d} [NeZero k] points centroids =>
   let x :=
     IndexType.fold IndexType.Range.full (0, 0) fun i xdx =>
@@ -68,7 +68,7 @@ rewrite_by
 
 
 /--
-info: def direction' : {n k d : ℕ} → [inst : NeZero k] → Float^[d]^[n] → Float^[d]^[k] → Float^[d]^[k] :=
+info: def direction' : {n k d : ℕ} → [NeZero k] → Float^[d]^[n] → Float^[d]^[k] → Float^[d]^[k] :=
 fun {n k d} [NeZero k] points centroids =>
   let x :=
     IndexType.fold IndexType.Range.full (0, 0) fun i xdx =>

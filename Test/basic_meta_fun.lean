@@ -64,15 +64,15 @@ satisfied_by
   sorry_proof
 
 
-/-- info: |(-2)| ⊔ |3| -/
+/-- info: max |(-2)| |3| -/
 #guard_msgs in
 #eval_meta_fun naiveBoundOn (fun x => x) (Icc (-2) (3))
 
 /--
 info: let bf := |3|;
-let bg := |(-2)| ⊔ |3|;
+let bg := max |(-2)| |3|;
 let bf := bf * bg;
-let bg := |(-2)| ⊔ |3|;
+let bg := max |(-2)| |3|;
 bf * bg
 -/
 #guard_msgs in

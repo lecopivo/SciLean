@@ -423,7 +423,7 @@ theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule_at
     =
     let ydf := revFDeriv K f x
     let zdg := revFDeriv K g x
-    (ydf.1 • zdg.1, fun dx' => ydf.2 (inner zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
+    (ydf.1 • zdg.1, fun dx' => ydf.2 (inner K zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
   unfold revFDeriv
   fun_trans
   funext y; rw[add_comm]; congr
@@ -439,7 +439,7 @@ theorem HSMul.hSMul.arg_a0a1.revFDeriv_rule
     fun x =>
       let ydf := revFDeriv K f x
       let zdg := revFDeriv K g x
-      (ydf.1 • zdg.1, fun dx' => ydf.2 (inner zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
+      (ydf.1 • zdg.1, fun dx' => ydf.2 (inner K zdg.1 dx') + (conj ydf.1) • zdg.2 dx') := by
 
   funext; fun_trans
 

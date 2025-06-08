@@ -26,7 +26,7 @@ package scilean {
 
 
 -- require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.19.0"
-require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.19.0"
+require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.20.1"
 
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library

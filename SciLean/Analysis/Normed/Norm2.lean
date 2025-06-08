@@ -10,8 +10,9 @@ open RCLike ComplexConjugate
 class Norm2 (K X : Type _) where
   norm2 : X → K
 
+-- TODO: remove this instance and add coherency class saying that `‖x‖₂ = ⟪x,x⟫`
 instance [Inner K X] : Norm2 K X where
-  norm2 x := Inner.inner x x
+  norm2 x := Inner.inner K x x
 
 macro "‖" x:term "‖₂²[" K:term "]" : term => `(@Norm2.norm2 $K _ _ $x)
 macro "‖" x:term "‖₂²" : term => `(@Norm2.norm2 defaultScalar% _ _ $x)
@@ -21,7 +22,7 @@ macro "‖" x:term "‖₂²" : term => `(@Norm2.norm2 defaultScalar% _ _ $x)
   | _ => throw ()
 
 
-theorem norm2_def [Inner K X] (x : X) : ‖x‖₂²[K] = Inner.inner x x := by rfl
+theorem norm2_def [Inner K X] (x : X) : ‖x‖₂²[K] = Inner.inner K x x := by rfl
 
 def norm₂ (K : Type _) {R X : Type _} [Scalar R K] [Norm2 K X] (x : X) : K := Scalar.sqrt (Norm2.norm2 x)
 
@@ -49,7 +50,7 @@ macro "⟪" x:term ", " y:term "⟫[" K:term "]" : term => `(@Inner.inner $K _ _
 macro "⟪" x:term ", " y:term "⟫" : term => `(@Inner.inner defaultScalar% _ _ $x $y)
 
 @[app_unexpander Inner.inner] def unexpandInner : Lean.PrettyPrinter.Unexpander
-  | `($(_) $x $y) => `(⟪$x, $y⟫)
+  | `($(_) $_ $x $y) => `(⟪$x, $y⟫)
   | _ => throw ()
 
 

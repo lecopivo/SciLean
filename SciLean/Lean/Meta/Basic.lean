@@ -481,10 +481,10 @@ def withLetDecls [MonadControlT MetaM n] [Monad n]
   map1MetaM (fun k => withLetDeclsImpl names vals k) k
 
 
-@[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
-  (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α)
-  {α} (k : β → γ → δ → m α) : m α :=
-  controlAt MetaM fun runInBase => f (fun b c d => runInBase <| k b c d)
+-- @[inline] def map3MetaM [MonadControlT MetaM m] [Monad m]
+--   (f : forall {α}, (β → γ → δ → MetaM α) → MetaM α)
+--   {α} (k : β → γ → δ → m α) : m α :=
+--   controlAt MetaM fun runInBase => f (fun b c d => runInBase <| k b c d)
 
 @[inline] def map4MetaM [MonadControlT MetaM m] [Monad m]
   (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α)

@@ -46,7 +46,7 @@ variable {R}
 
 /-- Normal random variable with mean `μ` and standard deviation `σ`. -/
 def normal (μ σ : R)  : Rand R := {
-  spec := erase (fun φ => ∫ x, φ x * (Scalar.toReal R (gaussian μ σ x)))
+  spec := default -- erase (fun φ => ∫ x, φ x * (Scalar.toReal R (gaussian μ σ x)))
   rand := do
     let x ← (generateNormalV2 R).rand
     return σ * x + μ

@@ -4,12 +4,6 @@ open SciLean
 
 set_default_scalar Float
 
-
-#eval ⊞[1.0,2,3]
-
-#eval ByteArray.replicate 10 1
-
-
 /-- info: 𝐈 : Float^[2, 2] -/
 #guard_msgs in
 #check 𝐈[Float, 2]

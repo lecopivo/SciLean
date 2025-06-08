@@ -13,6 +13,9 @@ def objective : ObjectiveFunction Float (Float^[2]) where
     data_synth => lsimp
   f' := _
 
+def main : IO Unit := do
+  IO.println "LBFGS test disabled temporarily"
+
 #exit -- the compiler is broken right now :(
 
 def main : IO Unit := do

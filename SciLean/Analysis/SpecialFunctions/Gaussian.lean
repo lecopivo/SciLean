@@ -10,7 +10,7 @@ import SciLean.Lean.ToSSA
 import SciLean.AD.Rules.Log
 import SciLean.AD.Rules.Exp
 
-import Mathlib.Probability.Distributions.Gaussian
+import Mathlib.Probability.Distributions.Gaussian.Real
 
 namespace SciLean
 

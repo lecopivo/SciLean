@@ -11,8 +11,8 @@ theorem convIf.id {α} (P : Prop) [inst : Decidable P] (a : α) : a = convIf P i
 by
   simp[convIf]
 
-open Lean.Parser.Tactic.Conv
-syntax (name := conv_if) "if" ident ":" term  "then" convSeq "else" convSeq : conv
+open Lean.Parser.Tactic.Conv Lean
+syntax (name := conv_if) "if" binderIdent ":" term  "then" convSeq "else" convSeq : conv
 
 open Lean.Elab Tactic Conv in
 @[tactic conv_if]

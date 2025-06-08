@@ -22,6 +22,9 @@ info: fun x dx => (‖x‖₂², vecMatMulAdd 2 x dx 0 0) : Float^[3] → Float^
   rewrite_by
     lsimp -zeta only [simp_core, ↓vecFwdFDeriv_simproc]
 
+@[app_unexpander Inner.inner] def unexpandInner' : Lean.PrettyPrinter.Unexpander
+  | `($(_) $_ $y $z) => `(⟪$y, $z⟫)
+  | _ => throw ()
 
 /--
 info: fun x dx =>
