@@ -288,7 +288,7 @@ partial def expand' (l : List (TSyntax `dimSpec)) : TermElabM Expr :=
         return ← mkAppM ``Idx #[n]
       catch _ =>
         return ← elabTerm n none
-    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(↑(Set.Icc ($n : Int64) ($m : Int64)))) q(Type)
+    | `(dimSpec| [$n:term : $m:term]) => do elabTerm (← `(Idx2 ($n : Int) ($m : Int))) q(Type)
     | `(dimSpec| [$ds:dimSpec,*]) => expand' ds.getElems.toList
     | _ => throwError "unexpected type power syntax"
   | t :: l' =>  do

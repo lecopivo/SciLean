@@ -30,7 +30,7 @@ def stdNext : Int64Gen → Nat × Int64Gen
     let s2'' : Int64 := if s2' < 0 then s2' + 2147483399 else s2'
     let z    : Int64 := s1'' - s2''
     let z'   : Int64 := if z < 1 then z + 2147483562 else z % (2147483562 : Int64)
-    (z'.toNat, ⟨s1''.toUSize, s2''.toUSize⟩)
+    (z'.toNatClampNeg, ⟨s1''.toUSize, s2''.toUSize⟩)
     -- (s1.toNat, ⟨s1,s2⟩)
 
 def stdSplit : Int64Gen → Int64Gen × Int64Gen

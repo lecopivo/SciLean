@@ -1,4 +1,4 @@
-import SciLean.Data.Idx.Basic
+import SciLean.Data.Idx
 import SciLean.Data.ArrayOperations.Basic
 
 import Mathlib.Data.Fintype.Prod
@@ -116,6 +116,16 @@ instance : IndexType (Idx n) n where
   fromIdx x := x
   toFin x := x.toFin
   fromFin x := x.toIdx
+  toFin_eq_toIdx := sorry_proof
+  fromIdx_eq_fromFin := sorry_proof
+  left_inv := sorry_proof
+  right_inv := sorry_proof
+
+instance : IndexType (Idx2 a b) (b-a+1).toNat where
+  toIdx x := x.toIdx
+  fromIdx x := x.toIdx2
+  toFin x := x.toFin
+  fromFin x := x.toIdx2
   toFin_eq_toIdx := sorry_proof
   fromIdx_eq_fromFin := sorry_proof
   left_inv := sorry_proof

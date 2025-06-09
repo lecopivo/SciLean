@@ -253,3 +253,66 @@ instance : FoldM (Fin n) m  where
         Fin.forInIntervalUp a b init f
       else
         Fin.forInIntervalDown b a init f
+
+
+----------------------------------------------------------------------------------------------------
+-- Instance for `Idx2 a b` ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Run `f` for all `Idx n` -/
+@[inline]
+partial def Idx2.forInFull {β} [Monad m]
+    (init : β) (f : Idx2 a b → β → m (ForInStep β)) : m β :=
+  loop init a.toInt64
+where
+  @[specialize] loop (x : β) (i : Int64) : m β := do
+    if i ≤ b.toInt64 then
+      match (← f ⟨i, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `a` up to `a`(inclusive) -/
+@[inline]
+partial def Idx2.forInIntervalUp {β} [Monad m]
+    (a b : Idx2 c d) (init : β) (f : Idx2 c d → β → m (ForInStep β)) : m β :=
+  loop init a.1
+where
+  @[specialize] loop (x : β) (i : Int64) : m β := do
+    if i <= b.1 then
+      match (← f ⟨i, sorry_proof⟩ x) with
+      | .yield x => loop x (i+1)
+      | .done x => pure x
+    else
+      pure x
+
+
+/-- Run `f` starting at `b` down to `a`(inclusive) (assuming `a<b`)  -/
+@[inline]
+partial def Idx2.forInIntervalDown {β} [Monad m]
+    (a b : Idx2 c d) (init : β) (f : Idx2 c d → β → m (ForInStep β)) : m β :=
+  loop init b
+where
+  @[specialize] loop (x : β) (i : Int64) : m β := do
+    match (← f ⟨i,sorry_proof⟩ x) with
+    | .yield x =>
+      if i ≤ a then
+        pure x
+      else
+        loop x (i-1)
+    | .done x => pure x
+
+
+@[inline]
+instance : FoldM (Idx2 a b) m  where
+  forIn r init f :=
+    match r with
+    | .empty => pure init
+    | .full => Idx2.forInFull init f
+    | .interval a b =>
+      if a ≤ b then
+        Idx2.forInIntervalUp a b init f
+      else
+        Idx2.forInIntervalDown b a init f
