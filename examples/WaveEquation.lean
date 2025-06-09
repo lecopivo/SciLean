@@ -21,7 +21,8 @@ by
   unfold H
 
   -- compute derivatives
-  autodiff [jacobian_reverse_mode]
+  simp_rw [jacobian_reverse_mode]
+  autodiff
 
   -- apply RK4 method
   conv in odeSolve _ =>

@@ -84,7 +84,7 @@ package foo {
   moreLinkArgs := linkArgs
 }
 
-require leanblas from git "https://github.com/lecopivo/SciLean" @ "v4.18.0"
+require scilean from git "https://github.com/lecopivo/SciLean" @ "v4.20.1"
 
 @[default_target]
 lean_lib Foo {

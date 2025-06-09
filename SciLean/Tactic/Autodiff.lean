@@ -22,19 +22,24 @@ open Lean Meta Elab Tactic Mathlib.Meta.FunTrans Lean.Parser.Tactic in
 syntax (name := lautodiffTacticStx) "autodiff" optConfig (discharger)?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : tactic
 
+private def addUnfoldPartialApp :
+    Lean.TSyntax `Lean.Parser.Tactic.optConfig → Lean.MacroM (Lean.TSyntax `Lean.Parser.Tactic.optConfig)
+  | `(Lean.Parser.Tactic.optConfig| $xs:configItem*) => do
+    `(Lean.Parser.Tactic.optConfig|$xs* +unfoldPartialApp)
+  | x => return x
+
+
 macro_rules
 | `(conv| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   let a := a.getD ⟨#[]⟩
   `(conv|
-    ((try unfold deriv fgradient jacobianMat);
-     lsimp $cfg $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc, $a,*]))
+    (lsimp $(← addUnfoldPartialApp cfg) $[$disch]? only [deriv, fgradient, jacobianMat, simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc, $a,*]))
 
 macro_rules
 | `(tactic| autodiff $cfg $[$disch]?  $[[$a,*]]?) => do
   let a := a.getD ⟨#[]⟩
   `(tactic|
-     ((try unfold deriv fgradient jacobianMat);
-      lsimp $cfg  $[$disch]? only [simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc,$a,*]))
+     (lsimp $(← addUnfoldPartialApp cfg)  $[$disch]? only [deriv, fgradient, jacobianMat, simp_core, revFDeriv_simproc, fwdFDeriv_simproc, vecFwdFDeriv_simproc, vecRevFDeriv_simproc, fderivAt_simproc, fderiv_simproc,$a,*]))
 
   -- if a.isSome then
   --   `(tactic| ((try unfold deriv fgradient adjointFDeriv);

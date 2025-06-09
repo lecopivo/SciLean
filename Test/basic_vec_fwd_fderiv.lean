@@ -76,7 +76,7 @@ info: fun x =>
 #guard_msgs in
 #check (∇ (fun x : Float^[3] => ‖x‖₂))
   rewrite_by
-    autodiff (disch:=unsafeAD)
+    autodiff +unfoldPartialApp  (disch:=unsafeAD) [jacobianMat]
 
 
 @[simp, simp_core]
