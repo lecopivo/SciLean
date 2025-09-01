@@ -9,15 +9,15 @@ open SciLean
 
 abbrev State (n : Nat) := Float^[n] × Float^[n]
 
-instance : ToJson (DataArrayN Float (Fin n)) where
+instance : ToJson (DataArrayN Float (Idx n)) where
   toJson := fun x =>
-    let x' := Array.ofFn (fun i => x[i])
+    let x' := Array.ofFn (fun i => x[i.toIdx])
     toJson x'
 
-instance : FromJson (DataArrayN Float (Fin n)) where
+instance : FromJson (DataArrayN Float (Idx n)) where
   fromJson? := fun json => do
     let x' : Array Float ← fromJson? json
-    return (⊞ (i : Fin n) => x'[i.1]!)
+    return (⊞ (i : Idx n) => x'[i.1]!)
 
 def frame : Frame where
   xmin := -1
@@ -26,7 +26,7 @@ def frame : Frame where
   width := 400
   height := 400
 
-instance : Coe (Idx n) Float := ⟨fun x => x.1.toUInt64.toFloat⟩
+-- instance : Coe (Idx n) Float := ⟨fun x => x.1.toUInt64.toFloat⟩
 
 def isvg (n) : InteractiveSvg (State n) where
   init := (⊞ (i : Idx n) => (0:Float), -- 0 * Float.sin (2*RealScalar.pi*(i.toFloat)/40),
@@ -57,8 +57,8 @@ def isvg (n) : InteractiveSvg (State n) where
         let mut pts : Array (Point frame) := .mkEmpty n
         -- let mut qts : Array (Point frame) := .mkEmpty n.toNat
         let Δθ := 2*(RealScalar.pi : Float) / n
-        for i in fullRange (Fin n) do
-          let θ := i.1 * Δθ
+        for i in [:n] do
+          let θ := i.1.toFloat * Δθ
           let r := 0.5 + 0.2*state.1[i]
           pts := pts.push (.abs (r*θ.cos) (r*θ.sin))
           -- qts := qts.push (.abs (-frame.xmin + (i.1.toNat.toFloat/n.toNat.toFloat)*frame.xSize) (0.3*state.1[i].toFloat))
@@ -68,7 +68,7 @@ def isvg (n) : InteractiveSvg (State n) where
     }
 
 
-
+set_option trace.Meta.synthInstance true in
 open Server RequestM in
 @[server_rpc_method]
 def updateSvg (params : UpdateParams (State 100)) : RequestM (RequestTask (UpdateResult (State 100))) := (isvg 100).serverRpcMethod params

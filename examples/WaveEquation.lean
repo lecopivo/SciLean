@@ -47,13 +47,13 @@ def main : IO Unit := do
   let mut t := 0
   let mut (x,p) := (x₀, p₀)
 
-  for _ in [0:100] do
+  for _ in [0:1000] do
 
     (x,p) := solver m k (substeps,()) t (t+Δt) (x, p)
     t += Δt
 
     let M : Nat := 20
-    for m in fullRange (Idx N) do
+    for m in fullRange (Idx M) do
       for n in fullRange (Idx N) do
         let xi := x[n]
         if (2*m.1.toNat.toFloat - M.toFloat)/(M.toFloat) - xi < 0  then
