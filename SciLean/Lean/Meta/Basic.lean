@@ -492,7 +492,7 @@ def withLetDecls [MonadControlT MetaM n] [Monad n]
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
 
 
-private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α :=
+private def letTelescopeImpl' (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α :=
   lambdaLetTelescope e λ xs b => do
     if let .some i ← xs.findIdxM? (λ x => do pure !(← x.fvarId!.isLetVar)) then
       k xs[0:i] (← mkLambdaFVars xs[i:] b)
@@ -501,8 +501,9 @@ private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) :
 
 variable [MonadControlT MetaM n] [Monad n]
 
-def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α :=
-  map2MetaM (fun k => letTelescopeImpl e k) k
+/-- SciLean's version of letTelescope (different from builtin) -/
+def letTelescope' (e : Expr) (k : Array Expr → Expr → n α) : n α :=
+  map2MetaM (fun k => letTelescopeImpl' e k) k
 
 
 private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
@@ -607,7 +608,7 @@ def reduceProj?' (e : Expr) : MetaM (Option Expr) := do
   match e with
   | Expr.proj _ _ (.fvar _) => return none -- do not reduce projections on fvars
   | Expr.proj _ i c =>
-    letTelescope c λ xs b => do
+    letTelescope' c λ xs b => do
       let some b ← Meta.project? b i
         | return none
       mkLambdaFVars xs b

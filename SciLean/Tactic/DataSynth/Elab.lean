@@ -34,19 +34,17 @@ syntax (name:=data_synth_conv) "data_synth" optConfig (discharger)? : conv
     | none => fun _ => return none
     | some stx => Mathlib.Meta.FunProp.tacticToDischarge ⟨stx.raw[3]⟩
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
-    |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
-    |>.run {}
-
-  -- let cacheRef : IO.Ref LSimp.Cache ← IO.mkRef {}
-  -- let stateRef : IO.Ref Simp.State ← IO.mkRef {}
-
-  -- let (((proof?,_), _),_) ← dataSynth e |>.run {} |>.run {}
-  --  |>.run (← Simp.mkDefaultMethods)
-  --  |>.run {config := cfg.toConfig, simpTheorems := #[← getSimpTheorems]}
-  --  |>.run {cache := cacheRef, simpState := stateRef}
-  --  |>.run {}
+  let simpCtx ← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems])
+  let simpMethods ← Simp.mkDefaultMethods
+  let simpStateRef ← ST.mkRef ({} : Simp.State)
+  let cacheRef ← ST.mkRef ({} : Std.HashMap ExprStructEq Expr)
+  let r? ← dataSynth g
+    {config := cfg, discharge := fun e => do disch e}
+    cacheRef
+    stateRef
+    simpMethods.toMethodsRef
+    simpCtx
+    simpStateRef
 
   match r? with
   | some r =>
@@ -82,10 +80,17 @@ syntax (name:=data_synth_tac) "data_synth" optConfig (discharger)? ("=>" convSeq
 
   let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
-    |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
-    |>.run {}
+  let simpCtx ← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems])
+  let simpMethods ← Simp.mkDefaultMethods
+  let simpStateRef ← ST.mkRef ({} : Simp.State)
+  let cacheRef ← ST.mkRef ({} : Std.HashMap ExprStructEq Expr)
+  let r? ← dataSynth g
+    {config := cfg, discharge := fun e => do disch e}
+    cacheRef
+    stateRef
+    simpMethods.toMethodsRef
+    simpCtx
+    simpStateRef
 
   match r? with
   | some r =>

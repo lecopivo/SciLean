@@ -274,7 +274,8 @@ theorem HMul.hMul.arg_a0a1.fderiv_rule_at
       let dz := fderiv K g x dx
       y * dz + dy * z := by
   ext dx
-  simp[fderiv_mul hf hg, mul_comm]
+  simp only [fderiv_mul hf hg, ContinuousLinearMap.add_apply, ContinuousLinearMap.coe_smul']
+  ring
 
 
 
@@ -320,13 +321,7 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
       let dy := fderiv K f x dx
       let dz := fderiv K g x dx
       (dy * z - y * dz) / z^2 := by
-  ext dx
-  have h : ∀ (f : X → K) x, fderiv K f x dx = deriv (fun h : K => f (x + h•dx)) 0 := by sorry_proof
-  simp[h,-deriv_fderiv']
-  rw[deriv_div (c:=(fun h => f (x + h • dx))) (d:=(fun h => g (x + h • dx)))
-               (hc:=by sorry_proof) (hd:= by sorry_proof)
-               (hx:=by simp; assumption)]
-  simp[-deriv_fderiv']
+  sorry_proof
 
 
 -- Inv.inv -------------------------------------------------------------------

@@ -150,16 +150,16 @@ where
       | .done b => return .done (e.updateMData! b)
       | .yield b => return .yield (e.updateMData! b)
 
-    | .letE _ t v b _  =>
+    | .letE _ t v b nonDep  =>
       match ← run t with
-      | .done t => return .done (e.updateLet! t v b)
+      | .done t => return .done (e.updateLet! t v b nonDep)
       | .yield t =>
       match ← run v with
-      | .done v => return .done (e.updateLet! t v b)
+      | .done v => return .done (e.updateLet! t v b nonDep)
       | .yield v =>
       match ← run b with
-      | .done b => return .done (e.updateLet! t v b)
-      | .yield b => return .yield (e.updateLet! t v b)
+      | .done b => return .done (e.updateLet! t v b nonDep)
+      | .yield b => return .yield (e.updateLet! t v b nonDep)
 
     | .app f a         =>
       match ← run f with

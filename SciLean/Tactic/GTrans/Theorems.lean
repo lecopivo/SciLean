@@ -18,10 +18,10 @@ structure GTransTheorem where
   /-- Name of lambda theorem -/
   thmName : Name
   /-- discrimination tree keys used to index this theorem -/
-  keys        : List RefinedDiscrTree.DTExpr
+  keys        : List (RefinedDiscrTree.Key × RefinedDiscrTree.LazyEntry)
   /-- priority -/
   priority    : Nat  := eval_prio default
-  deriving Inhabited, BEq
+  deriving Inhabited
 
 
 
@@ -48,7 +48,8 @@ initialize gtransTheoremsExt : GTransTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      {d with theorems := e.keys.foldl (fun thms (key, entry) =>
+        RefinedDiscrTree.insert thms key (entry, e)) d.theorems}
   }
 
 
@@ -75,7 +76,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
   let thm : GTransTheorem := {
     gtransName := gtransDecl.gtransName
     thmName := declName
-    keys    := ← RefinedDiscrTree.mkDTExprs b false
+    keys    := ← RefinedDiscrTree.initializeLazyEntryWithEta b
     priority  := prio
   }
   return thm

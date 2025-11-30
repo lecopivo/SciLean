@@ -72,7 +72,7 @@ instance : LinearOrder Float where
     else if x = y then Ordering.eq
     else Ordering.gt
   compare_eq_compareOfLessAndEq := sorry_proof
-  lt_iff_le_not_le := sorry_proof
+  lt_iff_le_not_ge := sorry_proof
 
 instance : IsStrictOrderedRing Float where
   add_le_add_left := sorry_proof

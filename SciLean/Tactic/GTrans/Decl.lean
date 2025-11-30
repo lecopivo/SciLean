@@ -3,7 +3,6 @@ import Mathlib.Lean.Meta.RefinedDiscrTree
 
 
 open Lean Meta
-open Mathlib.Meta.FunProp
 
 namespace SciLean.Tactic.GTrans
 
@@ -33,7 +32,7 @@ initialize gtransDeclsExt : GTransDeclsExt ←
 
 
 def getGTrans (gtransName : Name) : MetaM GTransDecl := do
-  return (gtransDeclsExt.getState (← getEnv)).decls.find! gtransName
+  return (gtransDeclsExt.getState (← getEnv)).decls.get! gtransName
 
 
 def addGTransDecl (declName : Name) : MetaM Unit := do

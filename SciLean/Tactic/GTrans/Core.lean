@@ -103,15 +103,16 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
 
 
 /-- Replace n-th and all subsequent arguments in `e` with fresh metavariables. -/
-def mkTrailingArgsToFreshMVars (e : Expr) (n : ℕ) : MetaM Expr := do
+def mkTrailingArgsToFreshMVars (e : Expr) (n : Nat) : MetaM Expr := do
   e.withApp fun fn args => do
-    let e' := mkAppN fn args[0:n]
+    let firstArgs := args.shrink n
+    let e' := mkAppN fn firstArgs
     let (xs, _, _) ← forallMetaTelescope (← inferType e')
     return mkAppN e' xs
 
 
 
-unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : ℕ)
+unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : Nat)
     (gtrans : Expr → GTransM (Option Expr)) : GTransM (Option Expr) := do
 
   trace[Meta.Tactic.gtrans] "goal {← ppExpr e}"
@@ -202,12 +203,17 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
     | throwError "expected application of generalized transformation, got {← ppExpr e}"
 
   let ext := gtransTheoremsExt.getState (← getEnv)
-  let thms ← ext.theorems.getMatchWithScore e false
-  let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
+  let (matchResult, _) ← ext.theorems.getMatch e false false
+  let thms : Array GTransTheorem := match matchResult with
+    | Except.ok result =>
+      -- elts is TreeMap Nat (Array (Array GTransTheorem)), flatten all arrays
+      let allResults := result.elts.toList.map (·.2) |>.foldl (· ++ ·) #[] |>.flatten
+      allResults.qsort (fun x y => x.priority > y.priority)
+    | Except.error _ => #[]
 
   withTraceNode `Meta.Tactic.gtrans (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] {← ppExpr e}") do
 
-  let keys := ← RefinedDiscrTree.mkDTExprs e false
+  let keys := ← RefinedDiscrTree.initializeLazyEntryWithEta e
   trace[Meta.Tactic.gtrans.candidates] "look up key: {keys}"
   trace[Meta.Tactic.gtrans.candidates] "candidates: {thms.map (·.thmName)}"
 

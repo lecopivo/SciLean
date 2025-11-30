@@ -113,8 +113,8 @@ def Result.maybeLetBind (r : Result) (name := `x) : LSimpM Result :=timeThis "le
 
 
 private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
-  let e := e.toCtorIfLit
-  matchConstCtor e.getAppFn (fun _ => pure none) fun ctorVal _ =>
+  let e ← e.toCtorIfLit
+  matchConstCtor e.getAppFn (fun _ => pure none) fun ctorVal _ => do
     let numArgs := e.getAppNumArgs
     let idx := ctorVal.numParams + i
     if idx < numArgs then
@@ -492,6 +492,13 @@ partial def simpForall (e : Expr) : LSimpM Result := return { expr := e }
   else
     none
 
+/-- Check if a let expression has a dependent body (body type mentions the let-bound variable).
+This replaces the removed `Simp.getSimpLetCase` function. -/
+private def isLetDependent (t b : Expr) : MetaM Bool := do
+  -- Check if body type depends on bvar 0
+  withLocalDeclD `x t fun x => do
+    let bType ← inferType (b.instantiate1 x)
+    return bType.containsFVar x.fvarId!
 
 
 partial def simpLet (e : Expr) : LSimpM Result := do
@@ -499,8 +506,12 @@ partial def simpLet (e : Expr) : LSimpM Result := do
   if (← getConfig).zeta then
     return { expr := b.instantiate1 v }
   else
-    match (← Simp.getSimpLetCase n t b) with
-    | .dep | .nondepDepVar =>
+    -- Check if let is dependent (replaces Simp.getSimpLetCase)
+    let isDep ← isLetDependent t b
+    if isDep || b.hasLooseBVar 0 && (← withLocalDeclD n t fun x => do
+        let bType ← inferType (b.instantiate1 x)
+        return bType.containsFVar x.fvarId!) then
+      -- Dependent case: handle like .dep | .nondepDepVar
       let v' ← ldsimp v
 
       let (vVar,vars) ← do
@@ -522,7 +533,8 @@ partial def simpLet (e : Expr) : LSimpM Result := do
       let bx := b.instantiate1 vVar
       let rbx ← lsimp bx
       return { rbx with vars := vars ++ rbx.vars }
-    | .nondep =>
+    else
+      -- Non-dependent case
       let rv ← (lsimp v >>= (·.maybeLetBind n))
 
       let r : Result :=
@@ -810,7 +822,17 @@ where
 initialize lsimpRef.set lsimpImpl
 
 
-open private Lean.Meta.Simp.withSimpContext from Lean.Meta.Tactic.Simp.Main
+/-- Local implementation of `withSimpContext` since the private version was removed.
+Sets up the Meta config and runs the computation. -/
+def withSimpContextImpl (ctx : Simp.Context) (x : MetaM α) : MetaM α := do
+  let cfg := ctx.config
+  withConfig (fun c => { c with
+    iota := cfg.iota
+    beta := cfg.beta
+    proj := if cfg.proj then .yes else .no
+    zeta := cfg.zeta
+    zetaDelta := cfg.zetaDelta
+  }) x
 
 /-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context
 where all `r.vars` are valid free vars.
@@ -831,7 +853,7 @@ def main (e : Expr) (k : Result → MetaM α)
 
   -- load context
   -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
-  Lean.Meta.Simp.withSimpContext ctx do
+  withSimpContextImpl ctx do
 
     -- run simp
     let (a,s) ← Meta.withoutModifyingLCtx (fun (r,s) => do pure (← k r,s)) do

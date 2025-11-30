@@ -13,7 +13,7 @@ attribute [fun_prop]
   contDiff_apply
   -- contDiff_pi
 
-  ContDiff.prod
+  ContDiff.prodMk
   ContDiff.fst
   ContDiff.snd
 
@@ -31,7 +31,7 @@ attribute [fun_prop]
   contDiff_mul
   ContDiff.mul
   contDiff_prod
-  ContDiff.prod
+  ContDiff.prodMk
   -- contDiff_pow -- missing
   ContDiff.pow
   contDiff_smul

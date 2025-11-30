@@ -76,8 +76,8 @@ def normalizeLet' (e : Expr) : CoreM Expr :=
          let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
 
          return .visit <|
-           .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
-           .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+           .letE (n.appendAfter "₁") X x (nondep:=ndep) <|
+           .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nondep:=ndep) b
 
        | (.bvar ..) | (.fvar ..) | (.lam ..) =>
          return .visit <| b.instantiate1 v
@@ -104,8 +104,8 @@ partial def splitLet (e : Expr) : Expr :=
       let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
 
       splitLet <|
-        .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
-        .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+        .letE (n.appendAfter "₁") X x (nondep:=ndep) <|
+        .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nondep:=ndep) b
 
     | (.bvar ..) | (.fvar ..) | (.lam ..) =>
       splitLet <| b.instantiate1 v
@@ -154,8 +154,8 @@ partial def normalizeCore (e : Expr) : DataSynthM Expr := do
         let b := b.instantiate1 (Expr.mkApp4 (.const ``Prod.mk [u,v]) X Y (.bvar 1) (.bvar 0))
 
         normalizeCore <|
-          .letE (n.appendAfter "₁") X x (nonDep:=ndep) <|
-          .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nonDep:=ndep) b
+          .letE (n.appendAfter "₁") X x (nondep:=ndep) <|
+          .letE (n.appendAfter "₂") Y (y.liftLooseBVars 0 1) (nondep:=ndep) b
 
       | (.bvar ..) | (.fvar ..) | (.lam ..) =>
         normalizeCore <| b.instantiate1 v
@@ -261,10 +261,14 @@ def Result.normalize (r : Result) : DataSynthM Result := do
 def Goal.getCandidateTheorems (g : Goal) : DataSynthM (Array GeneralTheorem) := do
   let (_,e) ← g.mkFreshProofGoal
   let ext := dataSynthTheoremsExt.getState (← getEnv)
-  let keys ← Lean.Meta.RefinedDiscrTree.mkDTExpr e
+  let keys ← Lean.Meta.RefinedDiscrTree.initializeLazyEntryWithEta e
   trace[Meta.Tactic.data_synth] "keys: {keys}"
-  let thms ← ext.theorems.getMatchWithScore e false -- {zeta:=false, zetaDelta:=false}
-  let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
+  let (matchResult, _) ← ext.theorems.getMatch e false false -- {zeta:=false, zetaDelta:=false}
+  let thms : Array GeneralTheorem := match matchResult with
+    | Except.ok result =>
+      let allResults := result.elts.toList.map (·.2) |>.foldl (· ++ ·) #[] |>.flatten
+      allResults.qsort (fun x y => x.priority > y.priority)
+    | Except.error _ => #[]
   return thms
 
 
