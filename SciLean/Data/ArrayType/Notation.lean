@@ -217,12 +217,12 @@ def ofFnExplicitElab : TermElab := fun stx expectedType? =>
 
     if rows.size = 1 then
       let fn ←
-        elabTerm (←`(⊞ (i : Idx $n) => ![$elems,*] i)) expectedType?
+        elabTerm (←`(⊞ (i : Idx $n) => ![$elems,*] i.toFin)) expectedType?
 
       return fn
     else
       let fn ←
-        elabTerm (←`(⊞ (i : Idx $m) (j : Idx $n) => !![$[$[$rows],*];*] i j))
+        elabTerm (←`(⊞ (i : Idx $m) (j : Idx $n) => !![$[$[$rows],*];*] i.toFin j.toFin))
           expectedType?
 
       return fn

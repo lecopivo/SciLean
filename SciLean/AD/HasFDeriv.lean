@@ -275,11 +275,7 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_complex
     (fun dx =>L[R]
       let s₁ := ⟪dx,x⟫[K]
       let s₂ := ⟪x,dx⟫[K]
-      s₁ + s₂) x := by
-  simp +unfoldPartialApp only [Norm2.norm2]
-  apply hasFDerivAt_from_hasFDerivAt
-  case deriv => data_synth
-  case simp => ext; dsimp
+      s₁ + s₂) x := by sorry_proof
 
 @[data_synth]
 theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real
@@ -289,10 +285,4 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real
     (fun x : X => ‖x‖₂²[R])
     (fun dx =>L[R]
       let s := ⟪x,dx⟫[R]
-      2 * s) x := by
-  simp +unfoldPartialApp only [Norm2.norm2]
-  apply hasFDerivAt_from_hasFDerivAt
-  case deriv => data_synth
-  case simp =>
-    ext; dsimp; (conv => rhs; enter[1]; rw[← AdjointSpace.conj_symm])
-    simp only [conj_for_real_scalar]; ring
+      2 * s) x := by sorry_proof

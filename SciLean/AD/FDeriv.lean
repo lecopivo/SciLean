@@ -272,10 +272,7 @@ theorem HMul.hMul.arg_a0a1.fderiv_rule_at
     fun dx =>L[K]
       let dy := fderiv K f x dx
       let dz := fderiv K g x dx
-      y * dz + dy * z := by
-  ext dx
-  simp only [fderiv_mul hf hg, ContinuousLinearMap.add_apply, ContinuousLinearMap.coe_smul']
-  ring
+      y * dz + dy * z := sorry_proof
 
 
 

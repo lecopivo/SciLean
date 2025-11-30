@@ -36,7 +36,7 @@ attribute [fun_prop]
   ContDiff.pow
   contDiff_smul
   ContDiff.smul
-  ContDiff.prod_map
+  ContDiff.prodMap
   ContDiff.inv
   ContDiff.div
 

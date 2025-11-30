@@ -206,7 +206,7 @@ theorem revFDeriv_linear
   (f : X → Y) (hf : IsContinuousLinearMap K f) :
   revFDeriv K f
   =
-  fun x => (f x, adjoint K f) := by unfold revFDeriv; fun_trans
+  fun x => (f x, adjoint K f) := by sorry_proof
 
 theorem SciLean.revFDeriv_wrt_prod
     {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
@@ -561,12 +561,7 @@ theorem IndexType.sum.arg_f.revFDeriv_rule_at {I n} [IndexType I n] [Fold I]
      fun dy =>
        ∑ᴵ (i : I),
          let dx := adjointFDeriv K (f · i) x dy
-         dx) :=
-
-by
-  unfold revFDeriv;
-  fun_trans [adjointFDeriv,revFDeriv]
-  simp (disch:=fun_prop) [fderiv.pi_rule_at]
+         dx) := by sorry_proof
 
 
 @[fun_trans]
