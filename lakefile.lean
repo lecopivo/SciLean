@@ -10,6 +10,16 @@ def linkArgs :=
       "-L/usr/local/opt/openblas/lib", "-lblas"]
   else -- assuming linux
     #["-L/usr/lib/x86_64-linux-gnu/", "-lblas", "-lm"]
+
+-- Metal framework linking for final executables only
+-- Need to specify the SDK sysroot for lld to find frameworks and libobjc
+def metalLinkArgs :=
+  if System.Platform.isOSX then
+    #["-Wl,-syslibroot,/Applications/Xcode-26.1.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
+      "-lobjc",
+      "-framework", "Metal", "-framework", "Foundation", "-framework", "CoreFoundation"]
+  else
+    #[]
 def inclArgs :=
   if System.Platform.isWindows then
     #[]
@@ -41,16 +51,36 @@ target libscileanc pkg : FilePath := do
   let name := nameToStaticLib "scileanc"
   buildStaticLib (pkg.sharedLibDir / name) oFiles
 
+-- Metal backend (macOS only)
+target libscileanmetal pkg : FilePath := do
+  let mut oFiles : Array (Job FilePath) := #[]
+  if System.Platform.isOSX then
+    -- Build Objective-C++ wrapper
+    let mmSrc := pkg.dir / "Metal" / "metal_backend.mm"
+    let mmObj := pkg.buildDir / "metal" / "metal_backend.o"
+    let srcJob ← inputTextFile mmSrc
+    let weakArgs := #["-I", (← getLeanIncludeDir).toString, "-fobjc-arc"]
+    oFiles := oFiles.push (← buildO mmObj srcJob weakArgs #["-fPIC", "-O3", "-DNDEBUG", "-std=c++17"] "clang++" getLeanTrace)
+  let name := nameToStaticLib "scileanmetal"
+  buildStaticLib (pkg.sharedLibDir / name) oFiles
+
 
 @[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
 }
 
--- Files that should be compiled, either to get fast tactic or to make FFI functions work in editor
-lean_lib SciLean.FFI where
+-- C-based FFI modules (precompiled for editor support)
+lean_lib SciLean.FFI.Core where
+  roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float]
   precompileModules := true
   moreLinkObjs := #[libscileanc]
+
+-- Metal backend (not precompiled - linked at executable time)
+lean_lib SciLean.FFI.Metal where
+  roots := #[`SciLean.FFI.Metal]
+  precompileModules := false
+  moreLinkObjs := #[libscileanmetal]
 
 
 @[test_driver]
@@ -148,3 +178,7 @@ lean_exe ProfileLSTM {
 
 lean_exe MNISTClassifier where
   root := `examples.MNISTClassifier
+
+lean_exe MetalBenchmark where
+  root := `examples.MetalBenchmark
+  moreLinkArgs := metalLinkArgs
