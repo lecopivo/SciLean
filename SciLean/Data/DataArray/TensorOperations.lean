@@ -6,6 +6,7 @@ import SciLean.Data.DataArray.FloatN
 import SciLean.Data.DataArray.Operations
 import SciLean.Meta.Notation.Let'
 import SciLean.Data.ArrayOperations.Operations
+import SciLean.FFI.BLAS
 
 import SciLean.Analysis.Scalar.FloatAsReal
 
@@ -129,17 +130,61 @@ def contractRightAddR (a : R) (x : R^[I,J]) (y : R^[J]) (b : R) (z : R^[I]) : R^
   z
 
 /--
-Matrix-matrix multiplication
+Matrix-matrix multiplication (naive fallback)
 
-TODO: call BLAS
+Computes: z := a*x*y + b*z
 -/
-def contractMiddleAddR (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] := Id.run do
+def contractMiddleAddRNaive (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] := Id.run do
   let mut z := z
   for i in fullRange I do
-    for j in fullRange J do
-      for k in fullRange K do
-        z[i,k] := b * z[i,k] + a * x[i,j] * y[j,k]
+    for k in fullRange K do
+      -- Compute dot product of row i of x with column k of y
+      let sum := ∑ᴵ j, x[i,j] * y[j,k]
+      z[i,k] := b * z[i,k] + a * sum
   z
+
+
+----------------------------------------------------------------------------------------------------
+-- Float-specific BLAS GEMM implementation ----------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Convert DataArrayN Float to FloatArray (zero-copy reinterpret) -/
+@[inline]
+def toFloatArray {ι : Type} {n} [IndexType ι n] (x : Float^[ι]) : FloatArray :=
+  x.data.byteData.toFloatArray sorry_proof
+
+/-- Convert FloatArray to DataArrayN Float (zero-copy reinterpret) -/
+@[inline]
+def fromFloatArray {ι : Type} {n} [IndexType ι n] (x : FloatArray) : Float^[ι] :=
+  ⟨⟨x.toByteArray, sorry_proof⟩, sorry_proof⟩
+
+/--
+Matrix-matrix multiplication using BLAS dgemm (Float only).
+
+Computes: z := a*x*y + b*z
+
+This is significantly faster than naive loops for large matrices.
+-/
+def contractMiddleAddRFloat
+    {I : Type} {nI} [IndexType I nI]
+    {J : Type} {nJ} [IndexType J nJ]
+    {K : Type} {nK} [IndexType K nK]
+    (a : Float) (x : Float^[I,J]) (y : Float^[J,K]) (b : Float) (z : Float^[I,K]) : Float^[I,K] :=
+  let xArr := toFloatArray x
+  let yArr := toFloatArray y
+  let zArr := toFloatArray z
+  let result := BLAS.dgemmSimple nI.toUSize nK.toUSize nJ.toUSize a xArr yArr b zArr
+  fromFloatArray result
+
+
+/--
+Matrix-matrix multiplication
+
+Uses BLAS gemm for Float, naive loops otherwise.
+-/
+def contractMiddleAddR (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] :=
+  contractMiddleAddRNaive a x y b z
+
 
 
 /--

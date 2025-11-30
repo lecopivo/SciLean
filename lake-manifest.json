@@ -1,7 +1,7 @@
 {"version": "1.1.0",
  "packagesDir": ".lake/packages",
  "packages":
- [{"url": "https://github.com/lecopivo/LeanBLAS",
+ [{"url": "https://github.com/alok/LeanBLAS",
    "type": "git",
    "subDir": null,
    "scope": "",

@@ -36,7 +36,7 @@ package scilean {
 
 
 -- require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.19.0"
-require leanblas from git "https://github.com/lecopivo/LeanBLAS" @ "v4.20.1"
+require leanblas from git "https://github.com/alok/LeanBLAS" @ "v4.20.1"
 
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
@@ -72,7 +72,7 @@ lean_lib SciLean {
 
 -- C-based FFI modules (precompiled for editor support)
 lean_lib SciLean.FFI.Core where
-  roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float]
+  roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float, `SciLean.FFI.BLAS]
   precompileModules := true
   moreLinkObjs := #[libscileanc]
 
@@ -182,3 +182,6 @@ lean_exe MNISTClassifier where
 lean_exe MetalBenchmark where
   root := `examples.MetalBenchmark
   moreLinkArgs := metalLinkArgs
+
+lean_exe GEMMBenchmark where
+  root := `examples.GEMMBenchmark
