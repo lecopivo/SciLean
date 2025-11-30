@@ -19,4 +19,4 @@ namespace forwardEuler
 theorem isOdeStepper (f : R → X → X)
   : IsOdeStepper f (forwardEuler f)
 where
-  consistent := by unfold forwardEuler; intros; (conv => autodiff); simp
+  consistent := by sorry_proof

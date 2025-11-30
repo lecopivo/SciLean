@@ -20,21 +20,21 @@ def rand01 : IO Float := do
   return i.toFloat / N.toFloat
 
 def FloatArray.random (n : Nat) : IO FloatArray := do
-  let mut xs : FloatArray := .mkEmpty n
+  let mut xs : FloatArray := .emptyWithCapacity n
   for _ in [0:n] do
     xs := xs.push (← rand01)
   return xs
 
 /-- Create random Float^[I,J] matrix -/
 def DataArrayN.random {I nI} [IndexType I nI] {J nJ} [IndexType J nJ] : IO (Float^[I,J]) := do
-  let mut arr : FloatArray := .mkEmpty (nI * nJ)
+  let mut arr : FloatArray := .emptyWithCapacity (nI * nJ)
   for _ in [0:(nI * nJ)] do
     arr := arr.push (← rand01)
   return DataArrayN.fromFloatArray arr
 
 /-- Naive matrix multiplication: C = A * B -/
 def naiveMatMul (m k n : Nat) (A B : FloatArray) : FloatArray := Id.run do
-  let mut C : FloatArray := .mkEmpty (m * n)
+  let mut C : FloatArray := .emptyWithCapacity (m * n)
   for _ in [0:m*n] do
     C := C.push 0.0
   for i in [0:m] do
@@ -49,7 +49,7 @@ def naiveMatMul (m k n : Nat) (A B : FloatArray) : FloatArray := Id.run do
 
 /-- BLAS GEMM: C = A * B -/
 def blasMatMul (m k n : Nat) (A B : FloatArray) : FloatArray :=
-  let C : FloatArray := .mk (Array.mkArray (m * n) 0.0)
+  let C : FloatArray := .mk (Array.replicate (m * n) 0.0)
   BLAS.dgemmSimple m.toUSize n.toUSize k.toUSize 1.0 A B 0.0 C
 
 /-- Verify correctness -/
@@ -121,7 +121,7 @@ def runBenchmarks : IO Unit := do
 
   for (m, k, n) in sizes do
     IO.println s!"\nGEMM: {m}x{k} @ {k}x{n}"
-    IO.println (String.mk (List.replicate 40 '-'))
+    IO.println (String.ofList (List.replicate 40 '-'))
 
     let A ← FloatArray.random (m * k)
     let B ← FloatArray.random (k * n)

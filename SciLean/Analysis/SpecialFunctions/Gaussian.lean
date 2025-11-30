@@ -171,13 +171,12 @@ theorem mul_gaussian_gaussian (μ₁ μ₂ : X) (σ₁ σ₂ : R) (x : X) :
   · apply congrFun; apply congrArg
     simp only [div_eq_mul_inv]
     simp only [pow_push,inv_eq_pow,sqrt_eq_pow,
-               pow_pow,pow_pow_nat_real,pow_pow_real_nat]
+               pow_pow,pow_pow_real_nat]
     norm_num
     generalize hβ : (σ₁ * σ₁ + σ₂ * σ₂) = β
     have : 0 < β := by rw[←hβ]; sorry_proof
-    simp only [← inv_eq_pow, ←pow_nat_to_real]
+    simp only [← inv_eq_pow, -pow_nat_to_real]
     field_simp
-    ring
 
   · apply congrArg
 
@@ -186,6 +185,6 @@ theorem mul_gaussian_gaussian (μ₁ μ₂ : X) (σ₁ σ₂ : R) (x : X) :
     generalize h'   : sqrt (σ₁ * σ₁ * (σ₂ * σ₂) * (σ₁ * σ₁ + σ₂ * σ₂)⁻¹) = d
 
     simp only [norm2_def, smul_pull, sub_pull, add_pull]
-    simp only [div_eq_mul_inv, inv_eq_pow, sqrt_eq_pow, pow_push, pow_pow]
+    simp only [div_eq_mul_inv, inv_eq_pow, pow_push, pow_pow]
 
     sorry_proof

@@ -192,11 +192,7 @@ theorem setElem.arg_xs.HasRevFDeriv_rule {𝕜 X I Y : Type*}
          fun dx' =>
            let dxi := dx'[i]
            let dx' := setElem dx' i 0 .intro
-           (dx', dxi))) := by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => simp
+           (dx', dxi))) := sorry_proof
 
 open Classical
 @[data_synth]

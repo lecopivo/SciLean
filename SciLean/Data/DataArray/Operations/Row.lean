@@ -34,14 +34,15 @@ data_array_data_synth_abbrev DataArrayN.row X R in x : HasAdjointUpdate R by
   case adjoint => data_synth
   case simp => intros; simp; ext ⟨i,j⟩; sorry_proof --simp[uncurry_getElem]; sorry_proof
 
-data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDeriv R by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => rfl
+-- TODO: Fix universe polymorphism issue in abbrev_data_synth (see Curry.lean line 41 comment)
+-- data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDeriv R by
+--   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+--   case deriv => intros; data_synth
+--   case adjoint => intros; dsimp; data_synth
+--   case simp => rfl
 
-data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDerivUpdate R by
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => rfl
+-- data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDerivUpdate R by
+--   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+--   case deriv => intros; data_synth
+--   case adjoint => intros; dsimp; data_synth
+--   case simp => rfl

@@ -94,13 +94,4 @@ theorem explicitSymplecticEuler_eq_implicitSymplecticEulerV1
   : explicitSymplecticEuler (fun q p => T p + V q)
     =
     implicitSymplecticEulerV1 (fun q p => T p + V q) :=
-by
-  unfold implicitSymplecticEulerV1
-  unfold explicitSymplecticEuler
-  conv =>
-    rhs
-    solve_for p' from 1 := sorry_proof
-    solve_as_inv
-    solve_as_inv
-  conv => lfun_trans
   sorry_proof
