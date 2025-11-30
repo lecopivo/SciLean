@@ -1,20 +1,23 @@
 import SciLean
 import SciLean.FFI.Metal
+import SciLean.Util.Benchmark
 
 open SciLean
+
+namespace MetalBenchmark
 
 def rand01 : IO Float := do
   let N : Nat := 10^16
   let i ← IO.rand 0 N
   return i.toFloat / N.toFloat
 
-def FloatArray.rand01 (n : Nat) : IO FloatArray := do
-  let mut xs : FloatArray := .mkEmpty n
+def FloatArray.random (n : Nat) : IO FloatArray := do
+  let mut xs : FloatArray := .emptyWithCapacity n
   for _ in [0:n] do
-    xs := xs.push (← _root_.rand01)
+    xs := xs.push (← rand01)
   return xs
 
--- CPU KMeans (baseline)
+-- CPU KMeans (naive baseline)
 def kmeansCPU (d n k : Nat) (points centroids : FloatArray) : Float := Id.run do
   let mut loss := 0.0
   for i in [0:n] do
@@ -30,9 +33,9 @@ def kmeansCPU (d n k : Nat) (points centroids : FloatArray) : Float := Id.run do
     loss := loss + minNorm2
   return loss
 
--- CPU Matrix multiply (baseline)
+-- CPU Matrix multiply (naive baseline)
 def gemmCPU (m k n : Nat) (A B : FloatArray) : FloatArray := Id.run do
-  let mut C : FloatArray := .mkEmpty (m * n)
+  let mut C : FloatArray := .emptyWithCapacity (m * n)
   for _ in [0:m*n] do
     C := C.push 0.0
   for i in [0:m] do
@@ -45,59 +48,75 @@ def gemmCPU (m k n : Nat) (A B : FloatArray) : FloatArray := Id.run do
       C := C.uset (i*n + j).toUSize sum sorry_proof
   return C
 
-def benchmark (name : String) (warmup iterations : Nat) (f : Unit → IO α) : IO Unit := do
-  -- Warmup
-  for _ in [0:warmup] do
-    let _ ← f ()
-
-  -- Timed runs
-  let start ← IO.monoNanosNow
-  for _ in [0:iterations] do
-    let _ ← f ()
-  let elapsed := (← IO.monoNanosNow) - start
-  let avgMs := (elapsed.toFloat / iterations.toFloat) / 1_000_000.0
-  IO.println s!"{name}: {avgMs}ms avg over {iterations} iterations"
-
-def main : IO Unit := do
-  IO.println "SciLean Metal Benchmark"
-  IO.println "======================"
-
-  -- Check Metal availability
-  IO.println ""
-  let metalAvailable := Metal.isAvailable ()
-  IO.println s!"Metal available: {metalAvailable}"
-
-  -- KMeans benchmark
-  IO.println ""
-  IO.println "KMeans Benchmark (n=10000, d=64, k=32)"
+def runKMeansBenchmarks : IO Unit := do
   let d := 64
   let n := 10000
   let k := 32
-  let points ← FloatArray.rand01 (n * d)
-  let centroids ← FloatArray.rand01 (k * d)
 
-  benchmark "CPU KMeans" 2 10 fun () => do
-    return kmeansCPU d n k points centroids
+  IO.println s!"KMeans: n={n}, d={d}, k={k}"
 
-  if metalAvailable then
-    benchmark "GPU KMeans" 2 10 fun () => do
-      return Metal.kmeans d.toUSize n.toUSize k.toUSize points centroids
+  let points ← FloatArray.random (n * d)
+  let centroids ← FloatArray.random (k * d)
 
-  -- GEMM benchmark
-  IO.println ""
-  IO.println "GEMM Benchmark (512x512 × 512x512)"
+  let config : Benchmark.Config := { warmupIterations := 2, timedIterations := 10 }
+  let mut suite : Benchmark.Suite := { name := "KMeans Benchmark" }
+
+  -- CPU
+  let cpuResult ← Benchmark.run "CPU (naive loops)" config fun () => do
+    let _ := kmeansCPU d n k points centroids
+    pure ()
+  suite := suite.add cpuResult
+
+  -- GPU
+  if Metal.isAvailable () then
+    let gpuResult ← Benchmark.run "GPU (Metal)" config fun () => do
+      let _ := Metal.kmeans d.toUSize n.toUSize k.toUSize points centroids
+      pure ()
+    suite := suite.add gpuResult
+
+  suite.print
+
+def runGEMMBenchmarks : IO Unit := do
   let m := 512
   let kk := 512
   let nn := 512
-  let A ← FloatArray.rand01 (m * kk)
-  let B ← FloatArray.rand01 (kk * nn)
 
-  benchmark "CPU GEMM" 1 3 fun () => do
-    return gemmCPU m kk nn A B
+  IO.println s!"\nGEMM: {m}x{kk} @ {kk}x{nn}"
 
-  if metalAvailable then
-    benchmark "GPU GEMM" 1 10 fun () => do
-      return Metal.gemm m.toUSize kk.toUSize nn.toUSize A B
+  let A ← FloatArray.random (m * kk)
+  let B ← FloatArray.random (kk * nn)
 
+  let cpuConfig : Benchmark.Config := { warmupIterations := 1, timedIterations := 3 }
+  let gpuConfig : Benchmark.Config := { warmupIterations := 1, timedIterations := 10 }
+  let mut suite : Benchmark.Suite := { name := "GEMM Benchmark" }
+
+  -- CPU
+  let cpuResult ← Benchmark.run "CPU (naive loops)" cpuConfig fun () => do
+    let _ := gemmCPU m kk nn A B
+    pure ()
+  suite := suite.add cpuResult
+
+  -- GPU
+  if Metal.isAvailable () then
+    let gpuResult ← Benchmark.run "GPU (Metal)" gpuConfig fun () => do
+      let _ := Metal.gemm m.toUSize kk.toUSize nn.toUSize A B
+      pure ()
+    suite := suite.add gpuResult
+
+  suite.print
+
+def main : IO Unit := do
+  IO.println "╔════════════════════════════════════════════════════════════╗"
+  IO.println "║           SciLean Metal GPU Benchmark                      ║"
+  IO.println "╚════════════════════════════════════════════════════════════╝"
   IO.println ""
-  IO.println "Done!"
+  IO.println s!"Metal available: {Metal.isAvailable ()}"
+
+  runKMeansBenchmarks
+  runGEMMBenchmarks
+
+  IO.println "\nBenchmark complete!"
+
+end MetalBenchmark
+
+def main := MetalBenchmark.main
