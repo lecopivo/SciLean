@@ -191,3 +191,6 @@ lean_exe GEMMBenchmark where
 
 lean_exe SimpleMNIST where
   root := `examples.SimpleMNIST
+
+lean_exe DependentMNIST where
+  root := `examples.DependentMNIST

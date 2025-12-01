@@ -1,0 +1,82 @@
+{"9":
+ "<code>Float : Type</code><span class=\"sep\"></span><code class=\"docstring\">64-bit floating-point numbers.\n\n`Float` corresponds to the IEEE 754 *binary64* format (`double` in C or `f64` in Rust).\nFloating-point numbers are a finite representation of a subset of the real numbers, extended with\nextra “sentinel” values that represent undefined and infinite results as well as separate positive\nand negative zeroes. Arithmetic on floating-point numbers approximates the corresponding operations\non the real numbers by rounding the results to numbers that are representable, propagating error and\ninfinite values.\n\nFloating-point numbers include [subnormal numbers](https://en.wikipedia.org/wiki/Subnormal_number).\nTheir special values are:\n * `NaN`, which denotes a class of “not a number” values that result from operations such as\n   dividing zero by zero, and\n * `Inf` and `-Inf`, which represent positive and infinities that result from dividing non-zero\n   values by zero.\n</code>",
+ "8": "<code>Float</code>",
+ "7":
+ "<code>gelu (x : Float) : Float</code><span class=\"sep\"></span><code class=\"docstring\">Gaussian Error Linear Unit activation\\.\n    Approximation using tanh\\. </code>",
+ "6":
+ "<code>outputSize : Nat</code><span class=\"sep\"></span><code class=\"docstring\">Number of digit classes \\(0\\-9\\) </code>",
+ "5":
+ "<code>hiddenSize : Nat</code><span class=\"sep\"></span><code class=\"docstring\">Hidden layer size </code>",
+ "43":
+ "<code>Array.mapIdx.{u, v} {α : Type u} {β : Type v} (f : Nat → α → β) (as : Array α) : Array β</code><span class=\"sep\"></span><code class=\"docstring\">Applies a function to each element of the array along with the index at which that element is found,\nreturning the array of results.\n\n`Array.mapFinIdx` is a variant that additionally provides the function with a proof that the index\nis valid.\n</code>",
+ "42":
+ "<code>softmaxGrad (pred : Array Float) (target : UInt8) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Compute gradient of loss w\\.r\\.t\\. pre\\-softmax logits\\. </code>",
+ "41":
+ "<code>Float.log (x : Float) : Float</code><span class=\"sep\"></span><code class=\"docstring\">Computes the natural logarithm `ln x` of a floating-point number.\n\nThis function does not reduce in the kernel. It is implemented in compiled code by the C function\n`log`.\n</code>",
+ "40":
+ "<code class=\"docstring\">`if c then t else e` is notation for `ite c t e`, \"if-then-else\", which decides to\nreturn `t` or `e` depending on whether `c` is true or false. The explicit argument\n`c : Prop` does not have any actual computational content, but there is an additional\n`[Decidable c]` argument synthesized by typeclass inference which actually\ndetermines how to evaluate `c` to true or false. Write `if h : c then t else e`\ninstead for a \"dependent if-then-else\" `dite`, which allows `t`/`e` to use the fact\nthat `c` is true/false.\n</code>",
+ "4": "<code>Nat</code>",
+ "39":
+ "<code>UInt8.toNat (n : UInt8) : Nat</code><span class=\"sep\"></span><code class=\"docstring\">Converts an 8-bit unsigned integer to an arbitrary-precision natural number.\n\nThis function is overridden at runtime with an efficient implementation.\n</code>",
+ "38":
+ "<code>UInt8 : Type</code><span class=\"sep\"></span><code class=\"docstring\">Unsigned 8-bit integers.\n\nThis type has special support in the compiler so it can be represented by an unboxed 8-bit value\nrather than wrapping a `BitVec 8`.\n</code>",
+ "37": "<code>UInt8</code>",
+ "36":
+ "<code>crossEntropyLoss (pred : Array Float) (target : UInt8) : Float</code><span class=\"sep\"></span><code class=\"docstring\">Cross\\-entropy loss for classification\\. </code>",
+ "35": "<code>Weights</code>",
+ "34":
+ "<code>forward (x : Array Float) (w : Weights) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Forward pass through the neural network\\.\n\nWith dependent types, this would have signature:\n\n```\ndef forward (x : Float^[784]) (w : Weights) : Float^[10]\n```\n</code>",
+ "33":
+ "<code>vecAdd (a b : Array Float) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Vector addition </code>",
+ "32":
+ "<code>Array.foldl.{u, v} {α : Type u} {β : Type v} (f : β → α → β) (init : β) (as : Array α) (start : Nat := 0)\n  (stop : Nat := as.size) : β</code><span class=\"sep\"></span><code class=\"docstring\">Folds a function over an array from the left, accumulating a value starting with `init`. The\naccumulated value is combined with the each element of the array in order, using `f`.\n\nThe optional parameters `start` and `stop` control the region of the array to be folded. Folding\nproceeds from `start` (inclusive) to `stop` (exclusive), so no folding occurs unless `start &lt; stop`.\nBy default, the entire array is used.\n\nExamples:\n * `#[a, b, c].foldl f z  = f (f (f z a) b) c`\n * `#[1, 2, 3].foldl (· ++ toString ·) \"\" = \"123\"`\n * `#[1, 2, 3].foldl (s!\"({·} {·})\") \"\" = \"((( 1) 2) 3)\"`\n</code>",
+ "31":
+ "<code>Array.zip.{u, u_1} {α : Type u} {β : Type u_1} (as : Array α) (bs : Array β) : Array (α × β)</code><span class=\"sep\"></span><code class=\"docstring\">Combines two arrays into an array of pairs in which the first and second components are the\ncorresponding elements of each input array. The resulting array is the length of the shorter of the\ninput arrays.\n\nExamples:\n* `#[\"Mon\", \"Tue\", \"Wed\"].zip #[1, 2, 3] = #[(\"Mon\", 1), (\"Tue\", 2), (\"Wed\", 3)]`\n* `#[\"Mon\", \"Tue\", \"Wed\"].zip #[1, 2] = #[(\"Mon\", 1), (\"Tue\", 2)]`\n* `#[x₁, x₂, x₃].zip #[y₁, y₂, y₃, y₄] = #[(x₁, y₁), (x₂, y₂), (x₃, y₃)]`\n</code>",
+ "30":
+ "<code>Array.map.{u, v} {α : Type u} {β : Type v} (f : α → β) (as : Array α) : Array β</code><span class=\"sep\"></span><code class=\"docstring\">Applies a function to each element of the array, returning the resulting array of values.\n\nExamples:\n* `#[a, b, c].map f = #[f a, f b, f c]`\n* `#[].map Nat.succ = #[]`\n* `#[\"one\", \"two\", \"three\"].map (·.length) = #[3, 3, 5]`\n* `#[\"one\", \"two\", \"three\"].map (·.reverse) = #[\"eno\", \"owt\", \"eerht\"]`\n</code>",
+ "3":
+ "<code>Nat : Type</code><span class=\"sep\"></span><code class=\"docstring\">The natural numbers, starting at zero.\n\nThis type is special-cased by both the kernel and the compiler, and overridden with an efficient\nimplementation. Both use a fast arbitrary-precision arithmetic library (usually\n[GMP](https://gmplib.org/)); at runtime, `Nat` values that are sufficiently small are unboxed.\n</code>",
+ "29": "<code>Array (Array Float)</code>",
+ "28":
+ "<code>matVecMul (mat : Array (Array Float)) (vec : Array Float) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Matrix\\-vector multiplication: \\(n×m\\) @ \\(m\\) → \\(n\\) </code>",
+ "27":
+ "<code>Array.push.{u} {α : Type u} (a : Array α) (v : α) : Array α</code><span class=\"sep\"></span><code class=\"docstring\">Adds an element to the end of an array. The resulting array's size is one greater than the input\narray. If there are no other references to the array, then it is modified in-place.\n\nThis takes amortized `O(1)` time because `Array α` is represented by a dynamic array.\n\nExamples:\n* `#[].push \"apple\" = #[\"apple\"]`\n* `#[\"apple\"].push \"orange\" = #[\"apple\", \"orange\"]`\n</code>",
+ "26":
+ "<code>Float.exp (x : Float) : Float</code><span class=\"sep\"></span><code class=\"docstring\">Computes the exponential `e^x` of a floating-point number.\n\nThis function does not reduce in the kernel. It is implemented in compiled code by the C function\n`exp`.\n</code>",
+ "25":
+ "<code>Array.mkEmpty.{u} {α : Type u} (c : Nat) : Array α</code><span class=\"sep\"></span><code class=\"docstring\">Constructs a new empty array with initial capacity `c`.\n\nThis will be deprecated in favor of `Array.emptyWithCapacity` in the future.\n</code>",
+ "24":
+ "<code class=\"docstring\">`for x in e do s`  iterates over `e` assuming `e`'s type has an instance of the `ForIn` typeclass.\n`break` and `continue` are supported inside `for` loops.\n`for x in e, x2 in e2, ... do s` iterates of the given collections in parallel,\nuntil at least one of them is exhausted.\nThe types of `e2` etc. must implement the `Std.ToStream` typeclass.\n</code>",
+ "23":
+ "<code class=\"docstring\">`return e` inside of a `do` block makes the surrounding block evaluate to `pure e`,\nskipping any further statements.\nNote that uses of the `do` keyword in other syntax like in `for _ in _ do`\ndo not constitute a surrounding block in this sense;\nin supported editors, the corresponding `do` keyword of the surrounding block\nis highlighted when hovering over `return`.\n\n`return` not followed by a term starting on the same line is equivalent to `return ()`.\n</code>",
+ "22":
+ "<code>Array.size.{u} {α : Type u} (a : Array α) : Nat</code><span class=\"sep\"></span><code class=\"docstring\">Gets the number of elements stored in an array.\n\nThis is a cached value, so it is `O(1)` to access. The space allocated for an array, referred to as\nits _capacity_, is at least as large as its size, but may be larger. The capacity of an array is an\ninternal detail that's not observable by Lean code.\n</code>",
+ "21":
+ "<code>Id.run.{u_1} {α : Type u_1} (x : Id α) : α</code><span class=\"sep\"></span><code class=\"docstring\">Runs a computation in the identity monad.\n\nThis function is the identity function. Because its parameter has type `Id α`, it causes\n`do`-notation in its arguments to use the `Monad Id` instance.\n</code>",
+ "20": "<code>Array Float</code>",
+ "2":
+ "<code>inputSize : Nat</code><span class=\"sep\"></span><code class=\"docstring\">Size of MNIST images: 28 x 28 = 784 pixels </code>",
+ "19":
+ "<code>softmax (x : Array Float) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Numerically stable softmax: converts logits to probabilities\\. </code>",
+ "18":
+ "<code>Weights.b2 (self : Weights) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">Second layer bias </code>",
+ "17":
+ "<code>Weights.w2 (self : Weights) : Array (Array Float)</code><span class=\"sep\"></span><code class=\"docstring\">Second layer weights: maps 128\\-dim hidden to 10\\-dim output </code>",
+ "16":
+ "<code>Weights.b1 (self : Weights) : Array Float</code><span class=\"sep\"></span><code class=\"docstring\">First layer bias </code>",
+ "15":
+ "<code>Array.{u} (α : Type u) : Type u</code><span class=\"sep\"></span><code class=\"docstring\">`Array α` is the type of [dynamic arrays](https://en.wikipedia.org/wiki/Dynamic_array) with elements\nfrom `α`. This type has special support in the runtime.\n\nArrays perform best when unshared. As long as there is never more than one reference to an array,\nall updates will be performed _destructively_. This results in performance comparable to mutable\narrays in imperative programming languages.\n\nAn array has a size and a capacity. The size is the number of elements present in the array, while\nthe capacity is the amount of memory currently allocated for elements. The size is accessible via\n`Array.size`, but the capacity is not observable from Lean code. `Array.emptyWithCapacity n` creates\nan array which is equal to `#[]`, but internally allocates an array of capacity `n`. When the size\nexceeds the capacity, allocation is required to grow the array.\n\nFrom the point of view of proofs, `Array α` is just a wrapper around `List α`.\n</code>",
+ "14":
+ "<code>Weights.w1 (self : Weights) : Array (Array Float)</code><span class=\"sep\"></span><code class=\"docstring\">First layer weights: maps 784\\-dim input to 128\\-dim hidden </code>",
+ "13":
+ "<code>Weights : Type</code><span class=\"sep\"></span><code class=\"docstring\">Neural network weights with type\\-safe dimensions\\.\n\nThe types encode:\n\n* Layer 1: 784 inputs → 128 outputs \\(for MNIST 28×28 images\\)\n\n* Layer 2: 128 inputs → 10 outputs \\(for digit classes 0\\-9\\)\n  </code>",
+ "12":
+ "<code>Float.tanh : Float → Float</code><span class=\"sep\"></span><code class=\"docstring\">Computes the hyperbolic tangent of a floating-point number.\n\nThis function does not reduce in the kernel. It is implemented in compiled code by the C function\n`tanh`.\n</code>",
+ "11":
+ "<code>Float.sqrt : Float → Float</code><span class=\"sep\"></span><code class=\"docstring\">Computes the square root of a floating-point number.\n\nThis function does not reduce in the kernel. It is implemented in compiled code by the C function\n`sqrt`.\n</code>",
+ "10":
+ "<code class=\"docstring\">`let` is used to declare a local definition. Example:\n```\nlet x := 1\nlet y := x + 1\nx + y\n```\nSince functions are first class citizens in Lean, you can use `let` to declare\nlocal functions too.\n```\nlet double := fun x =&gt; 2*x\ndouble (double 3)\n```\nFor recursive definitions, you should use `let rec`.\nYou can also perform pattern matching using `let`. For example,\nassume `p` has type `Nat × Nat`, then you can write\n```\nlet (x, y) := p\nx + y\n```\n\nThe *anaphoric let* `let := v` defines a variable called `this`.\n</code>",
+ "1":
+ "<code>doc.verso</code><span class=\"sep\"></span><code class=\"docstring\">whether to use Verso syntax in docstrings</code>",
+ "0":
+ "<code class=\"docstring\">`set_option &lt;id&gt; &lt;value&gt;` sets the option `&lt;id&gt;` to `&lt;value&gt;`. Depending on the type of the option,\nthe value can be `true`, `false`, a string, or a numeral. Options are used to configure behavior of\nLean as well as user-defined extensions. The setting is active until the end of the current `section`\nor `namespace` or the end of the file.\nAuto-completion is available for `&lt;id&gt;` to list available options.\n\n`set_option &lt;id&gt; &lt;value&gt; in &lt;command&gt;` sets the option for just a single command:\n```\nset_option pp.all true in\n#check 1 + 1\n```\nSimilarly, `set_option &lt;id&gt; &lt;value&gt; in` can also be used inside terms and tactics to set an option\nonly in a single term or tactic.\n</code>"}
