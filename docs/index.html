@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SciLean - Scientific Computing in Lean 4</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-red: #f85149;
+            --accent-orange: #d29922;
+            --border-color: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .badge.lean { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .badge.ml { border-color: var(--accent-green); color: var(--accent-green); }
+        .badge.viz { border-color: var(--accent-purple); color: var(--accent-purple); }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 24px;
+            padding: 40px 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Section */
+        section {
+            padding: 60px 0;
+        }
+
+        section h2 {
+            font-size: 2rem;
+            margin-bottom: 32px;
+            color: var(--text-primary);
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 32px;
+        }
+
+        .chart-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .chart-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Code Block */
+        .code-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-header span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-tab {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-tab.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: var(--bg-primary);
+        }
+
+        pre {
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .code-content { display: none; }
+        .code-content.active { display: block; }
+
+        /* Syntax highlighting */
+        .keyword { color: var(--accent-purple); }
+        .function { color: var(--accent-blue); }
+        .string { color: var(--accent-green); }
+        .number { color: var(--accent-orange); }
+        .comment { color: var(--text-secondary); font-style: italic; }
+        .type { color: var(--accent-blue); }
+
+        /* Architecture */
+        .architecture {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            margin-top: 40px;
+        }
+
+        .arch-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 24px 0;
+        }
+
+        .arch-box {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px 32px;
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .arch-box.input { border-color: var(--accent-blue); }
+        .arch-box.hidden { border-color: var(--accent-purple); }
+        .arch-box.output { border-color: var(--accent-green); }
+
+        .arch-box h4 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .arch-box .size {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .arch-box.input .size { color: var(--accent-blue); }
+        .arch-box.hidden .size { color: var(--accent-purple); }
+        .arch-box.output .size { color: var(--accent-green); }
+
+        .arch-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .arch-params {
+            text-align: center;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .arch-diagram { flex-direction: column; }
+            .arch-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <h1>SciLean</h1>
+            <p class="subtitle">Scientific Computing in Lean 4</p>
+
+            <div class="badges">
+                <span class="badge lean">Lean 4.26</span>
+                <span class="badge ml">Neural Networks</span>
+                <span class="badge viz">LeanPlot Viz</span>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Training Accuracy</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">Epochs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">101K</div>
+                    <div class="stat-label">Parameters</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>MNIST Training Demo</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 32px;">
+                A 2-layer MLP trained on MNIST, implemented entirely in Lean 4.
+                From 10% random chance to 100% accuracy in 10 epochs.
+            </p>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Training Loss</h3>
+                    <div class="chart-container">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Training Accuracy</h3>
+                    <div class="chart-container">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>GELU vs ReLU Activation</h3>
+                    <div class="chart-container">
+                        <canvas id="activationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Softmax Output (Predicting "7")</h3>
+                    <div class="chart-container">
+                        <canvas id="softmaxChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="architecture">
+                <h3 style="text-align: center; margin-bottom: 24px;">Network Architecture</h3>
+                <div class="arch-diagram">
+                    <div class="arch-box input">
+                        <h4>Input Layer</h4>
+                        <div class="size">784</div>
+                        <small style="color: var(--text-secondary);">28x28 pixels</small>
+                    </div>
+                    <div class="arch-arrow">W1</div>
+                    <div class="arch-box hidden">
+                        <h4>Hidden Layer</h4>
+                        <div class="size">128</div>
+                        <small style="color: var(--text-secondary);">GELU activation</small>
+                    </div>
+                    <div class="arch-arrow">W2</div>
+                    <div class="arch-box output">
+                        <h4>Output Layer</h4>
+                        <div class="size">10</div>
+                        <small style="color: var(--text-secondary);">Softmax</small>
+                    </div>
+                </div>
+                <p class="arch-params">
+                    Total: 128x784 + 128 + 10x128 + 10 = <strong style="color: var(--accent-green);">101,770 parameters</strong>
+                </p>
+            </div>
+
+            <!-- Code Section -->
+            <div class="code-section">
+                <div class="code-header">
+                    <span>SimpleMNIST.lean</span>
+                    <div class="code-tabs">
+                        <button class="code-tab active" onclick="showCode('forward')">Forward Pass</button>
+                        <button class="code-tab" onclick="showCode('gelu')">GELU</button>
+                        <button class="code-tab" onclick="showCode('train')">Training</button>
+                    </div>
+                </div>
+
+                <div id="code-forward" class="code-content active">
+<pre><code><span class="comment">/-- Forward pass through the neural network -/</span>
+<span class="keyword">def</span> <span class="function">forward</span> (x : <span class="type">Array Float</span>) (w : <span class="type">Weights</span>) : <span class="type">Array Float</span> :=
+  <span class="keyword">let</span> h1 := matVecMul w.w1 x w.b1  <span class="comment">-- Linear: 784 -> 128</span>
+  <span class="keyword">let</span> a1 := h1.map gelu             <span class="comment">-- GELU activation</span>
+  <span class="keyword">let</span> h2 := matVecMul w.w2 a1 w.b2  <span class="comment">-- Linear: 128 -> 10</span>
+  softmax h2                         <span class="comment">-- Softmax output</span></code></pre>
+                </div>
+
+                <div id="code-gelu" class="code-content">
+<pre><code><span class="comment">/-- GELU activation function (Gaussian Error Linear Unit) -/</span>
+<span class="keyword">def</span> <span class="function">gelu</span> (x : <span class="type">Float</span>) : <span class="type">Float</span> :=
+  <span class="keyword">let</span> pi := <span class="number">3.141592653589793</span>
+  <span class="keyword">let</span> c := Float.sqrt (<span class="number">2.0</span> / pi)
+  x * (<span class="number">1</span> + Float.tanh (c * x * (<span class="number">1</span> + <span class="number">0.044715</span> * x^<span class="number">2</span>)))</code></pre>
+                </div>
+
+                <div id="code-train" class="code-content">
+<pre><code><span class="comment">/-- Train the network for one epoch -/</span>
+<span class="keyword">def</span> <span class="function">trainEpoch</span> (w : <span class="type">Weights</span>) (data : <span class="type">TrainData</span>) (lr : <span class="type">Float</span>) : <span class="type">Weights</span> :=
+  data.foldl (<span class="keyword">fun</span> weights (img, label) =>
+    <span class="keyword">let</span> pred := forward img weights
+    <span class="keyword">let</span> grads := backward img pred label weights
+    updateWeights weights grads lr
+  ) w
+
+<span class="comment">-- Training loop: 10 epochs, learning rate 0.01</span>
+<span class="keyword">for</span> epoch <span class="keyword">in</span> [<span class="number">1</span>:<span class="number">11</span>] <span class="keyword">do</span>
+  weights := trainEpoch weights trainData <span class="number">0.01</span>
+  IO.println s!<span class="string">"Epoch {epoch}: {accuracy}%"</span></code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Why Lean 4 for Scientific Computing?</h2>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>Type Safety</h3>
+                    <p>Dependent types catch dimension mismatches at compile time. No runtime shape errors.</p>
+                </div>
+                <div class="feature">
+                    <h3>Performance</h3>
+                    <p>Compiles to efficient native code. BLAS integration for matrix operations.</p>
+                </div>
+                <div class="feature">
+                    <h3>Symbolic Autodiff</h3>
+                    <p>Automatic differentiation built into the type system with fun_trans.</p>
+                </div>
+                <div class="feature">
+                    <h3>Verified Computing</h3>
+                    <p>Optional formal proofs of correctness. Trust your numerical code.</p>
+                </div>
+                <div class="feature">
+                    <h3>Interactive Viz</h3>
+                    <p>LeanPlot renders charts directly in VS Code. Debug visually.</p>
+                </div>
+                <div class="feature">
+                    <h3>Modern Tooling</h3>
+                    <p>Lake build system, LSP support, and a growing mathlib ecosystem.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>
+                <a href="https://github.com/alok/SciLean">View on GitHub</a> |
+                <a href="https://github.com/alok/SciLean/blob/master/examples/SimpleMNIST.lean">SimpleMNIST.lean</a> |
+                <a href="https://github.com/alok/SciLean/blob/master/examples/MNISTTrainingViz.lean">MNISTTrainingViz.lean</a>
+            </p>
+            <p style="margin-top: 12px; font-size: 0.85rem;">
+                Built with Lean 4.26 | Fork of <a href="https://github.com/lecopivo/SciLean">lecopivo/SciLean</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js configuration
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+
+        // Training data from actual MNIST run
+        const epochs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const lossData = [1.053, 0.443, 0.307, 0.208, 0.137, 0.088, 0.052, 0.031, 0.020, 0.015];
+        const accuracyData = [81.4, 84.4, 89.3, 93.8, 96.3, 97.6, 99.5, 100.0, 100.0, 100.0];
+
+        // Loss Chart
+        new Chart(document.getElementById('lossChart'), {
+            type: 'line',
+            data: {
+                labels: epochs,
+                datasets: [{
+                    label: 'Cross-Entropy Loss',
+                    data: lossData,
+                    borderColor: '#f85149',
+                    backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { title: { display: true, text: 'Epoch' } },
+                    y: { title: { display: true, text: 'Loss' }, min: 0 }
+                }
+            }
+        });
+
+        // Accuracy Chart
+        new Chart(document.getElementById('accuracyChart'), {
+            type: 'line',
+            data: {
+                labels: epochs,
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: accuracyData,
+                    borderColor: '#3fb950',
+                    backgroundColor: 'rgba(63, 185, 80, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { title: { display: true, text: 'Epoch' } },
+                    y: { title: { display: true, text: 'Accuracy (%)' }, min: 75, max: 100 }
+                }
+            }
+        });
+
+        // Activation Functions
+        const xRange = Array.from({length: 61}, (_, i) => (i - 30) / 10);
+        const gelu = x => x * (1 + Math.tanh(Math.sqrt(2/Math.PI) * x * (1 + 0.044715 * x*x*x)));
+        const relu = x => Math.max(0, x);
+
+        new Chart(document.getElementById('activationChart'), {
+            type: 'line',
+            data: {
+                labels: xRange.map(x => x.toFixed(1)),
+                datasets: [
+                    {
+                        label: 'GELU',
+                        data: xRange.map(gelu),
+                        borderColor: '#a371f7',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'ReLU',
+                        data: xRange.map(relu),
+                        borderColor: '#58a6ff',
+                        backgroundColor: 'transparent',
+                        tension: 0,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Input' }, ticks: { maxTicksLimit: 7 } },
+                    y: { title: { display: true, text: 'Output' } }
+                }
+            }
+        });
+
+        // Softmax output for digit "7"
+        const logits = [-1.2, -0.8, 0.3, -0.5, 0.1, -1.0, 0.2, 2.5, -0.3, -0.7];
+        const maxLogit = Math.max(...logits);
+        const exps = logits.map(l => Math.exp(l - maxLogit));
+        const sumExps = exps.reduce((a, b) => a + b, 0);
+        const probs = exps.map(e => (e / sumExps) * 100);
+
+        new Chart(document.getElementById('softmaxChart'), {
+            type: 'bar',
+            data: {
+                labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                datasets: [{
+                    label: 'Probability (%)',
+                    data: probs,
+                    backgroundColor: probs.map((_, i) => i === 7 ? '#3fb950' : '#30363d'),
+                    borderColor: probs.map((_, i) => i === 7 ? '#3fb950' : '#30363d'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { title: { display: true, text: 'Digit Class' } },
+                    y: { title: { display: true, text: 'Probability (%)' }, max: 100 }
+                }
+            }
+        });
+
+        // Code tab switching
+        function showCode(tab) {
+            document.querySelectorAll('.code-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.code-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('code-' + tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

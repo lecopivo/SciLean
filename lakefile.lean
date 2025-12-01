@@ -38,6 +38,9 @@ package scilean {
 -- require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.19.0"
 require leanblas from git "https://github.com/alok/LeanBLAS" @ "v4.26.0-rc2"
 
+-- LeanPlot for visualization (local dependency)
+require leanplot from ".." / "LeanPlot"
+
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
 target libscileanc pkg : FilePath := do
@@ -185,3 +188,6 @@ lean_exe MetalBenchmark where
 
 lean_exe GEMMBenchmark where
   root := `examples.GEMMBenchmark
+
+lean_exe SimpleMNIST where
+  root := `examples.SimpleMNIST
