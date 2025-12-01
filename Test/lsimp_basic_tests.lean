@@ -115,8 +115,8 @@ x : ℕ
         (x,y)).1 rewrite_by lsimp
 
 /--
-info: (let x := a * b;
-  let y := x * c;
+info: (have x := a * b;
+  have y := x * c;
   (x, y)).1 : ℕ
 -/
 #guard_msgs in

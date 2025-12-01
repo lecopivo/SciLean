@@ -72,29 +72,53 @@ df (0, 0) : K
 #guard_msgs in
 #check ∂! (fun x : K => x^2)
 
-/-- info: fun x => (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K → K × K →L[K] K × K -/
+/-- info: fun x => fun x =>L[K] (x.1 + x.1, x.2 + x.2) : K × K → K × K →L[K] K × K -/
 #guard_msgs in
 #check (∂ (fun x : K×K => x + x)) rewrite_by
   autodiff
   simp only [ContinuousLinearMap.add_apply]
 
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check (∂! (fun x => x*x) (1:K))
 
-/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
+/--
+info: fun x =>L[K]
+  let dx₁ := x.1;
+  let dx₁_1 := x.2;
+  let dx₁_2 := x.1;
+  let dx₁_3 := x.2;
+  let dz := dx₁ + dx₁_2;
+  let dz_1 := dx₁_1 + dx₁_3;
+  (dz, dz_1) : K × K →L[K] K × K
+-/
 #guard_msgs in
 #check ((∂ (x:=((1:K),(2:K))), (x + x)))
   rewrite_by
     autodiff
 
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check ∂! (x:=(1:K)), x*x
 
-/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
+/--
+info: fun x =>L[K]
+  let dx₁ := x.1;
+  let dx₁_1 := x.2;
+  let dx₁_2 := x.1;
+  let dx₁_3 := x.2;
+  let dz := dx₁ + dx₁_2;
+  let dz_1 := dx₁_1 + dx₁_3;
+  (dz, dz_1) : K × K →L[K] K × K
+-/
 #guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
 
@@ -141,7 +165,7 @@ set_default_scalar K
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ∇ x : (K×K), x.1
@@ -150,7 +174,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ∇! x : (K×K), x.2
@@ -161,7 +185,7 @@ variable (y : K × K)
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ∇ (x:=y), (x + x)
@@ -174,7 +198,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ∇ (fun x => x + x) y
@@ -183,7 +207,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ∇ (fun x => x + x) ((1.0,2.0) : K×K)
@@ -192,7 +216,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 error: failed to synthesize
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #check ((∇! x : (K×K), ⟪x,(1,0)⟫)) rewrite_by autodiff
@@ -215,7 +239,7 @@ set_default_scalar Float
 error: failed to synthesize
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #eval ∇! (fun x : Float×Float => (x + x).2) (1.0,2.0)
@@ -224,7 +248,7 @@ Additional diagnostic information may be available using the `set_option diagnos
 error: failed to synthesize
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 -/
 #guard_msgs in
 #eval ∇! (x:=((1.0 : Float),(2.0:Float))), (x + x).1

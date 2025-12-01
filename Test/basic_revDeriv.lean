@@ -141,7 +141,6 @@ example
     fun x => (∑ᴵ i, x i, fun dx _ => dx) :=
 by
   conv => lhs; autodiff
-  sorry_proof
 
 example
   : revFDeriv K (fun (x : Fin 10 → K) => ∑ᴵ i, ‖x i‖₂²)

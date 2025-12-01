@@ -36,9 +36,9 @@ info: HasRevFDeriv R
   (let c := 42;
   fun x => c * x)
   fun x =>
-  let x₁ := 42;
+  have x₁ := 42;
   (x₁ * x, fun dy =>
-    let dy₁ := (starRingEnd R) x₁ • dy;
+    have dy₁ := (starRingEnd R) x₁ • dy;
     dy₁) : Prop
 -/
 #guard_msgs in
@@ -51,15 +51,15 @@ info: HasRevFDeriv R
     let y := x ^ 2;
     y ^ 2 * x)
   fun x =>
-  let x₁ := x ^ 2;
-  let x₁_1 := x₁ ^ 2;
-  let x₁_2 := x₁_1 * x;
+  have x₁ := x ^ 2;
+  have x₁_1 := x₁ ^ 2;
+  have x₁_2 := x₁_1 * x;
   (x₁_2, fun dz =>
-    let dy₁ := (starRingEnd R) x₁_1 • dz;
-    let dy₂ := (starRingEnd R) x • dz;
-    let dx₁ := 0;
-    let dx := dx₁ + ↑2 * (starRingEnd R) x₁ ^ (2 - 1) • dy₂;
-    let dx := dy₁ + ↑2 * (starRingEnd R) x ^ (2 - 1) • dx;
+    have dy₁ := (starRingEnd R) x₁_1 • dz;
+    have dy₂ := (starRingEnd R) x • dz;
+    have dx₁ := 0;
+    have dx := dx₁ + ↑2 * (starRingEnd R) x₁ ^ (2 - 1) • dy₂;
+    have dx := dy₁ + ↑2 * (starRingEnd R) x ^ (2 - 1) • dx;
     dx) : Prop
 -/
 #guard_msgs in
@@ -72,12 +72,12 @@ info: HasRevFDeriv R
     let y := x₀ + x;
     x + y)
   fun x =>
-  let x₁ := x₀ + x;
-  let x₁ := x + x₁;
+  have x₁ := x₀ + x;
+  have x₁ := x + x₁;
   (x₁, fun dz =>
-    let dx₁ := 0;
-    let dx₁ := dx₁ + dz;
-    let dx := dz + dx₁;
+    have dx₁ := 0;
+    have dx₁ := dx₁ + dz;
+    have dx := dz + dx₁;
     dx) : Prop
 -/
 #guard_msgs in
