@@ -91,6 +91,26 @@ instance : LevelTwoData (DataArray Float) Float Float where
     dsyr2 order uplo N.toUSize alpha X offX.toUSize incX.toUSize Y offY.toUSize incY.toUSize A offA.toUSize lda.toUSize
 
 
+instance : LevelThreeData (DataArray Float) Float Float where
+  gemm order transA transB M N K_dim alpha A offA lda B offB ldb beta C offC ldc :=
+    dgemm order transA transB M.toUSize N.toUSize K_dim.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize beta C offC.toUSize ldc.toUSize
+
+  symm order side uplo M N alpha A offA lda B offB ldb beta C offC ldc :=
+    dsymm order side uplo M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize beta C offC.toUSize ldc.toUSize
+
+  syrk order uplo trans N K alpha A offA lda beta C offC ldc :=
+    dsyrk order uplo trans N.toUSize K.toUSize alpha A offA.toUSize lda.toUSize beta C offC.toUSize ldc.toUSize
+
+  syr2k order uplo trans N K alpha A offA lda B offB ldb beta C offC ldc :=
+    dsyr2k order uplo trans N.toUSize K.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize beta C offC.toUSize ldc.toUSize
+
+  trmm order side uplo trans diag M N alpha A offA lda B offB ldb :=
+    dtrmm order side uplo trans diag M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
+
+  trsm order side uplo trans diag M N alpha A offA lda B offB ldb :=
+    dtrsm order side uplo trans diag M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
+
+
 instance : BLAS (DataArray Float) Float Float where
 
 -- This is provable under the assumption `RCLike Float`

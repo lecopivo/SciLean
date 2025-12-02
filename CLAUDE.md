@@ -7,6 +7,10 @@
 3. Gradient/autodiff tests
 4. Better ML support (see lean-mlir for inspiration)
 
+## Local Dependencies
+- **LeanBLAS** (`../LeanBLAS`): Vendored locally for active development. Expect frequent changes to BLAS bindings, Level 1-3 operations, and FFI layer. Keep in sync with SciLean's mathlib version.
+- **LeanPlot** (`../LeanPlot`): Local visualization library
+
 ## Build Commands
 - Build entire project: `lake build`
 - Run tests: `lake test`

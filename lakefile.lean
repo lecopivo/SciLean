@@ -35,8 +35,11 @@ package scilean {
 }                               --
 
 
--- require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.19.0"
-require leanblas from git "https://github.com/alok/LeanBLAS" @ "v4.26.0-rc2"
+-- Use latest mathlib (includes compile_inductive fix PR #32225)
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+
+-- Use local LeanBLAS
+require leanblas from ".." / "LeanBLAS"
 
 -- LeanPlot for visualization (local dependency)
 require leanplot from ".." / "LeanPlot"
@@ -194,3 +197,6 @@ lean_exe SimpleMNIST where
 
 lean_exe DependentMNIST where
   root := `examples.DependentMNIST
+
+lean_exe TestMinimal where
+  root := `examples.TestMinimal
