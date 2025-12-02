@@ -32,7 +32,8 @@ def inclArgs :=
 
 package scilean {
   moreLinkArgs := linkArgs
-}                               --
+  leanOptions := #[⟨`doc.verso, true⟩]
+}
 
 
 -- Use latest mathlib (includes compile_inductive fix PR #32225)
