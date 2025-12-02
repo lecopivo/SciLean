@@ -105,10 +105,12 @@ instance : LevelThreeData (DataArray Float) Float Float where
     dsyr2k order uplo trans N.toUSize K.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize beta C offC.toUSize ldc.toUSize
 
   trmm order side uplo trans diag M N alpha A offA lda B offB ldb :=
-    dtrmm order side uplo trans diag M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtrmm order side uplo trans diag' M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
 
   trsm order side uplo trans diag M N alpha A offA lda B offB ldb :=
-    dtrsm order side uplo trans diag M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtrsm order side uplo trans diag' M.toUSize N.toUSize alpha A offA.toUSize lda.toUSize B offB.toUSize ldb.toUSize
 
 
 instance : BLAS (DataArray Float) Float Float where

@@ -10,7 +10,7 @@ The dependent types guarantee dimensional correctness at compile time.
 -/
 import SciLean
 
-open SciLean Scalar
+open SciLean Scalar ArrayType.PowerNotation
 
 set_default_scalar Float
 
@@ -20,7 +20,7 @@ def checkFileExists (path : System.FilePath) : IO Unit := do
   if ¬(← path.pathExists) then
      throw (IO.userError s!"MNIST data file '{path}' not found. Please download from https://git-disl.github.io/GTDLBench/datasets/mnist_datasets/")
 
-/-- Load MNIST images as dependently-typed Float^[784] arrays -/
+/-- Load MNIST images as dependently-typed `Float^[784]` arrays -/
 def loadImages (path : System.FilePath) (maxImages : Nat) : IO (Array (Float^[784])) := do
   checkFileExists path
   if maxImages = 0 then return #[]
@@ -52,7 +52,7 @@ def loadImages (path : System.FilePath) (maxImages : Nat) : IO (Array (Float^[78
   IO.println s!"done ({(← IO.monoMsNow) - start}ms)"
   return images
 
-/-- Load MNIST labels as one-hot encoded Float^[10] arrays -/
+/-- Load MNIST labels as one-hot encoded `Float^[10]` arrays -/
 def loadLabels (path : System.FilePath) (maxLabels : Nat) : IO (Array (Float^[10])) := do
   checkFileExists path
   if maxLabels = 0 then return #[]
@@ -172,7 +172,7 @@ def sgdUpdate (w grad : Weights) (lr : Float) : Weights :=
     w2 := w.w2 - lr • grad.w2
     b2 := w.b2 - lr • grad.b2 }
 
-/-- Generate random Float in [0,1) -/
+/-- Generate random Float in `[0,1)` -/
 def rand01 : IO Float := do
   let N : Nat := 10^9
   let i ← IO.rand 0 N
@@ -204,7 +204,7 @@ def initWeights : IO Weights := do
 
   pure { w1 := w1, b1 := b1, w2 := w2, b2 := b2 }
 
-/-- Get argmax of a Float^[10] array -/
+/-- Get argmax of a `Float^[10]` array -/
 def argmax10 (x : Float^[10]) : Nat := Id.run do
   let mut maxIdx : Nat := 0
   let mut maxVal : Float := x[⟨0, by decide⟩]
