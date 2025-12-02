@@ -29,17 +29,17 @@ def ContinuousLinearMap.mk'
   : X →L[R] Y :=
   ⟨⟨⟨f, hf.linear.map_add⟩, hf.linear.map_smul⟩, hf.cont⟩
 
-@[simp, simp_core, simp_core ↓]
+@[simp ↓, simp_core]
 theorem ContinuousLinearMap.mk'_eval
   (x : X) (f : X → Y) (hf : IsContinuousLinearMap R f)
   : mk' R f hf x = f x := by rfl
 
-@[simp, simp_core, simp_core ↓]
+@[simp ↓, simp_core]
 theorem ContinuousLinearMap.mk'_coe
   (f : X → Y) (hf : IsContinuousLinearMap R f)
   : mk' R f hf = f := by rfl
 
-attribute [simp_core, simp_core↓]
+attribute [simp ↓, simp_core]
   ContinuousLinearMap.add_apply
   ContinuousLinearMap.sub_apply
   ContinuousLinearMap.smul_apply

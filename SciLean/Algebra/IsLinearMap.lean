@@ -80,15 +80,15 @@ macro "fun " "(" x:ident " : " X:term ")" " =>ₗ[" R:term "] " b:term : term =>
   `(LinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
 
 
-@[simp, simp_core, simp_core ↓]
+@[simp ↓, simp_core]
 theorem LinearMap.mk'_eval (f : X → Y) (hf : IsLinearMap R f) (x : X) :
     mk' R f hf x = f x := by rfl
 
-@[simp, simp_core, simp_core ↓]
+@[simp ↓, simp_core]
 theorem LinearMap.mk'_coe (f : X → Y) (hf : IsLinearMap R f) :
     mk' R f hf = f := by rfl
 
-@[simp, simp_core, simp_core ↓]
+@[simp ↓, simp_core]
 theorem LinearMap.eta_reduce (f : X →ₗ[R] Y) :
     mk' R f.1 ⟨f.1.2,f.2⟩ = f := by rfl
 

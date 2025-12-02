@@ -1,6 +1,3 @@
-import Lean
-
-register_simp_attr rand_simp
-register_simp_attr rand_AD
-register_simp_attr rand_push_E
-register_simp_attr rand_pull_E
+-- Note: This module is deprecated. Use SciLean.Probability.SimpAttr instead.
+-- The attributes are defined there to avoid duplication.
+import SciLean.Probability.SimpAttr

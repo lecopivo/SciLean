@@ -28,4 +28,4 @@ simproc_decl dfunlike_coe_zetaDelta (DFunLike.coe _ _) := fun e => do
   let coe := e.appFn!.appFn!
   return .visit { expr := coe.app f |>.app x }
 
-attribute [simp, simp_core] dfunlike_coe_zetaDelta
+attribute [simp, simp_core_proc] dfunlike_coe_zetaDelta

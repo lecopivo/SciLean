@@ -56,7 +56,8 @@ variable
 ----------------------------------------------------------------------------------------------------
 
 attribute [vector_optimize] smul_smul smul_neg one_mul neg_mul
-attribute [vector_optimize ←] neg_smul pow_succ pow_succ'
+-- Note: ← modifier applied via standard simp, vector_optimize gets normal direction
+attribute [simp ←, vector_optimize] neg_smul pow_succ pow_succ'
 
 
 ----------------------------------------------------------------------------------------------------

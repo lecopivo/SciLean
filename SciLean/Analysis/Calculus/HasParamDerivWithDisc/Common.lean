@@ -23,7 +23,7 @@ attribute [simp_core]
   Pi.conj_apply
   ite_apply
 
-attribute [simp_core ↓, simp_core]
+attribute [simp ↓, simp_core]
   List.cons_append
   List.nil_append
   List.singleton_append
@@ -239,7 +239,7 @@ end IntegralSimps
 -- List --------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- @[simp_core ↓]
+-- @[simp_core]
 -- theorem foldl_cons' (l : List α) (b : β) :
 --   (a :: l).foldl f b
 --   =
@@ -247,7 +247,7 @@ end IntegralSimps
 --   l.foldl f x := by simp only [List.foldl_cons]
 
 
-@[simp_core ↓ mid+1]
+@[simp ↓ mid+1, simp_core]
 theorem List.foldl_sum (a : α) (f : α → β) (l : List α) (b : β) [Add β] :
   (a :: l).foldl (fun s x => s + f x) b
   =
@@ -260,22 +260,22 @@ theorem List.foldl_sum (a : α) (f : α → β) (l : List α) (b : β) [Add β] 
 -- if simps ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-@[simp_core ↓]
+@[simp ↓, simp_core]
 theorem fst_ite {c : Prop} [Decidable c] (t e : α×β) :
     (if c then t else e).1 = if c then t.1 else e.1 := by split_ifs <;> rfl
 
-@[simp_core ↓]
+@[simp ↓, simp_core]
 theorem snd_ite {c : Prop} [Decidable c] (t e : α×β) :
     (if c then t else e).2 = if c then t.2 else e.2 := by split_ifs <;> rfl
 
 
-@[simp_core ↓]
+@[simp ↓, simp_core]
 theorem ite_add2 {α} [Add α] (P : Prop) [Decidable P] (a b c d : α) :
     (if P then a else b) + (if P then c else d)
     =
     if P then a + c else b + d := by split_ifs <;> rfl
 
-@[simp_core ↓]
+@[simp ↓, simp_core]
 theorem ite_sub2 {α} [Sub α] (P : Prop) [Decidable P] (a b c d : α) :
     (if P then a else b) - (if P then c else d)
     =
@@ -310,7 +310,7 @@ theorem volume_Ico {R} [RealScalar R] [MeasureSpace R] (a b : R) :
 theorem volume_Ioc {R} [RealScalar R] [MeasureSpace R] (a b : R) :
   volume (Ioc a b) = Scalar.toENNReal (R:=R) (if a ≤ b then b - a else 0) := sorry_proof
 
-@[simp_core ↓]
+@[simp_core]
 theorem volume_prod {X Y} [MeasureSpace X] [MeasureSpace Y] (A : Set X) (B : Set Y) :
   volume (A ×ˢ B) = volume A * volume B := sorry_proof
 
