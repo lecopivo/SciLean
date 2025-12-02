@@ -112,9 +112,12 @@ TODO: call BLAS
 -/
 def contractLeftAddR (a : R) (x : R^[I]) (y : R^[I,J]) (b : R) (z : R^[J]) : R^[J] := Id.run do
   let mut z := z
+  -- First apply b*z, then accumulate a*x^T*y
+  for j in fullRange J do
+    z[j] := b * z[j]
   for i in fullRange I do
     for j in fullRange J do
-      z[j] := b * z[j] + a * x[i] * y[i,j]
+      z[j] := z[j] + a * x[i] * y[i,j]
   z
 
 /--
@@ -124,9 +127,12 @@ TODO: call BLAS
 -/
 def contractRightAddR (a : R) (x : R^[I,J]) (y : R^[J]) (b : R) (z : R^[I]) : R^[I] := Id.run do
   let mut z := z
+  -- First apply b*z, then accumulate a*x*y
+  for i in fullRange I do
+    z[i] := b * z[i]
   for i in fullRange I do
     for j in fullRange J do
-      z[i] := b * z[i] + a * x[i,j] * y[j]
+      z[i] := z[i] + a * x[i,j] * y[j]
   z
 
 /--

@@ -205,3 +205,11 @@ lean_exe DependentMNIST where
 
 lean_exe TestMinimal where
   root := `examples.TestMinimal
+
+lean_exe TestNpyRoundtrip where
+  root := `examples.TestNpyRoundtrip
+  moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
+
+lean_exe VerifyPyTorchMNIST where
+  root := `examples.VerifyPyTorchMNIST
+  moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]

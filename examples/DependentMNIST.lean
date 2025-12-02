@@ -172,25 +172,33 @@ def sgdUpdate (w grad : Weights) (lr : Float) : Weights :=
     w2 := w.w2 - lr • grad.w2
     b2 := w.b2 - lr • grad.b2 }
 
+/-- Generate random Float in [0,1) -/
+def rand01 : IO Float := do
+  let N : Nat := 10^9
+  let i ← IO.rand 0 N
+  return i.toFloat / N.toFloat
+
 /-- Initialize weights with He initialization -/
 def initWeights : IO Weights := do
   let scale1 := Float.sqrt (2.0 / 784.0)
   let scale2 := Float.sqrt (2.0 / 128.0)
 
   -- Initialize w1 with random values scaled by He init
-  -- Uses Rand.uniform from SciLean.Probability
-  let w1 : Float^[128, 784] :=
-    ⊞ (_ : Idx 128 × Idx 784) =>
-      let r := (← (Rand.uniform (X:=Float) (Set.Icc 0 1)).get)
-      r * scale1 - scale1/2
+  -- Use FloatArray.push in IO monad for proper sequencing
+  let mut w1Arr : FloatArray := .emptyWithCapacity (128 * 784)
+  for _ in [0:128*784] do
+    let r ← rand01
+    w1Arr := w1Arr.push (r * scale1 - scale1/2)
+  let w1 : Float^[128, 784] := DataArrayN.fromFloatArray w1Arr
 
   let b1 : Float^[128] := 0
 
   -- Initialize w2
-  let w2 : Float^[10, 128] :=
-    ⊞ (_ : Idx 10 × Idx 128) =>
-      let r := (← (Rand.uniform (X:=Float) (Set.Icc 0 1)).get)
-      r * scale2 - scale2/2
+  let mut w2Arr : FloatArray := .emptyWithCapacity (10 * 128)
+  for _ in [0:10*128] do
+    let r ← rand01
+    w2Arr := w2Arr.push (r * scale2 - scale2/2)
+  let w2 : Float^[10, 128] := DataArrayN.fromFloatArray w2Arr
 
   let b2 : Float^[10] := 0
 
