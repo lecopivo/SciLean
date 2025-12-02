@@ -7,6 +7,39 @@
 3. Gradient/autodiff tests
 4. Better ML support (see lean-mlir for inspiration)
 
+## Backend Architecture (Future)
+SciLean uses dependent types (`Float^[784]`, `Float^[128, 784]`) wrapping compute backends:
+
+```
+┌──────────────────────────────────────────────┐
+│  SciLean Dependent Types + Autodiff          │
+│  DataArrayN, gradients, fun_trans            │
+└──────────────────────────────────────────────┘
+                     │
+                     ▼
+┌──────────────────────────────────────────────┐
+│  Backend Typeclass (TensorBackend)           │
+│  gemm, axpy, softmax, conv2d, ...            │
+└──────────────────────────────────────────────┘
+       │            │            │
+       ▼            ▼            ▼
+   ┌───────┐   ┌────────┐   ┌────────┐
+   │ BLAS  │   │ Metal  │   │ CUDA   │
+   │ (CPU) │   │ (MPS)  │   │(future)│
+   └───────┘   └────────┘   └────────┘
+```
+
+**Current state:**
+- LeanBLAS: BLAS Level 1-3 bindings (CPU) ✅
+- Metal: Started in `SciLean/FFI/Metal.lean` ✅
+- CUDA: Not started
+
+**Related projects:**
+- [TensorLib](https://github.com/leanprover/TensorLib): Verified tensors, .npy file support (steal this!)
+- [c-libtorch](https://github.com/lighttransport/c-libtorch): C bindings to PyTorch (minimal, needs work)
+- [tch-rs](https://github.com/LaurentMazare/tch-rs): Rust libtorch bindings (reference for API design)
+- [Hasktorch](https://github.com/hasktorch/hasktorch): Haskell libtorch bindings
+
 ## Local Dependencies
 - **LeanBLAS** (`../LeanBLAS`): Vendored locally for active development. Expect frequent changes to BLAS bindings, Level 1-3 operations, and FFI layer. Keep in sync with SciLean's mathlib version.
 - **LeanPlot** (`../LeanPlot`): Local visualization library
