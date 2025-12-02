@@ -16,3 +16,12 @@ Doodle*
 *_old*
 perf.data
 /docbuild/
+
+# Python
+uv.lock
+__pycache__/
+
+# Test data
+data/npy_test/
+data/mnist_weights/
+data/MNIST/

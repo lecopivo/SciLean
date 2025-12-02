@@ -17,20 +17,9 @@ open SciLean
 Architecture: 784 → 128 (ReLU) → 10
 -/
 
-/-- ReLU activation for FloatArray -/
-def reluArr (x : FloatArray) : FloatArray := Id.run do
-  let mut y : FloatArray := .emptyWithCapacity x.size
-  for i in [0:x.size] do
-    let v := x.uget i.toUSize sorry_proof
-    y := y.push (if v > 0 then v else 0)
-  y
-
-/-- Element-wise addition for FloatArray -/
-def addArr (x y : FloatArray) : FloatArray := Id.run do
-  let mut z : FloatArray := .emptyWithCapacity x.size
-  for i in [0:x.size] do
-    z := z.push (x.uget i.toUSize sorry_proof + y.uget i.toUSize sorry_proof)
-  z
+/-- ReLU activation for DataArrayN -/
+def relu {ι : Type} {n : Nat} [IndexType ι n] [Fold ι] (x : Float^[ι]) : Float^[ι] :=
+  x.mapMono (fun v => if v > 0 then v else 0)
 
 /-- Single MLP forward pass using DataArrayN: y = W2 @ relu(W1 @ x + b1) + b2 -/
 def mlpForward
@@ -41,9 +30,7 @@ def mlpForward
   let h : Float^[128] := DataArrayN.contractRightAddR 1.0 w1 x 0.0 0
   let h := h + b1
   -- h_relu = relu(h)
-  let hArr := DataArrayN.toFloatArray h
-  let hReluArr := reluArr hArr
-  let hRelu : Float^[128] := DataArrayN.fromFloatArray hReluArr
+  let hRelu := relu h
   -- logits = W2 @ h_relu + b2
   let logits : Float^[10] := DataArrayN.contractRightAddR 1.0 w2 hRelu 0.0 0
   logits + b2
