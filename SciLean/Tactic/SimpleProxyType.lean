@@ -85,7 +85,9 @@ def defaultMkCtorSimpleProxyType (xs : List (Expr × Name))
 /-- Create a `Sum` of types, mildly optimized to not have a trailing `Empty`.
 
 The `decorateSum` function is to wrap the `Sum` with a function such as `Lex`.
-It should yield a definitionally equal type. -/
+It should yield a definitionally equal type.
+
+Returns a tuple of (type, patterns, tactic proof). -/
 def defaultMkSimpleProxyType (ctors : Array (Name × Expr × Term))
     (decorateSum : Expr → TermElabM Expr := pure) :
     TermElabM (Expr × Array Term × TSyntax `tactic) := do
@@ -98,7 +100,7 @@ def defaultMkSimpleProxyType (ctors : Array (Name × Expr × Term))
   let (type, pf) ← mkCType types.toList
   return (type, patts, pf)
 where
-  /-- Construct the `Sum` expression, using `decorateSum` to adjust each `Sum`. -/
+  -- Construct the Sum expression, using decorateSum to adjust each Sum.
   mkCType (ctypes : List Expr) : TermElabM (Expr × TSyntax `tactic) :=
     match ctypes with
     | [] => return (mkConst ``Empty, ← `(tactic| cases x))
@@ -107,7 +109,7 @@ where
       let (ty, pf) ← mkCType xs
       let pf ← `(tactic| cases x with | inl _ => rfl | inr x => $pf:tactic)
       return (← decorateSum (← mkAppM ``Sum #[x, ty]), pf)
-  /-- Navigates into the sum type that we create in `mkCType` for the given constructor index. -/
+  -- Navigates into the sum type for the given constructor index.
   wrapSumAccess (cidx nctors : Nat) (spatt : Term) : TermElabM Term :=
     match cidx with
     | 0 =>

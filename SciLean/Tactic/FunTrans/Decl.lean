@@ -6,7 +6,9 @@ Authors: Tomas Skrivan
 import Qq
 
 /-!
-## `funTrans` environment extension that stores all registered function properties
+# funTrans environment extension
+
+Stores all registered function properties.
 -/
 
 

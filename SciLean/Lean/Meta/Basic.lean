@@ -81,7 +81,7 @@ def getFunHeadConst? (e : Expr) : MetaM (Option Name) :=
 
 /-- Changes structure projection back to function application. Left unchanged if not a projection.
 
-For example `proj ``Prod 0 xy` is changed to `mkApp ``Prod.fst #[xy]`.
+For example, `proj Prod 0 xy` is changed to `mkApp Prod.fst #[xy]`.
 -/
 def revertStructureProj (e : Expr) : MetaM Expr :=
   match e with

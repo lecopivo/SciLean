@@ -407,13 +407,13 @@ def Mesh : Component SurfaceMesh where
 
 /- Random mesh generation -/
 
-/-- Generate a random floating point number in [0, 1] -/
+/-- Generate a random floating point number in `[0, 1]` -/
 def randFloat01 [G : RandomGen γ] (gen : γ) : Float × γ := Id.run do
   let (val, gen) := G.next gen
   let (lo, hi) := G.range gen
   return ((Float.ofNat <| val - lo) / (Float.ofNat <| hi - lo), gen)
 
-/-- Create a random vertex with coordinates sampled from uniform [0, 1] -/
+/-- Create a random vertex with coordinates sampled from uniform `[0, 1]` -/
 def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Float3 × γ := Id.run do
   let (val1, gen) := randFloat01 gen
   let (val2, gen) := randFloat01 gen
@@ -421,7 +421,7 @@ def randVertex01 [RandomGen γ] (gen : γ) : SciLean.Float3 × γ := Id.run do
   return ({ x := val1, y := val2, z := val3 }, gen)
 
 
-/-- Create `nvertices` random vertices with coordinates sampled from [-scale/2, scale/2] -/
+/-- Create `nvertices` random vertices with coordinates sampled from `[-scale/2, scale/2]` -/
 def randVertices [RandomGen γ]
  (gen : γ) (nvertices : Nat) (scale : Float := 10) : (Array (SciLean.Float3)) × γ := Id.run do
   let mut out : Array (SciLean.Float3) := #[]

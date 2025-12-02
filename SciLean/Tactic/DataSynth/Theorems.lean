@@ -64,7 +64,8 @@ inductive LambdaTheoremData where
   The theorem should have roughly the following form
   ```
   (y : Y) → P (fun x => y) c'
-  `` -/
+  ```
+  -/
   | const
   /-- Projection theorem
 

@@ -9,7 +9,9 @@ import SciLean.Tactic.FunTrans.Decl
 import SciLean.Tactic.FunTrans.Theorems
 
 /-!
-## `funTrans` attribute
+# funTrans Attribute
+
+Attribute for registering funTrans theorems.
 -/
 
 

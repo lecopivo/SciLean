@@ -13,7 +13,9 @@ import SciLean.Lean.Array
 
 
 /-!
-## `fun_trans` enviroment extensions storing thorems for `fun_trans`
+# funTrans Theorems
+
+Environment extensions storing theorems for funTrans.
 -/
 
 namespace Mathlib
@@ -326,7 +328,7 @@ Examples:
   theorem Continuous_add (hf : Continuous f) (hg : Continuous g) :
       Continuous (fun x => (f x) + (g x))
 ```
-- mor - the head of function body has to be ``DFunLike.code
+- mor - the head of function body has to be `DFunLike.code`
 ```
   theorem ContDiff.clm_apply {f : E → F →L[𝕜] G} {g : E → F}
       (hf : ContDiff 𝕜 n f) (hg : ContDiff 𝕜 n g) :

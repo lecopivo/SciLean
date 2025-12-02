@@ -21,7 +21,7 @@ def AEWeakMeasurable (f : α → E) (μ : Measure α) :=
 
 /-- Element `e` is weak(Pettis) integral of `f`
 
-wiki:https://en.wikipedia.org/wiki/Pettis_integral
+See `https://en.wikipedia.org/wiki/Pettis_integral`
 
 Also see documentation for `weakIntegral`
 -/
@@ -34,7 +34,7 @@ def HasWeakIntegral (f : α → E) (e : E) (μ : Measure α) :=
 
 /-- Function `f` is weakly(Pettis) integrable
 
-wiki:https://en.wikipedia.org/wiki/Pettis_integral
+See `https://en.wikipedia.org/wiki/Pettis_integral`
 
 Also see documentation for `weakIntegral`
 -/
@@ -57,8 +57,8 @@ normed space too.
 Our main application is when working with random variables as we can talk about random functions
 `f : Rand (ι → E)` for arbitrary `ι` and `E` locally convex vector space.
 
-wiki:https://en.wikipedia.org/wiki/Pettis_integral
- -/
+See `https://en.wikipedia.org/wiki/Pettis_integral`
+-/
 noncomputable
 def weakIntegral (μ : Measure α) (f : α → E) : E :=
   if h : WeakIntegrable f μ then

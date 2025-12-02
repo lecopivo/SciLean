@@ -13,7 +13,9 @@ import Mathlib.Tactic.FunProp.Core
 import Mathlib.Tactic.FunProp.Types
 
 /-!
-## `funTrans` core tactic algorithm
+# funTrans Core Algorithm
+
+Core tactic algorithm for function transformation.
 -/
 
 namespace Mathlib

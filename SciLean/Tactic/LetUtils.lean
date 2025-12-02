@@ -80,7 +80,7 @@ For example for the following expresion
   let z := ..
   f x y z
 ```
-calling `letMoveUp e (λ n => n == `z) (some 1)` will produce
+calling ``letMoveUp e (fun n => n == `z) (some 1)`` will produce
 ```
   let x := ..
   let z := ..

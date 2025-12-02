@@ -4,11 +4,11 @@ import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
 import SciLean.Data.DataArray.Algebra
 import SciLean.Data.DataArray.TensorProduct
 
-/-! Port of Optim.jl, file src/multivariate/solvers/first_order/bfgs.jl
+/-! Port of Optim.jl
 
-github link:
-https://github.com/JuliaNLSolvers/Optim.jl/blob/711dfec61acf5dbed677e1af15f2a3347d5a88ad/src/multivariate/solvers/first_order/bfgs.jl
+Ported from `src/multivariate/solvers/first_order/bfgs.jl`.
 
+See <https://github.com/JuliaNLSolvers/Optim.jl>
 -/
 
 namespace SciLean.Optimjl

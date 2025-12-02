@@ -8,7 +8,9 @@ import Lean.Meta.Tactic.Simp.Types
 import Mathlib.Tactic.FunProp.Types
 
 /-!
-## `funTrans`
+# funTrans Types
+
+Core types for function transformation tactic.
 -/
 
 namespace Mathlib

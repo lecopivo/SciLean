@@ -834,9 +834,9 @@ def withSimpContextImpl (ctx : Simp.Context) (x : MetaM α) : MetaM α := do
     zetaDelta := cfg.zetaDelta
   }) x
 
-/-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context
+/-- Run `lsimp` on `e` and process result with `k r` where `k` is executed in modified local context
 where all `r.vars` are valid free vars.
- -/
+-/
 def main (e : Expr) (k : Result → MetaM α)
     (ctx : Simp.Context)
     (stats : Simp.Stats := {})

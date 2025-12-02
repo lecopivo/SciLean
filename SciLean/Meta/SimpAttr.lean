@@ -1,5 +1,7 @@
 import Lean
 
+set_option doc.verso false
+
 register_simp_attr add_pull
 register_simp_attr add_push
 register_simp_attr sum_push
@@ -21,6 +23,4 @@ register_simp_attr exp_pull
 register_simp_attr log_push
 register_simp_attr log_pull
 
-
 register_simp_attr simp_core
--- register_simp_attr ftrans_simp

@@ -193,8 +193,10 @@ def decomposeStructure (e : Expr) (split : Nat → Expr → Bool) : MetaM (Optio
 
       return .some {u:=u, v:=v, w:=w, X:=X, X₁:=X₁, X₂:=X₂, p₁:=p₁, p₂:=p₂, q:=q, proof := proof}
 
-/-- Decomposition of the domain of a function `f : X → Y` as `X ≃ X₁×X₂` and provides `f' : X₁ → Y` such that `f = f' ∘ p₁` where `p₁ : X → X₁` is the projection onto the first component.
-`
+/-- Decomposition of the domain of a function `f : X → Y` as `X ≃ X₁×X₂` and provides
+`f' : X₁ → Y` such that `f = f' ∘ p₁` where `p₁ : X → X₁` is the projection onto the
+first component.
+
 In other words, this claims that `f` does not use the `X₂` part of `X`.
 -/
 structure DomainDecomposition where

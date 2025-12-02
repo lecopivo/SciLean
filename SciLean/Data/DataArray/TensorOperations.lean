@@ -138,7 +138,7 @@ def contractRightAddR (a : R) (x : R^[I,J]) (y : R^[J]) (b : R) (z : R^[I]) : R^
 /--
 Matrix-matrix multiplication (naive fallback)
 
-Computes: z := a*x*y + b*z
+Computes: `z := a * x * y + b * z`
 -/
 def contractMiddleAddRNaive (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] := Id.run do
   let mut z := z
@@ -167,7 +167,7 @@ def fromFloatArray {ι : Type} {n} [IndexType ι n] (x : FloatArray) : Float^[ι
 /--
 Matrix-matrix multiplication using BLAS dgemm (Float only).
 
-Computes: z := a*x*y + b*z
+Computes: `z := a * x * y + b * z`
 
 This is significantly faster than naive loops for large matrices.
 -/

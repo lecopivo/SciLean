@@ -46,7 +46,7 @@ def isProjectionOfFVar (e : Expr) : MetaM Bool := do
 
 Two main normalizations are:
 
-1. nested let bindings`
+1. nested let bindings:
 ```
 let x :=
   let y := a + b

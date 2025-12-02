@@ -8,7 +8,9 @@ import Mathlib.Tactic.FunProp.Core
 import SciLean.Tactic.FunTrans.Core
 
 /-!
-## `funProp` tactic syntax
+# funTrans Tactic Syntax
+
+Tactic syntax for function transformation.
 -/
 
 namespace Mathlib
