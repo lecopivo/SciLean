@@ -204,25 +204,15 @@ def initWeights : IO Weights := do
 
   pure { w1 := w1, b1 := b1, w2 := w2, b2 := b2 }
 
-/-- Get argmax of a `Float^[10]` array -/
-def argmax10 (x : Float^[10]) : Nat := Id.run do
-  let mut maxIdx : Nat := 0
-  let mut maxVal : Float := x[⟨0, by decide⟩]
-  for i in [1:10] do
-    let idx : Idx 10 := ⟨i.toUSize, sorry_proof⟩
-    if x[idx] > maxVal then
-      maxVal := x[idx]
-      maxIdx := i
-  maxIdx
-
 /-- Compute accuracy on a batch -/
 def computeAccuracy (w : Weights) (images : Array (Float^[784])) (labels : Array (Float^[10])) : Float := Id.run do
   let mut correct : Nat := 0
   for idx in [0:images.size] do
     let pred := forward images[idx]! w
     let label := labels[idx]!
-    let predMaxIdx := argmax10 pred
-    let labelMaxIdx := argmax10 label
+    -- Use the new DataArrayN.argmax function
+    let predMaxIdx := DataArrayN.argmax pred
+    let labelMaxIdx := DataArrayN.argmax label
     if predMaxIdx = labelMaxIdx then
       correct := correct + 1
   correct.toFloat / images.size.toFloat
