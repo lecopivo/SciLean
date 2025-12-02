@@ -195,8 +195,13 @@ lean_exe GEMMBenchmark where
 lean_exe SimpleMNIST where
   root := `examples.SimpleMNIST
 
+-- LeanBLAS FFI library path for local dependency
+def leanblasLibPath : FilePath := ".." / "LeanBLAS" / ".lake" / "build" / "lib"
+
 lean_exe DependentMNIST where
   root := `examples.DependentMNIST
+  -- Explicitly link LeanBLAS FFI for local path dependency
+  moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
 
 lean_exe TestMinimal where
   root := `examples.TestMinimal
