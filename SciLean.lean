@@ -320,6 +320,7 @@ import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.old.VariationalCalculus
 -- import SciLean.Core_old.old.VariationalCalculus.Examples
 -- import SciLean.Core_old.old.Vec
+import SciLean.Compiler.LazyTensor
 import SciLean.Data.ArrayLike
 import SciLean.Data.ArrayOperations.Algebra
 import SciLean.Data.ArrayOperations.Basic
