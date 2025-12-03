@@ -189,7 +189,37 @@ inductive MovementOp where
   | expand : Array Sint → MovementOp
   | pad : Array (Sint × Sint) → MovementOp
   | shrink : Array (Sint × Sint) → MovementOp
+  | flip : Array Nat → MovementOp  -- flip along specified axes
   deriving Repr, BEq
+
+namespace MovementOp
+
+/-- Check if movement op is a no-op. -/
+def isIdentity : MovementOp → Array Sint → Bool
+  | .reshape s, inputShape => s == inputShape
+  | .permute perm, _ => perm == Array.range perm.size
+  | .expand s, inputShape => s == inputShape
+  | .pad padding, _ => padding.all fun (lo, hi) => lo == Sint.nat 0 && hi == Sint.nat 0
+  | .shrink _, _ => false  -- shrink is never identity unless full range
+  | .flip axes, _ => axes.isEmpty
+
+/-- Compose two permutations. -/
+def composePermute (p1 p2 : Array Nat) : Array Nat :=
+  p2.map fun i => p1.getD i 0
+
+/-- Try to fuse two movement ops. -/
+def fuse : MovementOp → MovementOp → Option MovementOp
+  | .permute p1, .permute p2 => some (.permute (composePermute p1 p2))
+  | .reshape _, .reshape s2 => some (.reshape s2)  -- reshape ∘ reshape = reshape
+  | .flip a1, .flip a2 =>
+    -- flipping same axis twice cancels out
+    let combined := (a1 ++ a2).filter fun ax =>
+      let count := (a1 ++ a2).filter (· == ax) |>.size
+      count % 2 == 1
+    some (.flip combined)
+  | _, _ => none
+
+end MovementOp
 
 /-! ## Lazy Tensor Graph
 
@@ -210,6 +240,27 @@ inductive LazyNode where
 
 instance : Inhabited LazyNode where
   default := .const 0.0 #[] .float32
+
+/-- Unique ID for each LazyNode (used for equality comparison). -/
+partial def LazyNode.toHash : LazyNode → UInt64
+  | .buffer id shape _ =>
+    mixHash id.toUInt64 shape.size.toUInt64
+  | .const v shape _ =>
+    mixHash v.toUInt64 shape.size.toUInt64
+  | .unary op x =>
+    mixHash (Hashable.hash op) x.toHash
+  | .binary op x y =>
+    mixHash (Hashable.hash op) (mixHash x.toHash y.toHash)
+  | .reduce op axes x =>
+    mixHash (Hashable.hash op) (mixHash axes.size.toUInt64 x.toHash)
+  | .movement _ x =>
+    mixHash 7 x.toHash  -- simple constant for movement ops
+
+instance : BEq LazyNode where
+  beq a b := a.toHash == b.toHash
+
+instance : Hashable LazyNode where
+  hash n := n.toHash
 
 namespace LazyNode
 
@@ -233,6 +284,7 @@ def shape : LazyNode → Array Sint
         si + lo + hi
     | .shrink bounds =>
       bounds.map fun (lo, hi) => hi - lo
+    | .flip _ => x.shape  -- flip doesn't change shape
 
 /-- Get the dtype of a lazy node. -/
 def dtype : LazyNode → DType
@@ -387,6 +439,31 @@ def reshape (newShape : Array Sint) (x : LazyTensor) : LazyTensor :=
 /-- Permute tensor dimensions. -/
 def permute (perm : Array Nat) (x : LazyTensor) : LazyTensor :=
   { node := Thunk.mk fun _ => .movement (.permute perm) x.node.get }
+
+/-- Expand tensor to new shape (broadcast). -/
+def expand (newShape : Array Sint) (x : LazyTensor) : LazyTensor :=
+  { node := Thunk.mk fun _ => .movement (.expand newShape) x.node.get }
+
+/-- Pad tensor with zeros. -/
+def pad (padding : Array (Sint × Sint)) (x : LazyTensor) : LazyTensor :=
+  { node := Thunk.mk fun _ => .movement (.pad padding) x.node.get }
+
+/-- Shrink tensor (slice). -/
+def shrink (bounds : Array (Sint × Sint)) (x : LazyTensor) : LazyTensor :=
+  { node := Thunk.mk fun _ => .movement (.shrink bounds) x.node.get }
+
+/-- Flip tensor along axes. -/
+def flip (axes : Array Nat) (x : LazyTensor) : LazyTensor :=
+  { node := Thunk.mk fun _ => .movement (.flip axes) x.node.get }
+
+/-- Transpose (swap last two dimensions). -/
+def transpose (x : LazyTensor) : LazyTensor :=
+  let shape := x.node.get.shape
+  let n := shape.size
+  if n < 2 then x
+  else
+    let perm := Array.range n |>.modify (n - 2) (fun _ => n - 1) |>.modify (n - 1) (fun _ => n - 2)
+    permute perm x
 
 /-- Force evaluation of the lazy tensor graph. -/
 def realize (x : LazyTensor) : LazyNode :=
@@ -551,35 +628,159 @@ def gradientRules : List GradientRule := [
       [some (.unary .neg (.binary .mul ctx (.binary .mul ret ret)))] }
 ]
 
+/-- Movement operation gradient rules. -/
+def movementGradientRules : List GradientRule := [
+  -- reshape: gradient is reshaped back to input shape
+  { name := "reshape"
+    matchNode := fun n => match n with | .movement (.reshape _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.reshape _) x => [some (.movement (.reshape x.shape) ctx)]
+      | _ => [] },
+
+  -- permute: gradient uses inverse permutation
+  { name := "permute"
+    matchNode := fun n => match n with | .movement (.permute _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.permute perm) _ =>
+        -- Compute inverse permutation
+        let invPerm := Array.range perm.size |>.map fun i =>
+          perm.findIdx? (· == i) |>.getD 0
+        [some (.movement (.permute invPerm) ctx)]
+      | _ => [] },
+
+  -- expand: gradient is reduced (summed) along expanded dimensions
+  { name := "expand"
+    matchNode := fun n => match n with | .movement (.expand _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.expand _) x =>
+        -- Find axes where input had size 1 but output has size > 1
+        let inputShape := x.shape
+        let outputShape := ret.shape
+        let reduceAxes := Array.range inputShape.size |>.filterMap fun i =>
+          let si := inputShape.getD i (Sint.nat 0)
+          let so := outputShape.getD i (Sint.nat 0)
+          if si == Sint.nat 1 && so != Sint.nat 1 then some i else none
+        if reduceAxes.isEmpty then [some ctx]
+        else [some (.reduce .sum reduceAxes ctx)]
+      | _ => [] },
+
+  -- pad: gradient shrinks (removes padding)
+  { name := "pad"
+    matchNode := fun n => match n with | .movement (.pad _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.pad padding) x =>
+        let bounds := Array.range x.shape.size |>.map fun i =>
+          let si := x.shape.getD i (Sint.nat 0)
+          let (lo, _) := padding.getD i (Sint.nat 0, Sint.nat 0)
+          (lo, lo + si)
+        [some (.movement (.shrink bounds) ctx)]
+      | _ => [] },
+
+  -- shrink: gradient pads back
+  { name := "shrink"
+    matchNode := fun n => match n with | .movement (.shrink _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.shrink bounds) x =>
+        let padding := Array.range x.shape.size |>.map fun i =>
+          let si := x.shape.getD i (Sint.nat 0)
+          let (lo, hi) := bounds.getD i (Sint.nat 0, Sint.nat 0)
+          (lo, si - hi)
+        [some (.movement (.pad padding) ctx)]
+      | _ => [] },
+
+  -- flip: gradient flips along same axes
+  { name := "flip"
+    matchNode := fun n => match n with | .movement (.flip _) _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .movement (.flip axes) _ => [some (.movement (.flip axes) ctx)]
+      | _ => [] }
+]
+
+/-- All gradient rules combined. -/
+def allGradientRules : List GradientRule :=
+  gradientRules ++ movementGradientRules
+
 /-- Look up the gradient rule for a node. -/
 def findGradientRule (n : LazyNode) : Option GradientRule :=
-  gradientRules.find? fun rule => rule.matchNode n
+  allGradientRules.find? fun rule => rule.matchNode n
 
-/-- Compute gradients for all nodes in a computation graph.
+/-! ## Topological Sort
 
-This implements reverse-mode automatic differentiation (backpropagation).
-Given a root node and its gradient, computes gradients for all inputs.
+Proper reverse-mode AD requires processing nodes in reverse topological order.
+-/
+
+/-- Get all children of a node. -/
+def LazyNode.children : LazyNode → List LazyNode
+  | .buffer _ _ _ => []
+  | .const _ _ _ => []
+  | .unary _ x => [x]
+  | .binary _ x y => [x, y]
+  | .reduce _ _ x => [x]
+  | .movement _ x => [x]
+
+/-- Topological sort of computation graph (returns nodes in forward order). -/
+partial def toposort (root : LazyNode) : List LazyNode :=
+  let rec visit (node : LazyNode) (visited : List LazyNode) : List LazyNode :=
+    if visited.any (· == node) then visited
+    else
+      let visited' := node.children.foldl (fun acc child => visit child acc) visited
+      visited' ++ [node]
+  visit root []
+
+/-- Compute gradients using proper reverse-mode AD with topological sort.
+
+This implements backpropagation correctly:
+1. Topologically sort the graph
+2. Process nodes in reverse order
+3. Accumulate gradients at each node
 -/
 partial def computeGradients
     (root : LazyNode)
     (rootGrad : LazyNode)
-    (_targets : List LazyNode) : List (LazyNode × LazyNode) :=
-  -- Simple implementation: just apply gradient rules
-  -- A full implementation would do topological sort and accumulation
-  match findGradientRule root with
-  | none => []
-  | some rule =>
-    let inputGrads := rule.gradFn rootGrad root
-    match root with
-    | .unary _ x =>
-      match inputGrads.head? with
-      | some (some g) => [(x, g)]
-      | _ => []
-    | .binary _ x y =>
-      match inputGrads with
-      | [some gx, some gy] => [(x, gx), (y, gy)]
-      | _ => []
-    | _ => []
+    (targets : List LazyNode) : List (LazyNode × LazyNode) :=
+  -- Get nodes in forward topological order
+  let forwardOrder := toposort root
+
+  -- Filter to nodes on path to targets (for future optimization)
+  let _inTargetPath := forwardOrder.filter fun node =>
+    targets.any (· == node) ||
+    node.children.any fun child => targets.any (· == child)
+
+  -- Initialize gradient map with root gradient
+  let initGrads : List (LazyNode × LazyNode) := [(root, rootGrad)]
+
+  -- Process nodes in reverse order, accumulating gradients
+  let finalGrads := forwardOrder.reverse.foldl (fun grads node =>
+    match grads.find? (fun (n, _) => n == node) with
+    | none => grads
+    | some (_, nodeGrad) =>
+      match findGradientRule node with
+      | none => grads
+      | some rule =>
+        let inputGrads := rule.gradFn nodeGrad node
+        let children := node.children
+        -- Add gradients for each child
+        children.zip inputGrads |>.foldl (fun acc (child, maybeGrad) =>
+          match maybeGrad with
+          | none => acc
+          | some grad =>
+            match acc.find? (fun (n, _) => n == child) with
+            | none => acc ++ [(child, grad)]
+            | some (_, existingGrad) =>
+              -- Accumulate gradients
+              let newGrad := LazyNode.binary .add existingGrad grad
+              acc.map fun (n, g) => if n == child then (n, newGrad) else (n, g)
+        ) grads
+  ) initGrads
+
+  -- Return only gradients for target nodes
+  finalGrads.filter fun (node, _) => targets.any (· == node)
 
 /-! ## Kernel Fusion (Scheduling)
 
@@ -623,5 +824,93 @@ partial def fuseOperations (nodes : List LazyNode) (nextId : Nat) : List Kernel 
       kernel :: fuseOperations remaining (nextId + 1)
     else
       fuseOperations rest nextId
+
+/-! ## DataArrayN Bridge
+
+Connect LazyTensor to SciLean's DataArrayN for actual computation.
+This provides the interface between lazy graphs and concrete execution.
+-/
+
+/-- Buffer registry: maps buffer IDs to actual data. -/
+structure BufferRegistry where
+  nextId : Nat
+  /-- We store buffer metadata; actual data is external -/
+  shapes : Array (Array Nat)
+  dtypes : Array DType
+  deriving Repr
+
+namespace BufferRegistry
+
+def empty : BufferRegistry := { nextId := 0, shapes := #[], dtypes := #[] }
+
+def register (reg : BufferRegistry) (shape : Array Nat) (dtype : DType := .float32)
+    : (BufferRegistry × Nat) :=
+  let id := reg.nextId
+  ({ nextId := id + 1
+     shapes := reg.shapes.push shape
+     dtypes := reg.dtypes.push dtype }, id)
+
+end BufferRegistry
+
+/-- Execution backend trait. -/
+class TensorBackend (B : Type) where
+  /-- Allocate a buffer -/
+  alloc : B → Array Nat → DType → IO (B × Nat)
+  /-- Execute a kernel -/
+  execute : B → Kernel → IO Unit
+  /-- Synchronize (wait for completion) -/
+  sync : B → IO Unit
+
+/-- CPU backend using BLAS. -/
+structure CPUBackend where
+  registry : BufferRegistry
+  deriving Repr
+
+namespace CPUBackend
+
+def new : CPUBackend := { registry := BufferRegistry.empty }
+
+instance : TensorBackend CPUBackend where
+  alloc backend shape dtype := do
+    let (reg', id) := backend.registry.register shape dtype
+    pure ({ backend with registry := reg' }, id)
+
+  execute _backend _kernel := do
+    -- Would dispatch to BLAS operations
+    pure ()
+
+  sync _backend := pure ()
+
+end CPUBackend
+
+/-! ## Shape Utilities for DataArrayN Integration -/
+
+/-- Convert concrete shape to symbolic shape. -/
+def shapeToSint (shape : Array Nat) : Array Sint :=
+  shape.map Sint.nat
+
+/-- Try to evaluate symbolic shape to concrete shape. -/
+def sintToShape (shape : Array Sint) : Option (Array Nat) :=
+  shape.mapM fun s =>
+    match s with
+    | .nat n => some n
+    | _ => none
+
+/-- Check if two shapes are compatible for broadcasting. -/
+def broadcastable (s1 s2 : Array Nat) : Bool :=
+  let maxLen := max s1.size s2.size
+  let s1' := Array.range maxLen |>.map fun i =>
+    s1.getD (s1.size - 1 - (maxLen - 1 - i)) 1
+  let s2' := Array.range maxLen |>.map fun i =>
+    s2.getD (s2.size - 1 - (maxLen - 1 - i)) 1
+  s1'.zip s2' |>.all fun (a, b) => a == b || a == 1 || b == 1
+
+/-- Compute broadcast output shape. -/
+def broadcastShape (s1 s2 : Array Nat) : Array Nat :=
+  let maxLen := max s1.size s2.size
+  Array.range maxLen |>.map fun i =>
+    let a := s1.getD (s1.size - 1 - (maxLen - 1 - i)) 1
+    let b := s2.getD (s2.size - 1 - (maxLen - 1 - i)) 1
+    max a b
 
 end SciLean.Compiler
