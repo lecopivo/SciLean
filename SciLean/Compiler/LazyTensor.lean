@@ -532,6 +532,36 @@ inductive UOp where
 instance : Inhabited UOp where
   default := .const 0.0 .float32
 
+/-- Structural equality for UOp. -/
+partial def UOp.beq : UOp → UOp → Bool
+  | .const v1 dt1, .const v2 dt2 => v1 == v2 && dt1 == dt2
+  | .defineGlobal id1 dt1, .defineGlobal id2 dt2 => id1 == id2 && dt1 == dt2
+  | .defineVar s1, .defineVar s2 => s1 == s2
+  | .load u1, .load u2 => u1.beq u2
+  | .store p1 v1, .store p2 v2 => p1.beq p2 && v1.beq v2
+  | .index b1 o1, .index b2 o2 => b1.beq b2 && o1.beq o2
+  | .range lo1 hi1 ax1, .range lo2 hi2 ax2 => lo1 == lo2 && hi1 == hi2 && ax1 == ax2
+  | .barrier, .barrier => true
+  | .neg u1, .neg u2 => u1.beq u2
+  | .exp2 u1, .exp2 u2 => u1.beq u2
+  | .log2 u1, .log2 u2 => u1.beq u2
+  | .sin u1, .sin u2 => u1.beq u2
+  | .sqrt u1, .sqrt u2 => u1.beq u2
+  | .recip u1, .recip u2 => u1.beq u2
+  | .add x1 y1, .add x2 y2 => x1.beq x2 && y1.beq y2
+  | .sub x1 y1, .sub x2 y2 => x1.beq x2 && y1.beq y2
+  | .mul x1 y1, .mul x2 y2 => x1.beq x2 && y1.beq y2
+  | .div x1 y1, .div x2 y2 => x1.beq x2 && y1.beq y2
+  | .max x1 y1, .max x2 y2 => x1.beq x2 && y1.beq y2
+  | .cmpLt x1 y1, .cmpLt x2 y2 => x1.beq x2 && y1.beq y2
+  | .cmpEq x1 y1, .cmpEq x2 y2 => x1.beq x2 && y1.beq y2
+  | .where_ c1 t1 f1, .where_ c2 t2 f2 => c1.beq c2 && t1.beq t2 && f1.beq f2
+  | .mulacc a1 b1 c1, .mulacc a2 b2 c2 => a1.beq a2 && b1.beq b2 && c1.beq c2
+  | _, _ => false
+
+instance : BEq UOp where
+  beq := UOp.beq
+
 /-! ## Gradient Rules via Pattern Matching
 
 Like tinygrad's `pm_gradient`, we define gradient rules as pattern matches.
