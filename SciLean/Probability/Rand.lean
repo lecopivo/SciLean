@@ -12,14 +12,6 @@ import SciLean.Meta.SimpAttr
 import SciLean.Probability.SimpAttr
 import SciLean.Util.Limit
 
--- import Mathlib.Control.Random
--- import SciLean.Mathlib.MeasureTheory.WeakIntegral
--- import SciLean.Core.FunctionPropositions.IsAffineMap
--- import SciLean.Core.Objects.Scalar
--- import SciLean.Core.Notation
-
-
-
 open MeasureTheory ENNReal BigOperators Finset
 
 namespace SciLean

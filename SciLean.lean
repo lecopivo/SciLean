@@ -387,22 +387,11 @@ import SciLean.Data.DataArray.TensorProduct
 import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
-import SciLean.Data.FloatExtern
 import SciLean.Data.Function
 import SciLean.Data.Idx
 import SciLean.Data.Idx.Basic
 import SciLean.Data.Idx.GetElemIdx
 import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.DeriveIndexType
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.IndexEquiv
-import SciLean.Data.IndexType.Init
-import SciLean.Data.IndexType.Operations
-import SciLean.Data.IndexType.Range
-import SciLean.Data.IndexType.RangeNotation
-import SciLean.Data.IndexType.SumProduct
-import SciLean.Data.IndexType.TensorIndex
 import SciLean.Data.Instances.Sigma
 import SciLean.Data.Int64
 import SciLean.Data.ListN
@@ -586,7 +575,6 @@ import SciLean.Modules.DDG.Trace
 -- import SciLean.Modules.Prob.Rand2
 -- import SciLean.Modules.Prob.RandDeriv
 -- import SciLean.Modules.Prob.RandFwdDeriv
--- import SciLean.Modules.Prob.SimpAttr
 -- import SciLean.Modules.Prob.Simps
 -- import SciLean.Modules.Prob.Tactic
 -- import SciLean.Modules.Prob.Test
@@ -660,7 +648,6 @@ import SciLean.Tactic.DFunLikeCoeZetaDelta
 import SciLean.Tactic.DataSynth.Attr
 import SciLean.Tactic.DataSynth.Decl
 import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Tactic.DataSynth.Elab
 import SciLean.Tactic.DataSynth.Main
 import SciLean.Tactic.DataSynth.Simproc

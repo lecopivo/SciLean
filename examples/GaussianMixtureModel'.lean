@@ -1,5 +1,4 @@
 import SciLean
-import SciLean.Tactic.DataSynth.DefRevDeriv
 import SciLean.Data.DataArray.Operations.GaussianS
 
 open SciLean Scalar SciLean.Meta

@@ -150,8 +150,9 @@ def Module.ofEquiv  {R X Y : Type*} [Semiring R] [AddCommGroup X] [Module R X] [
 -- Topology ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+-- TODO: This uses trivial uniformity (⊥). Should use product uniformity from X and Y.
 instance {X Y : Type*} [UniformSpace X] [UniformSpace Y] : UniformSpace ((_ : X) × Y) where
-  uniformity := default -- TODO: fix this!!!
+  uniformity := default
   symm := sorry_proof
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
@@ -170,9 +171,10 @@ def TopologicalSpace.ofEquiv {X Y : Type*} [TopologicalSpace X] (f : X ≃ Y) :
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
 
+-- TODO: This uses trivial uniformity. Should transport uniformity via f.
 def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f : X ≃ Y) :
     UniformSpace Y where
-  uniformity := default -- TODO: fix this !!!!
+  uniformity := default
   symm := sorry_proof
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof

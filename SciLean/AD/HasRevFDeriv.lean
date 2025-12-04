@@ -687,7 +687,7 @@ theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
   case adjoint => intro x; eta_expand; simp; data_synth
   case simp => simp_all
 
--- TODO: !!!check this!!!
+-- TODO: Verify the formula for reverse derivative of division is correct
 set_option linter.unusedVariables false in
 open ComplexConjugate in
 @[data_synth]

@@ -1,5 +1,5 @@
 import SciLean.Core.FunctionTransformations
-import SciLean.Modules.Prob.SimpAttr
+import SciLean.Probability.SimpAttr
 import SciLean.Modules.Prob.FDRand
 
 namespace SciLean.Prob

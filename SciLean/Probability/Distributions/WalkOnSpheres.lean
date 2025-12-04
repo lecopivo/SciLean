@@ -1,20 +1,4 @@
 import SciLean.Probability.Rand
--- import SciLean.Core.Rand.Tactic
--- import SciLean.Core.Rand.Distributions.Uniform
--- import SciLean.Core.Rand.Distributions.Sphere
-
--- import SciLean.Core.FunctionTransformations
--- import SciLean.Core.Notation.CDeriv
--- import SciLean.Core.Notation.FwdDeriv
-
--- import SciLean.Core.FloatAsReal
--- import SciLean.Tactic.LetUtils
--- import SciLean.Tactic.LetEnter
--- import SciLean.Util.RecVal
-
--- import SciLean.Tactic.ConvInduction
-
--- import SciLean.Core.FunctionSpaces
 
 open MeasureTheory
 
