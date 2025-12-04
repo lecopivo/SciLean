@@ -461,7 +461,7 @@ import SciLean.Geometry.FrontierSpeed
 -- import SciLean.Geometry.Shape.Shape
 -- import SciLean.Geometry.Shape.Simplex
 -- import SciLean.Geometry.Shape.Sphere
--- import SciLean.Geometry.Shape.TransfromedShape
+-- import SciLean.Geometry.Shape.TransformedShape
 -- import SciLean.Geometry.Shape.Triangle
 import SciLean.Geometry.SurfaceParametrization
 import SciLean.Lean.Array
@@ -515,7 +515,7 @@ import SciLean.Modules.DDG.Trace
 -- import SciLean.Modules.FiniteElement.Mesh.Circle
 -- import SciLean.Modules.FiniteElement.Mesh.Line
 -- import SciLean.Modules.FiniteElement.Mesh.Prism
--- import SciLean.Modules.FiniteElement.Mesh.PrismClosetsPoint
+-- import SciLean.Modules.FiniteElement.Mesh.PrismClosestPoint
 -- import SciLean.Modules.FiniteElement.Mesh.PrismFiniteElement
 -- import SciLean.Modules.FiniteElement.Mesh.PrismRepr
 -- import SciLean.Modules.FiniteElement.Mesh.PrismTest
@@ -531,7 +531,7 @@ import SciLean.Modules.DDG.Trace
 -- import SciLean.Modules.Geometry.Shape.Shape
 -- import SciLean.Modules.Geometry.Shape.Simplex
 -- import SciLean.Modules.Geometry.Shape.Sphere
--- import SciLean.Modules.Geometry.Shape.TransfromedShape
+-- import SciLean.Modules.Geometry.Shape.TransformedShape
 -- import SciLean.Modules.Geometry.Shape.Triangle
 -- import SciLean.Modules.Interpolation.Interpolate
 -- import SciLean.Modules.ML

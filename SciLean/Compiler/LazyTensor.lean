@@ -7,24 +7,36 @@ import SciLean.Data.DataArray.DataArray
 Inspired by tinygrad's architecture, this module implements lazy tensor evaluation
 with kernel fusion and symbolic shape support.
 
-## Architecture Overview
+## Implementation Status
+
+**Implemented:**
+- ✅ `Sint`: Symbolic integers with constant folding
+- ✅ `LazyNode`: Lazy computation graph representation
+- ✅ `LazyTensor`: User-facing lazy tensor API with Thunk
+- ✅ Pattern matching for algebraic simplification (`x + 0 = x`, etc.)
+- ✅ Gradient rules for reverse-mode AD on the graph
+- ✅ Topological sort for proper backprop ordering
+- ✅ Basic kernel fusion detection
+
+**Not Yet Implemented:**
+- ❌ Lowering `LazyNode` → `UOp` (micro-ops IR)
+- ❌ Code generation from `UOp` to CUDA/Metal/C
+- ❌ Actual execution backends (see `TensorBackend` trait)
+- ❌ Integration with `DataArrayN` for seamless use
+
+## Architecture
 
 ```
-User API: DataArrayN, Float^[n,m], tensor operations
-                              |
-                              v
-LazyTensor: Lazy computation graph (not evaluated immediately)
-  - TensorOp: ADD, MUL, REDUCE, RESHAPE, etc.
-  - Symbolic shapes: Sint (symbolic int)
-                              |
-                              v
-Schedule: Fuse operations into kernels
-  - Elementwise fusion
-  - Reduce fusion
-  - Memory planning
-                              |
-                              v
-Backend: BLAS, Metal, CUDA
+LazyTensor (graph building)
+        |
+        v
+LazyNode (computation graph)
+        |  <- algebraic simplification via pattern matching
+        v
+[TODO] UOp (micro-operations IR)
+        |  <- code generation
+        v
+[TODO] Backend execution (BLAS/Metal/CUDA)
 ```
 
 ## Key Concepts from tinygrad
@@ -33,13 +45,6 @@ Backend: BLAS, Metal, CUDA
 2. Kernel fusion: Adjacent elementwise ops become one kernel
 3. Symbolic shapes: Dimensions can be variables, resolved at runtime
 4. Pattern matching: Algebraic simplification via term rewriting
-
-## Lean-specific advantages
-
-- Dependent types: Shapes are part of the type, many errors caught at compile time
-- Thunk: Built-in lazy evaluation primitive
-- Termination proofs: Guarantee optimizer loops terminate
-- Algebraic properties: Prove optimizations correct
 -/
 
 namespace SciLean.Compiler
@@ -167,12 +172,13 @@ inductive UnaryOp where
 inductive BinaryOp where
   | add : BinaryOp
   | sub : BinaryOp
-  | mul : BinaryOp
+  | mul : BinaryOp      -- elementwise multiplication
   | div : BinaryOp
   | max : BinaryOp
   | min : BinaryOp
   | cmpLt : BinaryOp
   | cmpEq : BinaryOp
+  | matmul : BinaryOp   -- matrix multiplication
   deriving Repr, BEq, Hashable
 
 /-- Reduce operations. -/
@@ -241,7 +247,26 @@ inductive LazyNode where
 instance : Inhabited LazyNode where
   default := .const 0.0 #[] .float32
 
-/-- Unique ID for each LazyNode (used for equality comparison). -/
+/-- Structural equality for LazyNode. -/
+partial def LazyNode.beq : LazyNode → LazyNode → Bool
+  | .buffer id1 shape1 dt1, .buffer id2 shape2 dt2 =>
+    id1 == id2 && shape1 == shape2 && dt1 == dt2
+  | .const v1 shape1 dt1, .const v2 shape2 dt2 =>
+    v1 == v2 && shape1 == shape2 && dt1 == dt2
+  | .unary op1 x1, .unary op2 x2 =>
+    op1 == op2 && x1.beq x2
+  | .binary op1 x1 y1, .binary op2 x2 y2 =>
+    op1 == op2 && x1.beq x2 && y1.beq y2
+  | .reduce op1 axes1 x1, .reduce op2 axes2 x2 =>
+    op1 == op2 && axes1 == axes2 && x1.beq x2
+  | .movement op1 x1, .movement op2 x2 =>
+    op1 == op2 && x1.beq x2
+  | _, _ => false
+
+instance : BEq LazyNode where
+  beq := LazyNode.beq
+
+/-- Hash for LazyNode (for use in HashMaps, not equality). -/
 partial def LazyNode.toHash : LazyNode → UInt64
   | .buffer id shape _ =>
     mixHash id.toUInt64 shape.size.toUInt64
@@ -254,10 +279,7 @@ partial def LazyNode.toHash : LazyNode → UInt64
   | .reduce op axes x =>
     mixHash (Hashable.hash op) (mixHash axes.size.toUInt64 x.toHash)
   | .movement _ x =>
-    mixHash 7 x.toHash  -- simple constant for movement ops
-
-instance : BEq LazyNode where
-  beq a b := a.toHash == b.toHash
+    mixHash 7 x.toHash
 
 instance : Hashable LazyNode where
   hash n := n.toHash
@@ -269,7 +291,16 @@ def shape : LazyNode → Array Sint
   | buffer _ s _ => s
   | const _ s _ => s
   | unary _ x => x.shape
-  | binary _ x _ => x.shape  -- assumes broadcasting resolved
+  | binary .matmul x y =>
+    -- matmul: [..., m, k] @ [..., k, n] -> [..., m, n]
+    let sx := x.shape
+    let sy := y.shape
+    if sx.size < 2 || sy.size < 2 then sx  -- fallback for malformed input
+    else
+      let m := sx.getD (sx.size - 2) (Sint.nat 0)
+      let n := sy.getD (sy.size - 1) (Sint.nat 0)
+      sx.pop.pop ++ #[m, n]
+  | binary _ x _ => x.shape  -- assumes broadcasting resolved for other ops
   | reduce _ axes x =>
     let s := x.shape
     s.mapIdx fun i si => if axes.contains i then Sint.nat 1 else si
@@ -465,6 +496,10 @@ def transpose (x : LazyTensor) : LazyTensor :=
     let perm := Array.range n |>.modify (n - 2) (fun _ => n - 1) |>.modify (n - 1) (fun _ => n - 2)
     permute perm x
 
+/-- Matrix multiplication. -/
+def matmul (x y : LazyTensor) : LazyTensor :=
+  { node := Thunk.mk fun _ => .binary .matmul x.node.get y.node.get }
+
 /-- Force evaluation of the lazy tensor graph. -/
 def realize (x : LazyTensor) : LazyNode :=
   let node := x.node.get
@@ -482,6 +517,8 @@ end LazyTensor
 
 Like tinygrad's UOp, this is the core intermediate representation.
 All tensor operations get lowered to UOp before code generation.
+
+**Status**: Defined but not yet used. Lowering from `LazyNode` to `UOp` is TODO.
 -/
 
 /-- Axis types for GPU execution dimensions. -/
@@ -655,7 +692,25 @@ def gradientRules : List GradientRule := [
   { name := "reciprocal"
     matchNode := fun n => match n with | .unary .reciprocal _ => true | _ => false
     gradFn := fun ctx ret =>
-      [some (.unary .neg (.binary .mul ctx (.binary .mul ret ret)))] }
+      [some (.unary .neg (.binary .mul ctx (.binary .mul ret ret)))] },
+
+  -- matmul: d/dA (A @ B) = dOut @ B^T, d/dB (A @ B) = A^T @ dOut
+  { name := "matmul"
+    matchNode := fun n => match n with | .binary .matmul _ _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .binary .matmul a b =>
+        -- Transpose helper: swap last two dimensions
+        let transposeNode (x : LazyNode) : LazyNode :=
+          let n := x.shape.size
+          if n < 2 then x
+          else
+            let perm := Array.range n |>.modify (n - 2) (fun _ => n - 1) |>.modify (n - 1) (fun _ => n - 2)
+            .movement (.permute perm) x
+        let gradA := .binary .matmul ctx (transposeNode b)
+        let gradB := .binary .matmul (transposeNode a) ctx
+        [some gradA, some gradB]
+      | _ => [] }
 ]
 
 /-- Movement operation gradient rules. -/
@@ -732,9 +787,38 @@ def movementGradientRules : List GradientRule := [
       | _ => [] }
 ]
 
+/-- Reduce operation gradient rules. -/
+def reduceGradientRules : List GradientRule := [
+  -- sum: gradient broadcasts back to input shape
+  { name := "reduce_sum"
+    matchNode := fun n => match n with | .reduce .sum _ _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .reduce .sum _axes x =>
+        -- Broadcast ctx back to input shape
+        [some (.movement (.expand x.shape) ctx)]
+      | _ => [] },
+
+  -- max: gradient is 1 where input equals output, 0 elsewhere (subgradient)
+  -- This is a simplified version - full impl needs the argmax
+  { name := "reduce_max"
+    matchNode := fun n => match n with | .reduce .max _ _ => true | _ => false
+    gradFn := fun ctx ret =>
+      match ret with
+      | .reduce .max _axes x =>
+        -- Expand output to input shape, then mask where input == output
+        let expandedOut := LazyNode.movement (.expand x.shape) ret
+        let expandedCtx := LazyNode.movement (.expand x.shape) ctx
+        let mask := LazyNode.binary .cmpEq x expandedOut
+        -- Cast bool to float and multiply
+        let maskFloat := LazyNode.unary (.cast .float32) mask
+        [some (.binary .mul expandedCtx maskFloat)]
+      | _ => [] }
+]
+
 /-- All gradient rules combined. -/
 def allGradientRules : List GradientRule :=
-  gradientRules ++ movementGradientRules
+  gradientRules ++ movementGradientRules ++ reduceGradientRules
 
 /-- Look up the gradient rule for a node. -/
 def findGradientRule (n : LazyNode) : Option GradientRule :=
@@ -776,11 +860,6 @@ partial def computeGradients
     (targets : List LazyNode) : List (LazyNode × LazyNode) :=
   -- Get nodes in forward topological order
   let forwardOrder := toposort root
-
-  -- Filter to nodes on path to targets (for future optimization)
-  let _inTargetPath := forwardOrder.filter fun node =>
-    targets.any (· == node) ||
-    node.children.any fun child => targets.any (· == child)
 
   -- Initialize gradient map with root gradient
   let initGrads : List (LazyNode × LazyNode) := [(root, rootGrad)]
@@ -882,7 +961,12 @@ def register (reg : BufferRegistry) (shape : Array Nat) (dtype : DType := .float
 
 end BufferRegistry
 
-/-- Execution backend trait. -/
+/-- Execution backend trait.
+
+**Status**: Interface only. Implementations should be in separate files:
+- `SciLean.Compiler.BLASBackend` for CPU via LeanBLAS
+- `SciLean.Compiler.CUDABackend` for GPU (stub exists)
+-/
 class TensorBackend (B : Type) where
   /-- Allocate a buffer -/
   alloc : B → Array Nat → DType → IO (B × Nat)
@@ -890,28 +974,6 @@ class TensorBackend (B : Type) where
   execute : B → Kernel → IO Unit
   /-- Synchronize (wait for completion) -/
   sync : B → IO Unit
-
-/-- CPU backend using BLAS. -/
-structure CPUBackend where
-  registry : BufferRegistry
-  deriving Repr
-
-namespace CPUBackend
-
-def new : CPUBackend := { registry := BufferRegistry.empty }
-
-instance : TensorBackend CPUBackend where
-  alloc backend shape dtype := do
-    let (reg', id) := backend.registry.register shape dtype
-    pure ({ backend with registry := reg' }, id)
-
-  execute _backend _kernel := do
-    -- Would dispatch to BLAS operations
-    pure ()
-
-  sync _backend := pure ()
-
-end CPUBackend
 
 /-! ## Shape Utilities for DataArrayN Integration -/
 

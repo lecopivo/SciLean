@@ -9,7 +9,7 @@ namespace Prism
 
 -- The result is a pair:
 --   1. element is point,segment or triangle
---   2. element is position of the closets point in the local coordinates
+--   2. element is position of the closest point in the local coordinates
 -- -/
 def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f : Face triangle) × ℝ^{f.dim} :=
   let y := toRef x
@@ -73,7 +73,7 @@ def closestOnTriangle (x : ℝ^{2}) (fromRef toRef : ℝ^{2} → ℝ^{2}) : (f :
 
 /-- Finds the closest point to `x` on the prism `P` that is linearly deformed by `fromRef`
 
-The output is pair (f, y) where `f` is the face of `P` on which the closest point lies and `y` is the location of the closets poin in local coordinates
+The output is pair (f, y) where `f` is the face of `P` on which the closest point lies and `y` is the location of the closest point in local coordinates
 -/
 def closestPoint (P : Prism) (x : P.Space) (fromRef toRef : P.Space → P.Space) : (f : Face P) × ℝ^{f.dim} :=
   match P with
