@@ -1,4 +1,5 @@
 import Lean
+import Batteries.Data.Array.Basic
 import SciLean.Data.DataArray.DataArray
 
 /-!
@@ -1004,5 +1005,309 @@ def broadcastShape (s1 s2 : Array Nat) : Array Nat :=
     let a := s1.getD (s1.size - 1 - (maxLen - 1 - i)) 1
     let b := s2.getD (s2.size - 1 - (maxLen - 1 - i)) 1
     max a b
+
+/-! ## Interpreter: Execute LazyNode graphs
+
+A simple interpreter that executes LazyNode graphs using FloatArray.
+This provides actual computation without needing GPU backends.
+-/
+
+/-- Runtime tensor: concrete data with shape. -/
+structure RTensor where
+  data : FloatArray
+  shape : Array Nat
+  deriving Inhabited
+
+namespace RTensor
+
+instance : Repr RTensor where
+  reprPrec t _ := s!"RTensor({t.shape}, {t.data.size} elems)"
+
+/-- Create a tensor filled with a constant value. -/
+def ofConst (value : Float) (shape : Array Nat) : RTensor :=
+  let size := shape.foldl (· * ·) 1
+  let arr := Id.run do
+    let mut arr := FloatArray.emptyWithCapacity size
+    for _ in [:size] do
+      arr := arr.push value
+    return arr
+  { data := arr, shape := shape }
+
+/-- Create a tensor from a FloatArray with given shape. -/
+def ofArray (data : FloatArray) (shape : Array Nat) : RTensor :=
+  { data := data, shape := shape }
+
+/-- Total number of elements. -/
+def size (t : RTensor) : Nat := t.shape.foldl (· * ·) 1
+
+/-- Get element at flat index (unchecked). -/
+def get (t : RTensor) (i : Nat) : Float := t.data.data[i]!
+
+/-- Set element at flat index (unchecked). -/
+def set (t : RTensor) (i : Nat) (v : Float) : RTensor :=
+  { t with data := FloatArray.mk (t.data.data.set! i v) }
+
+/-- Compute strides from shape (row-major). Each stride is the product of subsequent dimensions. -/
+def computeStrides (shape : Array Nat) : Array Nat :=
+  -- stride(n-1) = 1, stride(i) = shape(i+1) * stride(i+1)
+  -- Build from right using foldr
+  let (strides, _) := shape.foldr (init := (#[], 1)) fun dim (acc, prod) =>
+    (acc.push prod, prod * dim)
+  strides.reverse
+
+/-- Convert multi-dimensional index to flat index. -/
+def flatIndex (shape : Array Nat) (idx : Array Nat) : Nat :=
+  let strides := computeStrides shape
+  let pairs := idx.zip strides
+  pairs.foldl (fun acc (i, s) => acc + i * s) 0
+
+/-- Convert flat index to multi-dimensional index. -/
+def unflatIndex (shape : Array Nat) (flat : Nat) : Array Nat :=
+  let strides := computeStrides shape
+  let (result, _) := strides.foldl (init := (#[], flat)) fun (arr, rem) stride =>
+    if stride > 0 then
+      (arr.push (rem / stride), rem % stride)
+    else
+      (arr.push 0, rem)
+  result
+
+end RTensor
+
+/-- Buffer storage: maps buffer IDs to runtime tensors (simple assoc list). -/
+abbrev BufferStore := List (Nat × RTensor)
+
+namespace BufferStore
+
+def empty : BufferStore := []
+
+def insert (store : BufferStore) (id : Nat) (t : RTensor) : BufferStore :=
+  (id, t) :: store.filter (·.1 != id)
+
+def getD (store : BufferStore) (id : Nat) (default : RTensor) : RTensor :=
+  match store.find? (·.1 == id) with
+  | some (_, t) => t
+  | none => default
+
+end BufferStore
+
+/-- Interpreter state. -/
+structure InterpState where
+  buffers : BufferStore
+  deriving Inhabited
+
+namespace Interpreter
+
+/-- Apply a unary operation elementwise. -/
+def applyUnary (op : UnaryOp) (x : RTensor) : RTensor :=
+  let f : Float → Float := match op with
+    | .neg => (- ·)
+    | .exp2 => fun v => Float.exp (v * Float.log 2)
+    | .log2 => fun v => Float.log v / Float.log 2
+    | .sin => Float.sin
+    | .sqrt => Float.sqrt
+    | .reciprocal => (1.0 / ·)
+    | .cast _ => id  -- ignore cast for Float-only interpreter
+  let newData := FloatArray.mk (x.data.data.map f)
+  { data := newData, shape := x.shape }
+
+/-- Apply a binary operation elementwise (with broadcasting). -/
+def applyBinary (op : BinaryOp) (x y : RTensor) : RTensor :=
+  let f : Float → Float → Float := match op with
+    | .add => (· + ·)
+    | .sub => (· - ·)
+    | .mul => (· * ·)
+    | .div => (· / ·)
+    | .max => fun a b => if a >= b then a else b
+    | .min => fun a b => if a <= b then a else b
+    | .cmpLt => fun a b => if a < b then 1.0 else 0.0
+    | .cmpEq => fun a b => if a == b then 1.0 else 0.0
+    | .matmul => panic! "matmul should be handled separately"
+
+  -- Simple case: same shape
+  if x.shape == y.shape then
+    let xArr := x.data.data
+    let yArr := y.data.data
+    let newData := FloatArray.mk (Array.zipWith f xArr yArr)
+    { data := newData, shape := x.shape }
+  else
+    -- Broadcasting: compute output shape and iterate
+    let outShape := broadcastShape x.shape y.shape
+    let outSize := outShape.foldl (· * ·) 1
+    let result := Id.run do
+      let mut result := FloatArray.emptyWithCapacity outSize
+      for i in [:outSize] do
+        let outIdx := RTensor.unflatIndex outShape i
+        -- Map output index to input indices (broadcasting)
+        let xIdx := outIdx.mapIdx fun j v =>
+          if j < outShape.size - x.shape.size then 0
+          else
+            let xj := j - (outShape.size - x.shape.size)
+            if x.shape.getD xj 1 == 1 then 0 else v
+        let yIdx := outIdx.mapIdx fun j v =>
+          if j < outShape.size - y.shape.size then 0
+          else
+            let yj := j - (outShape.size - y.shape.size)
+            if y.shape.getD yj 1 == 1 then 0 else v
+        let xFlat := RTensor.flatIndex x.shape (xIdx.extract (outShape.size - x.shape.size) outShape.size)
+        let yFlat := RTensor.flatIndex y.shape (yIdx.extract (outShape.size - y.shape.size) outShape.size)
+        result := result.push (f (x.get xFlat) (y.get yFlat))
+      return result
+    { data := result, shape := outShape }
+
+/-- Matrix multiplication (2D for now). -/
+def matmul (x y : RTensor) : RTensor :=
+  -- x: [m, k], y: [k, n] -> [m, n]
+  let m := x.shape.getD 0 1
+  let k := x.shape.getD 1 1
+  let n := y.shape.getD 1 1
+  let result := Id.run do
+    let mut result := FloatArray.emptyWithCapacity (m * n)
+    for i in [:m] do
+      for j in [:n] do
+        let mut sum : Float := 0.0
+        for l in [:k] do
+          sum := sum + x.get (i * k + l) * y.get (l * n + j)
+        result := result.push sum
+    return result
+  { data := result, shape := #[m, n] }
+
+/-- Reduce operation along specified axes. -/
+def applyReduce (op : ReduceOp) (axes : Array Nat) (x : RTensor) : RTensor :=
+  let floatMax (a b : Float) : Float := if a >= b then a else b
+  let floatMin (a b : Float) : Float := if a <= b then a else b
+  let f : Float → Float → Float := match op with
+    | .sum => (· + ·)
+    | .max => floatMax
+    | .min => floatMin
+  let init : Float := match op with
+    | .sum => 0.0
+    | .max => -1.0e308  -- approximate negative infinity
+    | .min => 1.0e308   -- approximate positive infinity
+
+  -- Compute output shape (axes become size 1)
+  let outShape := x.shape.mapIdx fun i dim =>
+    if axes.contains i then 1 else dim
+  let outSize := outShape.foldl (· * ·) 1
+
+  -- Initialize result with init values
+  let initResult := RTensor.ofConst init outShape
+
+  -- Iterate over input, accumulate into output
+  let result := Id.run do
+    let mut result := initResult
+    for i in [:x.size] do
+      let inIdx := RTensor.unflatIndex x.shape i
+      let outIdx := inIdx.mapIdx fun j v => if axes.contains j then 0 else v
+      let outFlat := RTensor.flatIndex outShape outIdx
+      let oldVal := result.get outFlat
+      let newVal := f oldVal (x.get i)
+      result := result.set outFlat newVal
+    return result
+  result
+
+/-- Reshape tensor (just changes shape metadata). -/
+def reshape (newShape : Array Nat) (x : RTensor) : RTensor :=
+  { x with shape := newShape }
+
+/-- Permute tensor dimensions. -/
+def permute (perm : Array Nat) (x : RTensor) : RTensor :=
+  let newShape := perm.map (x.shape.getD · 1)
+  let outSize := newShape.foldl (· * ·) 1
+  let result := Id.run do
+    let mut result := FloatArray.emptyWithCapacity outSize
+    for i in [:outSize] do
+      let outIdx := RTensor.unflatIndex newShape i
+      -- Inverse permute to get input index
+      let inIdx := Array.range x.shape.size |>.map fun j =>
+        outIdx.getD (perm.findIdx? (· == j) |>.getD 0) 0
+      let inFlat := RTensor.flatIndex x.shape inIdx
+      result := result.push (x.get inFlat)
+    return result
+  { data := result, shape := newShape }
+
+/-- Interpret a LazyNode, returning the computed tensor. -/
+partial def interpret (state : InterpState) (node : LazyNode) : RTensor :=
+  match node with
+  | .buffer id _ _ =>
+    state.buffers.getD id (RTensor.ofConst 0.0 #[])
+
+  | .const value shape _ =>
+    match sintToShape shape with
+    | some s => RTensor.ofConst value s
+    | none => panic! "Cannot interpret symbolic shape"
+
+  | .unary op x =>
+    let xVal := interpret state x
+    applyUnary op xVal
+
+  | .binary .matmul x y =>
+    let xVal := interpret state x
+    let yVal := interpret state y
+    matmul xVal yVal
+
+  | .binary op x y =>
+    let xVal := interpret state x
+    let yVal := interpret state y
+    applyBinary op xVal yVal
+
+  | .reduce op axes x =>
+    let xVal := interpret state x
+    applyReduce op axes xVal
+
+  | .movement (.reshape newShape) x =>
+    let xVal := interpret state x
+    match sintToShape newShape with
+    | some s => reshape s xVal
+    | none => panic! "Cannot interpret symbolic shape"
+
+  | .movement (.permute perm) x =>
+    let xVal := interpret state x
+    permute perm xVal
+
+  | .movement (.expand _) x =>
+    -- Expand is handled by broadcasting in binary ops
+    interpret state x
+
+  | .movement (.pad _) _ =>
+    panic! "pad not yet implemented"
+
+  | .movement (.shrink _) _ =>
+    panic! "shrink not yet implemented"
+
+  | .movement (.flip _) _ =>
+    panic! "flip not yet implemented"
+
+end Interpreter
+
+/-- Execute a lazy tensor and get the result. -/
+def LazyTensor.run (buffers : BufferStore := []) (t : LazyTensor) : RTensor :=
+  let node := t.realize  -- Apply simplification rules first
+  Interpreter.interpret { buffers := buffers } node
+
+/-- Execute a lazy tensor with a list of input buffers. -/
+def LazyTensor.runWithInputs (inputs : List (Nat × RTensor)) (t : LazyTensor) : RTensor :=
+  let buffers := inputs.foldl (fun m (id, tensor) => m.insert id tensor) BufferStore.empty
+  t.run buffers
+
+/-- Create a lazy tensor from a runtime tensor. -/
+def LazyTensor.ofRTensor (id : Nat) (t : RTensor) : LazyTensor × BufferStore :=
+  let lt := LazyTensor.fromBuffer id (shapeToSint t.shape)
+  let store : BufferStore := BufferStore.empty.insert id t
+  (lt, store)
+
+/-! ## Convenience functions for testing -/
+
+/-- Create a tensor from a list of floats with given shape. -/
+def RTensor.ofList (data : List Float) (shape : Array Nat) : RTensor :=
+  { data := data.toFloatArray, shape := shape }
+
+/-- Pretty print a tensor. -/
+def RTensor.toString (t : RTensor) : String :=
+  let shapeStr := t.shape.toList.map ToString.toString |> String.intercalate "×"
+  let dataStr := t.data.toList.take 10 |>.map (Float.toString) |> String.intercalate ", "
+  let suffix := if t.size > 10 then ", ..." else ""
+  s!"RTensor[{shapeStr}]({dataStr}{suffix})"
+
+instance : ToString RTensor := ⟨RTensor.toString⟩
 
 end SciLean.Compiler
