@@ -1187,7 +1187,6 @@ def applyReduce (op : ReduceOp) (axes : Array Nat) (x : RTensor) : RTensor :=
   -- Compute output shape (axes become size 1)
   let outShape := x.shape.mapIdx fun i dim =>
     if axes.contains i then 1 else dim
-  let outSize := outShape.foldl (· * ·) 1
 
   -- Initialize result with init values
   let initResult := RTensor.ofConst init outShape
