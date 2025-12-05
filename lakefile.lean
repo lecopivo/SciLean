@@ -17,7 +17,8 @@ def metalLinkArgs :=
   if System.Platform.isOSX then
     #["-Wl,-syslibroot,/Applications/Xcode-26.1.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
       "-lobjc",
-      "-framework", "Metal", "-framework", "Foundation", "-framework", "CoreFoundation"]
+      "-framework", "Metal", "-framework", "Foundation", "-framework", "CoreFoundation",
+      "-framework", "MetalPerformanceShaders"]
   else
     #[]
 def inclArgs :=
@@ -31,7 +32,7 @@ def inclArgs :=
 
 
 package scilean {
-  moreLinkArgs := linkArgs
+  moreLinkArgs := linkArgs ++ metalLinkArgs
   leanOptions := #[⟨`doc.verso, true⟩]
 }
 
@@ -44,6 +45,9 @@ require leanblas from ".." / "LeanBLAS"
 
 -- LeanPlot for visualization (local dependency)
 require leanplot from ".." / "LeanPlot"
+
+-- SorryProof for type-safe sorry macros (local dependency)
+require sorryproof from ".." / "SorryProof"
 
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
@@ -79,7 +83,7 @@ lean_lib SciLean {
 
 -- C-based FFI modules (precompiled for editor support)
 lean_lib SciLean.FFI.Core where
-  roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float, `SciLean.FFI.BLAS]
+  roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float, `SciLean.FFI.Float32Array, `SciLean.FFI.BLAS]
   precompileModules := true
   moreLinkObjs := #[libscileanc]
 
@@ -122,6 +126,14 @@ lean_exe CircleOptimisation {
 
 lean_exe Ballistic {
   root := `examples.Ballistic
+}
+
+lean_exe ComputeBackendTest {
+  root := `examples.ComputeBackendTest
+}
+
+lean_exe BackendBenchmark {
+  root := `examples.BackendBenchmark
 }
 
 lean_exe WalkOnSpheres {
@@ -214,3 +226,7 @@ lean_exe TestNpyRoundtrip where
 lean_exe VerifyPyTorchMNIST where
   root := `examples.VerifyPyTorchMNIST
   moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
+
+lean_exe Float32Benchmark where
+  root := `examples.Float32Benchmark
+  moreLinkArgs := metalLinkArgs

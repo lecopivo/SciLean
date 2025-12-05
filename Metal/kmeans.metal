@@ -1,4 +1,5 @@
 #include <metal_stdlib>
+#include <metal_simdgroup_matrix>
 using namespace metal;
 
 // KMeans loss computation - finds nearest centroid for each point
@@ -40,7 +41,7 @@ kernel void gemv(
     y[i] = sum;
 }
 
-// Matrix multiply: C = A * B
+// Matrix multiply: C = A * B (naive - 1 thread per element)
 // A is m x k, B is k x n, C is m x n
 kernel void gemm(
     device const float* A [[buffer(0)]],
@@ -61,6 +62,152 @@ kernel void gemm(
         sum += A[i * k + l] * B[l * n + j];
     }
     C[i * n + j] = sum;
+}
+
+// ============================================================
+// Tiled GEMM with Shared Memory (32x32 tiles)
+// ============================================================
+// Each threadgroup loads tiles of A and B into shared memory,
+// then computes partial products. This improves cache reuse
+// from O(1) to O(TILE_SIZE) per global memory load.
+
+#define TILE_SIZE 32
+
+kernel void gemm_tiled(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& M [[buffer(3)]],
+    constant uint& K [[buffer(4)]],
+    constant uint& N [[buffer(5)]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint2 tgid [[threadgroup_position_in_grid]]
+) {
+    // Shared memory tiles for A and B
+    threadgroup float As[TILE_SIZE][TILE_SIZE];
+    threadgroup float Bs[TILE_SIZE][TILE_SIZE];
+
+    // Global row/col this thread is responsible for
+    uint row = tgid.y * TILE_SIZE + tid.y;
+    uint col = tgid.x * TILE_SIZE + tid.x;
+
+    float sum = 0.0f;
+
+    // Number of tiles along K dimension
+    uint numTiles = (K + TILE_SIZE - 1) / TILE_SIZE;
+
+    for (uint t = 0; t < numTiles; t++) {
+        // Collaborative load: each thread loads one element of each tile
+        uint aCol = t * TILE_SIZE + tid.x;
+        uint bRow = t * TILE_SIZE + tid.y;
+
+        // Load A tile element (with bounds check)
+        As[tid.y][tid.x] = (row < M && aCol < K) ? A[row * K + aCol] : 0.0f;
+
+        // Load B tile element (with bounds check)
+        Bs[tid.y][tid.x] = (bRow < K && col < N) ? B[bRow * N + col] : 0.0f;
+
+        // Synchronize to ensure tile is fully loaded
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Compute partial dot product from this tile
+        for (uint i = 0; i < TILE_SIZE; i++) {
+            sum += As[tid.y][i] * Bs[i][tid.x];
+        }
+
+        // Synchronize before loading next tile
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Write result (with bounds check)
+    if (row < M && col < N) {
+        C[row * N + col] = sum;
+    }
+}
+
+// ============================================================
+// Simdgroup GEMM using Apple's hardware matrix units
+// ============================================================
+// Uses simdgroup_matrix for 8×8 cooperative matrix operations.
+// Each simdgroup (32 threads) computes multiple 8×8 output tiles.
+// This leverages the dedicated matrix hardware on Apple Silicon.
+
+// Constants for simdgroup GEMM
+#define SIMD_TILE_M 32  // Output tile rows per threadgroup
+#define SIMD_TILE_N 32  // Output tile cols per threadgroup
+#define SIMD_TILE_K 32  // K-dimension tile size
+
+kernel void gemm_simd(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& M [[buffer(3)]],
+    constant uint& K [[buffer(4)]],
+    constant uint& N [[buffer(5)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint simd_lane [[thread_index_in_simdgroup]],
+    uint simd_id [[simdgroup_index_in_threadgroup]]
+) {
+    // Each threadgroup computes a SIMD_TILE_M × SIMD_TILE_N output tile
+    // using 4 simdgroups (each simdgroup handles a 16×16 subtile using 2×2 8×8 blocks)
+
+    // Base row/col for this threadgroup's output tile
+    uint tg_row = tgid.y * SIMD_TILE_M;
+    uint tg_col = tgid.x * SIMD_TILE_N;
+
+    // Each simdgroup handles a 16×16 subtile (2×2 arrangement of 8×8 blocks)
+    // simd_id: 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
+    uint simd_row = tg_row + (simd_id / 2) * 16;
+    uint simd_col = tg_col + (simd_id % 2) * 16;
+
+    // Accumulators for 2×2 grid of 8×8 output blocks
+    simdgroup_float8x8 acc00 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc01 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc10 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc11 = simdgroup_float8x8(0);
+
+    // Iterate over K dimension in 8-element chunks
+    for (uint k = 0; k < K; k += 8) {
+        // Load 2 A tiles (16×8) and 2 B tiles (8×16)
+        simdgroup_float8x8 a0, a1;  // A[simd_row:simd_row+16, k:k+8]
+        simdgroup_float8x8 b0, b1;  // B[k:k+8, simd_col:simd_col+16]
+
+        // Load A tiles (two 8×8 blocks stacked vertically)
+        if (simd_row < M && k < K) {
+            simdgroup_load(a0, A + simd_row * K + k, K);
+        }
+        if (simd_row + 8 < M && k < K) {
+            simdgroup_load(a1, A + (simd_row + 8) * K + k, K);
+        }
+
+        // Load B tiles (two 8×8 blocks side by side)
+        if (k < K && simd_col < N) {
+            simdgroup_load(b0, B + k * N + simd_col, N);
+        }
+        if (k < K && simd_col + 8 < N) {
+            simdgroup_load(b1, B + k * N + simd_col + 8, N);
+        }
+
+        // Multiply-accumulate: C[i,j] += A[i,k] * B[k,j]
+        simdgroup_multiply_accumulate(acc00, a0, b0, acc00);
+        simdgroup_multiply_accumulate(acc01, a0, b1, acc01);
+        simdgroup_multiply_accumulate(acc10, a1, b0, acc10);
+        simdgroup_multiply_accumulate(acc11, a1, b1, acc11);
+    }
+
+    // Store results (with bounds checking)
+    if (simd_row < M && simd_col < N) {
+        simdgroup_store(acc00, C + simd_row * N + simd_col, N);
+    }
+    if (simd_row < M && simd_col + 8 < N) {
+        simdgroup_store(acc01, C + simd_row * N + simd_col + 8, N);
+    }
+    if (simd_row + 8 < M && simd_col < N) {
+        simdgroup_store(acc10, C + (simd_row + 8) * N + simd_col, N);
+    }
+    if (simd_row + 8 < M && simd_col + 8 < N) {
+        simdgroup_store(acc11, C + (simd_row + 8) * N + simd_col + 8, N);
+    }
 }
 
 // Element-wise operations
@@ -91,7 +238,7 @@ kernel void scale(
     b[i] = s * a[i];
 }
 
-// Reduction sum (single workgroup version - simple)
+// Reduction sum (single workgroup version - simple, for small arrays)
 kernel void reduce_sum(
     device const float* input [[buffer(0)]],
     device float* output [[buffer(1)]],
@@ -118,6 +265,83 @@ kernel void reduce_sum(
     }
 }
 
+// ============================================================
+// Multi-stage reduction for large arrays (grid-stride loop)
+// ============================================================
+// Pass 1: Each threadgroup reduces a portion of the input to a partial sum
+// Pass 2: Reduce the partial sums (can reuse reduce_sum for small counts)
+
+kernel void reduce_sum_large(
+    device const float* input [[buffer(0)]],
+    device float* partials [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    constant uint& numThreadgroups [[buffer(3)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint gid [[thread_position_in_grid]],
+    uint blockIdx [[threadgroup_position_in_grid]],
+    uint blockDim [[threads_per_threadgroup]]
+) {
+    threadgroup float shared[256];
+
+    // Grid-stride loop: each thread accumulates multiple elements
+    float sum = 0.0f;
+    uint gridSize = blockDim * numThreadgroups;
+    for (uint i = gid; i < n; i += gridSize) {
+        sum += input[i];
+    }
+
+    // Store thread's sum in shared memory
+    shared[tid] = sum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Binary tree reduction within threadgroup
+    for (uint s = blockDim / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] += shared[tid + s];
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Thread 0 writes this threadgroup's partial sum
+    if (tid == 0) {
+        partials[blockIdx] = shared[0];
+    }
+}
+
+// Reduce max for large arrays (grid-stride)
+kernel void reduce_max_large(
+    device const float* input [[buffer(0)]],
+    device float* partials [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    constant uint& numThreadgroups [[buffer(3)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint gid [[thread_position_in_grid]],
+    uint blockIdx [[threadgroup_position_in_grid]],
+    uint blockDim [[threads_per_threadgroup]]
+) {
+    threadgroup float shared[256];
+
+    float maxVal = -INFINITY;
+    uint gridSize = blockDim * numThreadgroups;
+    for (uint i = gid; i < n; i += gridSize) {
+        maxVal = max(maxVal, input[i]);
+    }
+
+    shared[tid] = maxVal;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    for (uint s = blockDim / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] = max(shared[tid], shared[tid + s]);
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (tid == 0) {
+        partials[blockIdx] = shared[0];
+    }
+}
+
 // Softmax numerator: exp(x - max)
 kernel void softmax_exp(
     device const float* x [[buffer(0)]],
@@ -135,4 +359,355 @@ kernel void normalize(
     uint i [[thread_position_in_grid]]
 ) {
     x[i] /= sum;
+}
+
+// ============================================================
+// Fused Softmax (2-pass version for small-medium arrays)
+// ============================================================
+// Pass 1: Find max, compute exp(x-max), and partial sums in one pass
+// Pass 2: Normalize by total sum
+
+// Fused softmax pass 1: computes exp(x - max) and partial sums
+// Also outputs the exp values for normalization
+kernel void softmax_fused_pass1(
+    device const float* input [[buffer(0)]],
+    device float* exp_output [[buffer(1)]],
+    device float* partial_sums [[buffer(2)]],
+    constant uint& n [[buffer(3)]],
+    constant float& max_val [[buffer(4)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint gid [[thread_position_in_grid]],
+    uint blockIdx [[threadgroup_position_in_grid]],
+    uint blockDim [[threads_per_threadgroup]]
+) {
+    threadgroup float shared[256];
+
+    // Compute exp(x - max) and store
+    float e = 0.0f;
+    if (gid < n) {
+        e = exp(input[gid] - max_val);
+        exp_output[gid] = e;
+    }
+    shared[tid] = e;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Reduce to partial sum
+    for (uint s = blockDim / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] += shared[tid + s];
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (tid == 0) {
+        partial_sums[blockIdx] = shared[0];
+    }
+}
+
+// Fused softmax pass 2: normalize by sum
+kernel void softmax_normalize(
+    device float* data [[buffer(0)]],
+    constant float& sum_val [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    uint gid [[thread_position_in_grid]]
+) {
+    if (gid < n) {
+        data[gid] /= sum_val;
+    }
+}
+
+// ============================================================
+// AXPY: y = a*x + y (BLAS Level 1)
+// ============================================================
+// Fused multiply-add for efficient vector operations
+
+kernel void axpy(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    constant float& a [[buffer(2)]],
+    constant uint& n [[buffer(3)]],
+    uint i [[thread_position_in_grid]]
+) {
+    if (i < n) {
+        y[i] = fma(a, x[i], y[i]);
+    }
+}
+
+// Scaled addition: z = a*x + b*y
+kernel void axpby(
+    device const float* x [[buffer(0)]],
+    device const float* y [[buffer(1)]],
+    device float* z [[buffer(2)]],
+    constant float& a [[buffer(3)]],
+    constant float& b [[buffer(4)]],
+    uint i [[thread_position_in_grid]]
+) {
+    z[i] = fma(a, x[i], b * y[i]);
+}
+
+// Fused multiply-add: z = x * y + z
+kernel void fma_vec(
+    device const float* x [[buffer(0)]],
+    device const float* y [[buffer(1)]],
+    device float* z [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    z[i] = fma(x[i], y[i], z[i]);
+}
+
+// ============================================================
+// LazyTensor Operations
+// ============================================================
+
+// --- Unary Operations ---
+
+kernel void neg(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = -x[i];
+}
+
+kernel void exp_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = exp(x[i]);
+}
+
+kernel void exp2_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = exp2(x[i]);
+}
+
+kernel void log_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = log(x[i]);
+}
+
+kernel void log2_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = log2(x[i]);
+}
+
+kernel void sin_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = sin(x[i]);
+}
+
+kernel void cos_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = cos(x[i]);
+}
+
+kernel void sqrt_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = sqrt(x[i]);
+}
+
+kernel void reciprocal(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = 1.0f / x[i];
+}
+
+kernel void relu(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = max(0.0f, x[i]);
+}
+
+kernel void sigmoid(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = 1.0f / (1.0f + exp(-x[i]));
+}
+
+kernel void tanh_op(
+    device const float* x [[buffer(0)]],
+    device float* y [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    y[i] = tanh(x[i]);
+}
+
+// --- Binary Operations ---
+
+kernel void sub(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    c[i] = a[i] - b[i];
+}
+
+kernel void div_op(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    c[i] = a[i] / b[i];
+}
+
+kernel void max_op(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    c[i] = max(a[i], b[i]);
+}
+
+kernel void min_op(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    c[i] = min(a[i], b[i]);
+}
+
+kernel void pow_op(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    uint i [[thread_position_in_grid]]
+) {
+    c[i] = pow(a[i], b[i]);
+}
+
+// --- Reduction Operations ---
+
+// Reduce max (single workgroup)
+kernel void reduce_max(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    threadgroup float* shared [[threadgroup(0)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint gid [[thread_position_in_grid]],
+    uint blockDim [[threads_per_threadgroup]]
+) {
+    shared[tid] = (gid < n) ? input[gid] : -INFINITY;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    for (uint s = blockDim / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] = max(shared[tid], shared[tid + s]);
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (tid == 0) {
+        output[0] = shared[0];
+    }
+}
+
+// Reduce min (single workgroup)
+kernel void reduce_min(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    threadgroup float* shared [[threadgroup(0)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint gid [[thread_position_in_grid]],
+    uint blockDim [[threads_per_threadgroup]]
+) {
+    shared[tid] = (gid < n) ? input[gid] : INFINITY;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    for (uint s = blockDim / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] = min(shared[tid], shared[tid + s]);
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (tid == 0) {
+        output[0] = shared[0];
+    }
+}
+
+// --- Broadcasting Binary Ops ---
+// For tensors with different shapes, we need stride-based indexing
+
+kernel void broadcast_add(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    constant uint* a_strides [[buffer(3)]],
+    constant uint* b_strides [[buffer(4)]],
+    constant uint* c_shape [[buffer(5)]],
+    constant uint& ndim [[buffer(6)]],
+    uint i [[thread_position_in_grid]]
+) {
+    // Compute multi-index from flat index
+    uint remaining = i;
+    uint a_idx = 0, b_idx = 0;
+    for (uint d = 0; d < ndim; d++) {
+        uint coord = remaining / c_shape[d];
+        remaining = remaining % c_shape[d];
+        a_idx += coord * a_strides[d];
+        b_idx += coord * b_strides[d];
+    }
+    c[i] = a[a_idx] + b[b_idx];
+}
+
+kernel void broadcast_mul(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device float* c [[buffer(2)]],
+    constant uint* a_strides [[buffer(3)]],
+    constant uint* b_strides [[buffer(4)]],
+    constant uint* c_shape [[buffer(5)]],
+    constant uint& ndim [[buffer(6)]],
+    uint i [[thread_position_in_grid]]
+) {
+    uint remaining = i;
+    uint a_idx = 0, b_idx = 0;
+    for (uint d = 0; d < ndim; d++) {
+        uint coord = remaining / c_shape[d];
+        remaining = remaining % c_shape[d];
+        a_idx += coord * a_strides[d];
+        b_idx += coord * b_strides[d];
+    }
+    c[i] = a[a_idx] * b[b_idx];
+}
+
+// --- Fill Operations ---
+
+kernel void fill_const(
+    device float* x [[buffer(0)]],
+    constant float& value [[buffer(1)]],
+    uint i [[thread_position_in_grid]]
+) {
+    x[i] = value;
 }
