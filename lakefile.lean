@@ -230,3 +230,7 @@ lean_exe VerifyPyTorchMNIST where
 lean_exe Float32Benchmark where
   root := `examples.Float32Benchmark
   moreLinkArgs := metalLinkArgs
+
+lean_exe Numpy100 where
+  root := `examples.Numpy100
+  moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]

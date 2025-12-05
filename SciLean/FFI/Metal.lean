@@ -178,6 +178,11 @@ opaque gemmSimd (m k n : USize) (A B : @& ByteArray) : ByteArray
 @[extern "scilean_metal_gemm_mps_f32"]
 opaque gemmMPS (m k n : USize) (A B : @& ByteArray) : ByteArray
 
+-- Accelerate GEMM (Float32): Apple's CPU BLAS using AMX coprocessor
+-- This runs on CPU but uses the AMX matrix extension for high throughput
+@[extern "scilean_accelerate_gemm_f32"]
+opaque gemmAccelerate (m k n : USize) (A B : @& ByteArray) : ByteArray
+
 -- Smart GEMM (Float32): selects best kernel based on matrix size
 -- Based on benchmarks (M4):
 --   MPS: ~10-11 TFLOP/s for large matrices (≥2048), but high overhead for small

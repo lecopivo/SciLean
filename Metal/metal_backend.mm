@@ -1,6 +1,7 @@
 #import <Metal/Metal.h>
 #import <Foundation/Foundation.h>
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
+#import <Accelerate/Accelerate.h>
 #include <lean/lean.h>
 
 // Global Metal state
@@ -1465,6 +1466,51 @@ LEAN_EXPORT lean_obj_res scilean_metal_softmax_f32(
 
         return buffer_to_byte_array_f32(outputBuf, n);
     }
+}
+
+// ============================================================
+// Accelerate Framework GEMM (CPU/AMX)
+// Uses Apple's vDSP/BLAS which leverages AMX on Apple Silicon
+// ============================================================
+
+// Accelerate GEMM (Float32): Uses CPU AMX units
+// This is Apple's optimized BLAS implementation that uses AMX coprocessor
+LEAN_EXPORT lean_obj_res scilean_accelerate_gemm_f32(
+    size_t m, size_t k, size_t n,
+    b_lean_obj_arg A,
+    b_lean_obj_arg B
+) {
+    // Allocate output
+    lean_obj_res C = lean_alloc_sarray(1, m * n * sizeof(float), m * n * sizeof(float));
+
+    float* aData = (float*)lean_sarray_cptr(A);
+    float* bData = (float*)lean_sarray_cptr(B);
+    float* cData = (float*)lean_sarray_cptr(C);
+
+    // Initialize C to zero
+    memset(cData, 0, m * n * sizeof(float));
+
+    // cblas_sgemm: C = alpha*A*B + beta*C
+    // Row-major layout (CblasRowMajor)
+    // A is m×k, B is k×n, C is m×n
+    cblas_sgemm(
+        CblasRowMajor,  // Row-major storage
+        CblasNoTrans,   // Don't transpose A
+        CblasNoTrans,   // Don't transpose B
+        (int)m,         // Rows of A and C
+        (int)n,         // Columns of B and C
+        (int)k,         // Columns of A, rows of B
+        1.0f,           // alpha
+        aData,          // A
+        (int)k,         // Leading dimension of A
+        bData,          // B
+        (int)n,         // Leading dimension of B
+        0.0f,           // beta
+        cData,          // C
+        (int)n          // Leading dimension of C
+    );
+
+    return C;
 }
 
 } // extern "C"

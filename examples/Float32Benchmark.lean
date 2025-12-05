@@ -217,12 +217,35 @@ def main : IO Unit := do
     let gflops := if axpyMs > 0.001 then flops / (axpyMs / 1000.0) else 0.0
     IO.println s!"  N={size}: {axpyMs.toString.take 8}ms ({gflops.toString.take 6} GFLOP/s)"
 
-  -- Softmax: TODO - needs proper fused kernel (chained ops hang)
-  -- The Lean-side implementation with chained ops causes hangs
-
+  -- ═══════════════════════════════════════════════════════════
   IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "MPS (GPU) vs ACCELERATE (CPU/AMX) COMPARISON"
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "MPS: Metal Performance Shaders - runs on GPU"
+  IO.println "Accelerate: Apple's BLAS - runs on CPU with AMX coprocessor\n"
+
+  for n in [256, 512, 1024, 2048, 4096] do
+    let matA32 := generateFloat32Data (n * n)
+    let matB32 := generateFloat32Data (n * n)
+    let flops := 2.0 * n.toFloat * n.toFloat * n.toFloat / 1e9
+
+    let mpsMs ← timeByteArray 3 (fun () => Metal.Float32.gemmMPS n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsMPS := if mpsMs > 0.001 then flops / (mpsMs / 1000.0) else 0.0
+
+    let accelMs ← timeByteArray 3 (fun () => Metal.Float32.gemmAccelerate n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsAccel := if accelMs > 0.001 then flops / (accelMs / 1000.0) else 0.0
+
+    let winner := if gflopsMPS > gflopsAccel then "MPS (GPU)" else "Accelerate (AMX)"
+    IO.println s!"  {n}×{n}:"
+    IO.println s!"    MPS (GPU):          {mpsMs.toString.take 8}ms  {gflopsMPS.toString.take 6} GFLOP/s"
+    IO.println s!"    Accelerate (AMX):   {accelMs.toString.take 8}ms  {gflopsAccel.toString.take 6} GFLOP/s"
+    IO.println s!"    Winner: {winner}"
+    IO.println ""
+
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   IO.println "Benchmark complete!"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  IO.println "\nSummary: MPS (Metal Performance Shaders) is Apple's optimized GEMM"
-  IO.println "         Simdgroup GEMM achieves up to ~10 TFLOP/s (2048×2048)"
-  IO.println "         Tiled GEMM handles larger matrices reliably at 5-6 TFLOP/s"
+  IO.println "\nSummary:"
+  IO.println "  MPS (GPU): Apple's Metal Performance Shaders library"
+  IO.println "  Accelerate (AMX): Apple's CPU BLAS using AMX coprocessor"
+  IO.println "  Both are highly optimized - comparing helps understand workload"

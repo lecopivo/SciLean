@@ -3,6 +3,7 @@ import SciLean.Data.IndexType
 import SciLean.Data.ByteArray
 import SciLean.Data.Idx
 import SciLean.Data.IndexType.Fold
+import SciLean.FFI.Float32Array
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
@@ -729,3 +730,21 @@ def Float.byteType : ByteType Float where
 
 instance : PlainDataType Float where
   btype := Float.byteType
+
+-------- Float32 -------------------------------------------------------
+------------------------------------------------------------------------
+
+@[inline]
+def Float32.byteType : ByteType Float32 where
+  bytes := 4
+  h_size := sorry_proof
+
+  fromByteArray arr i _ := arr.ugetFloat32 i
+  toByteArray arr i _ a := arr.usetFloat32 i a
+
+  toByteArray_size := sorry_proof
+  fromByteArray_toByteArray := sorry_proof
+  fromByteArray_toByteArray_other := sorry_proof
+
+instance : PlainDataType Float32 where
+  btype := Float32.byteType

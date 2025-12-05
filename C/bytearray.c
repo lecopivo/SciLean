@@ -24,3 +24,22 @@ LEAN_EXPORT lean_obj_res scilean_byte_array_replicate(b_lean_obj_arg size, uint8
   memset(lean_sarray_cptr(r), v, n);
   return r;
 }
+
+// Float32 FFI functions (Float32 is boxed in Lean)
+// i is a byte offset (must be 4-byte aligned for Float32)
+
+LEAN_EXPORT lean_obj_res scilean_byte_array_uget_float32(b_lean_obj_arg a, size_t i){
+  uint8_t* bytes = lean_sarray_cptr(a);
+  float v = *(float*)(bytes + i);
+  return lean_box_float32(v);
+}
+
+LEAN_EXPORT lean_obj_res scilean_byte_array_uset_float32(lean_obj_arg a, size_t i, b_lean_obj_arg v_box){
+  float v = lean_unbox_float32(v_box);
+  lean_obj_res r;
+  if (lean_is_exclusive(a)) r = a;
+  else r = lean_copy_byte_array(a);
+  uint8_t* bytes = lean_sarray_cptr(r);
+  *(float*)(bytes + i) = v;
+  return r;
+}
