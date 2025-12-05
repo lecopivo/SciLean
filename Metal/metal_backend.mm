@@ -1251,51 +1251,27 @@ static lean_obj_res empty_byte_array_f32() {
 }
 
 // AXPY (Float32): y = a*x + y
+// All parameters as ByteArray for zero-copy FFI
 LEAN_EXPORT lean_obj_res scilean_metal_axpy_f32(
     size_t n,
-    double a_val,  // Float32 is passed as double in Lean FFI
+    b_lean_obj_arg a_arr,  // scalar as ByteArray[4]
     b_lean_obj_arg x,
     b_lean_obj_arg y
 ) {
-    if (!ensure_metal_initialized()) {
+    if (!ensure_metal_initialized() || n == 0) {
         return empty_byte_array_f32();
     }
 
-    // Convert from double to float
-    float a = (float)a_val;
-
-    // Validate inputs
-    if (n == 0) {
-        return empty_byte_array_f32();
-    }
-
-    // Check ByteArray sizes
-    size_t x_size = lean_sarray_size(x);
-    size_t y_size = lean_sarray_size(y);
-    if (x_size < n * sizeof(float) || y_size < n * sizeof(float)) {
-        NSLog(@"AXPY: ByteArray too small. x_size=%zu, y_size=%zu, expected=%zu",
-              x_size, y_size, n * sizeof(float));
-        return empty_byte_array_f32();
-    }
+    // Read scalar directly from ByteArray pointer - zero copy
+    float a = ((float*)lean_sarray_cptr(a_arr))[0];
 
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"axpy");
-        if (!pipeline) {
-            NSLog(@"AXPY: Failed to get pipeline for 'axpy' kernel");
-            return empty_byte_array_f32();
-        }
+        if (!pipeline) return empty_byte_array_f32();
 
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
-        if (!xbuf) {
-            NSLog(@"AXPY: Failed to create x buffer");
-            return empty_byte_array_f32();
-        }
-        // Y is both input and output, so we need a copy
         id<MTLBuffer> ybuf = create_buffer_from_byte_array_f32(y, n, false);
-        if (!ybuf) {
-            NSLog(@"AXPY: Failed to create y buffer");
-            return empty_byte_array_f32();
-        }
+        if (!xbuf || !ybuf) return empty_byte_array_f32();
 
         id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
         id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
@@ -1324,38 +1300,30 @@ LEAN_EXPORT lean_obj_res scilean_metal_axpy_f32(
 }
 
 // AXPBY (Float32): z = a*x + b*y
+// All parameters as ByteArray for zero-copy FFI
 LEAN_EXPORT lean_obj_res scilean_metal_axpby_f32(
     size_t n,
-    double a_val,  // Float32 is passed as double in Lean FFI
+    b_lean_obj_arg a_arr,  // scalar as ByteArray[4]
     b_lean_obj_arg x,
-    double b_val,  // Float32 is passed as double in Lean FFI
+    b_lean_obj_arg b_arr,  // scalar as ByteArray[4]
     b_lean_obj_arg y
 ) {
-    if (!ensure_metal_initialized()) {
+    if (!ensure_metal_initialized() || n == 0) {
         return empty_byte_array_f32();
     }
 
-    float a = (float)a_val;
-    float b = (float)b_val;
-
-    // Validate inputs
-    if (n == 0) {
-        return empty_byte_array_f32();
-    }
+    // Read scalars directly from ByteArray pointers - zero copy
+    float a = ((float*)lean_sarray_cptr(a_arr))[0];
+    float b = ((float*)lean_sarray_cptr(b_arr))[0];
 
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"axpby");
-        if (!pipeline) {
-            NSLog(@"AXPBY: Failed to get pipeline for 'axpby' kernel");
-            return empty_byte_array_f32();
-        }
+        if (!pipeline) return empty_byte_array_f32();
 
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
         id<MTLBuffer> ybuf = create_buffer_from_byte_array_f32(y, n, true);
-        if (!xbuf || !ybuf) {
-            NSLog(@"AXPBY: Failed to create input buffers");
-            return empty_byte_array_f32();
-        }
+        if (!xbuf || !ybuf) return empty_byte_array_f32();
+
         id<MTLBuffer> zbuf = [device newBufferWithLength:n * sizeof(float)
                                                  options:MTLResourceStorageModeShared];
 

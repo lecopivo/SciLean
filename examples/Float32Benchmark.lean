@@ -202,14 +202,16 @@ def main : IO Unit := do
 
   -- ═══════════════════════════════════════════════════════════
   IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  IO.println "AXPY TEST (y = a*x + y)"
+  IO.println "AXPY TEST (y = a*x + y) - all ByteArray, zero-copy FFI"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  -- Scalar as ByteArray - same as vector data
+  let aScalar := ByteArray.replicateFloat32 1 (2.5 : Float32)
 
   for size in [100000, 1000000, 10000000] do
     let x32 := generateFloat32Data size
     let y32 := generateFloat32Data size
-    let a : Float32 := (2.5 : Float32)
-    let axpyMs ← timeByteArray 10 (fun () => Metal.Float32.axpy size.toUSize a x32 y32)
+    let axpyMs ← timeByteArray 10 (fun () => Metal.Float32.axpy size.toUSize aScalar x32 y32)
     -- Effective FLOPS: 2 ops per element (multiply + add)
     let flops := 2.0 * size.toFloat / 1e9
     let gflops := if axpyMs > 0.001 then flops / (axpyMs / 1000.0) else 0.0

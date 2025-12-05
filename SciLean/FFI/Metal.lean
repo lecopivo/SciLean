@@ -201,13 +201,14 @@ opaque gemmMPS (m k n : USize) (A B : @& ByteArray) : ByteArray
 
 /-! ## BLAS Level 1 Operations -/
 
-/-- AXPY: `y = a*x + y` (in-place update) -/
+-- AXPY: y = a*x + y (in-place update)
+-- All parameters as ByteArray for zero-copy FFI
 @[extern "scilean_metal_axpy_f32"]
-opaque axpy (n : USize) (a : Float32) (x y : @& ByteArray) : ByteArray
+opaque axpy (n : USize) (a x y : @& ByteArray) : ByteArray
 
-/-- AXPBY: `z = a*x + b*y` (creates new output) -/
+-- AXPBY: z = a*x + b*y (creates new output)
 @[extern "scilean_metal_axpby_f32"]
-opaque axpby (n : USize) (a : Float32) (x : @& ByteArray) (b : Float32) (y : @& ByteArray) : ByteArray
+opaque axpby (n : USize) (a x b y : @& ByteArray) : ByteArray
 
 -- Unary Operations
 
