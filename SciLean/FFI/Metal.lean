@@ -45,11 +45,12 @@ opaque gemmSimd (m k n : USize) (A B : @& FloatArray) : FloatArray
 -- - < 128×128: naive (low overhead)
 -- - 128-512: tiled (good cache reuse)
 -- - > 512: simd (hardware matrix units)
+-- NOTE: Using native USize arithmetic to avoid BigNat allocation
 @[inline] def gemmAuto (m k n : USize) (A B : @& FloatArray) : FloatArray :=
-  let size := m.toNat * n.toNat
-  if size >= 512 * 512 then
+  let size := m * n  -- USize multiplication
+  if size >= (512 : USize) * 512 then
     gemmSimd m k n A B
-  else if size >= 128 * 128 then
+  else if size >= (128 : USize) * 128 then
     gemmTiled m k n A B
   else
     gemm m k n A B
@@ -184,22 +185,23 @@ opaque gemmMPS (m k n : USize) (A B : @& ByteArray) : ByteArray
 opaque gemmAccelerate (m k n : USize) (A B : @& ByteArray) : ByteArray
 
 -- Smart GEMM (Float32): selects best kernel based on matrix size
--- Based on benchmarks (M4):
---   MPS: ~10-11 TFLOP/s for large matrices (≥2048), but high overhead for small
---   Simdgroup: ~7 TFLOP/s at 2048, ~3 TFLOP/s at 1024, best for medium aligned
---   Tiled: ~3 TFLOP/s, reliable for any size
---   Naive: ~1 TFLOP/s, low overhead for small matrices
+-- Benchmarks (M4 Pro, December 2024):
+--   1024×1024: Simd 6.3 TFLOP/s >> MPS 3.2 TFLOP/s (Simd wins 2x)
+--   2048×2048: MPS 11.0 TFLOP/s > Simd 8.6 TFLOP/s (MPS wins 1.28x)
+--   4096×4096: MPS 12.9 TFLOP/s (MPS amortizes launch overhead)
+-- Crossover: ~1536×1536, use 1.5M elements as threshold
+-- NOTE: Using native USize arithmetic to avoid BigNat allocation overhead
 @[inline] def gemmAuto (m k n : USize) (A B : @& ByteArray) : ByteArray :=
-  let size := m.toNat * n.toNat
-  let aligned := m.toNat % 8 == 0 && k.toNat % 8 == 0 && n.toNat % 8 == 0
-  if size >= 2048 * 2048 then
+  let size := m * n  -- USize multiplication, no BigNat
+  let aligned := m % 8 == 0 && k % 8 == 0 && n % 8 == 0  -- USize modulo
+  if size >= (1536 : USize) * 1536 then
     -- MPS dominates for large matrices (10+ TFLOP/s)
     gemmMPS m k n A B
-  else if aligned && size >= 512 * 512 then
-    -- Simdgroup for medium aligned matrices (3-7 TFLOP/s)
+  else if aligned && size >= (256 : USize) * 256 then
+    -- Simdgroup for medium aligned matrices (6-8 TFLOP/s)
     gemmSimd m k n A B
-  else if size >= 256 * 256 then
-    -- Tiled for smaller or non-aligned matrices
+  else if size >= (128 : USize) * 128 then
+    -- Tiled for smaller or non-aligned matrices (~3 TFLOP/s)
     gemmTiled m k n A B
   else
     gemm m k n A B
