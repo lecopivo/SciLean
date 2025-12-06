@@ -2178,4 +2178,234 @@ LEAN_EXPORT lean_obj_res scilean_metal_layer_norm_f32(
     }
 }
 
+// ============================================================
+// Attention Operations (Float32)
+// ============================================================
+
+// Flash Attention - single head
+// Q, K, V: [seq_len, head_dim]
+// output: [seq_len, head_dim]
+LEAN_EXPORT lean_obj_res scilean_metal_flash_attention_f32(
+    size_t seq_len,
+    size_t head_dim,
+    b_lean_obj_arg q_arr,
+    b_lean_obj_arg k_arr,
+    b_lean_obj_arg v_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"flash_attention");
+        if (!pipeline) {
+            NSLog(@"Flash attention: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t n = seq_len * head_dim;
+        id<MTLBuffer> qBuf = create_buffer_from_byte_array_f32(q_arr, n, true);
+        id<MTLBuffer> kBuf = create_buffer_from_byte_array_f32(k_arr, n, true);
+        id<MTLBuffer> vBuf = create_buffer_from_byte_array_f32(v_arr, n, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t seq_len32 = (uint32_t)seq_len;
+        uint32_t head_dim32 = (uint32_t)head_dim;
+        float scale = 1.0f / sqrtf((float)head_dim);
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:qBuf offset:0 atIndex:0];
+        [encoder setBuffer:kBuf offset:0 atIndex:1];
+        [encoder setBuffer:vBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+        [encoder setBytes:&seq_len32 length:sizeof(seq_len32) atIndex:4];
+        [encoder setBytes:&head_dim32 length:sizeof(head_dim32) atIndex:5];
+        [encoder setBytes:&scale length:sizeof(scale) atIndex:6];
+
+        // Simple serial kernel: one thread per query position
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, 256);
+        [encoder dispatchThreads:MTLSizeMake(seq_len, 1, 1)
+           threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
+// Flash Attention - causal (autoregressive) variant
+// Only attends to positions <= current position
+LEAN_EXPORT lean_obj_res scilean_metal_flash_attention_causal_f32(
+    size_t seq_len,
+    size_t head_dim,
+    b_lean_obj_arg q_arr,
+    b_lean_obj_arg k_arr,
+    b_lean_obj_arg v_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"flash_attention_causal");
+        if (!pipeline) {
+            NSLog(@"Flash attention causal: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t n = seq_len * head_dim;
+        id<MTLBuffer> qBuf = create_buffer_from_byte_array_f32(q_arr, n, true);
+        id<MTLBuffer> kBuf = create_buffer_from_byte_array_f32(k_arr, n, true);
+        id<MTLBuffer> vBuf = create_buffer_from_byte_array_f32(v_arr, n, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t seq_len32 = (uint32_t)seq_len;
+        uint32_t head_dim32 = (uint32_t)head_dim;
+        float scale = 1.0f / sqrtf((float)head_dim);
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:qBuf offset:0 atIndex:0];
+        [encoder setBuffer:kBuf offset:0 atIndex:1];
+        [encoder setBuffer:vBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+        [encoder setBytes:&seq_len32 length:sizeof(seq_len32) atIndex:4];
+        [encoder setBytes:&head_dim32 length:sizeof(head_dim32) atIndex:5];
+        [encoder setBytes:&scale length:sizeof(scale) atIndex:6];
+
+        // Simple serial kernel: one thread per query position
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, 256);
+        [encoder dispatchThreads:MTLSizeMake(seq_len, 1, 1)
+           threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
+// Multi-head attention
+// Q, K, V: [batch, num_heads, seq_len, head_dim]
+// output: [batch, num_heads, seq_len, head_dim]
+LEAN_EXPORT lean_obj_res scilean_metal_attention_multihead_f32(
+    size_t batch_size,
+    size_t num_heads,
+    size_t seq_len,
+    size_t head_dim,
+    b_lean_obj_arg q_arr,
+    b_lean_obj_arg k_arr,
+    b_lean_obj_arg v_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"attention_multi_head");
+        if (!pipeline) {
+            NSLog(@"Multi-head attention: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t n = batch_size * num_heads * seq_len * head_dim;
+        id<MTLBuffer> qBuf = create_buffer_from_byte_array_f32(q_arr, n, true);
+        id<MTLBuffer> kBuf = create_buffer_from_byte_array_f32(k_arr, n, true);
+        id<MTLBuffer> vBuf = create_buffer_from_byte_array_f32(v_arr, n, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch_size32 = (uint32_t)batch_size;
+        uint32_t num_heads32 = (uint32_t)num_heads;
+        uint32_t seq_len32 = (uint32_t)seq_len;
+        uint32_t head_dim32 = (uint32_t)head_dim;
+        float scale = 1.0f / sqrtf((float)head_dim);
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:qBuf offset:0 atIndex:0];
+        [encoder setBuffer:kBuf offset:0 atIndex:1];
+        [encoder setBuffer:vBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+        [encoder setBytes:&batch_size32 length:sizeof(batch_size32) atIndex:4];
+        [encoder setBytes:&num_heads32 length:sizeof(num_heads32) atIndex:5];
+        [encoder setBytes:&seq_len32 length:sizeof(seq_len32) atIndex:6];
+        [encoder setBytes:&head_dim32 length:sizeof(head_dim32) atIndex:7];
+        [encoder setBytes:&scale length:sizeof(scale) atIndex:8];
+
+        // Grid: (num_heads, batch_size, ceil(seq_len/threads))
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, 256);
+        NSUInteger q_tiles = (seq_len + tgSize - 1) / tgSize;
+        [encoder dispatchThreadgroups:MTLSizeMake(num_heads, batch_size, q_tiles)
+                threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
+// Batched softmax (row-wise) - commonly used in attention
+// Input: [num_rows, row_size], applies softmax to each row
+LEAN_EXPORT lean_obj_res scilean_metal_softmax_batched_f32(
+    size_t num_rows,
+    size_t row_size,
+    b_lean_obj_arg x
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"softmax_batched");
+        if (!pipeline) {
+            NSLog(@"Softmax batched: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t n = num_rows * row_size;
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(x, n, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t row_size32 = (uint32_t)row_size;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:outputBuf offset:0 atIndex:1];
+        [encoder setBytes:&row_size32 length:sizeof(row_size32) atIndex:2];
+
+        // Shared memory for row data
+        [encoder setThreadgroupMemoryLength:row_size * sizeof(float) atIndex:0];
+
+        // One threadgroup per row
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, 256);
+        [encoder dispatchThreadgroups:MTLSizeMake(num_rows, 1, 1)
+                threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
 } // extern "C"

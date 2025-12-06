@@ -50,6 +50,13 @@ require leanplot from ".." / "LeanPlot"
 require sorryproof from ".." / "SorryProof"
 
 
+-- Extra C compiler flags for macOS (use new Accelerate CBLAS interface)
+def cFlagsOSX :=
+  if System.Platform.isOSX then
+    #["-DACCELERATE_NEW_LAPACK"]  -- Use updated CBLAS interface (macOS 13.3+)
+  else
+    #[]
+
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
 target libscileanc pkg : FilePath := do
   let mut oFiles : Array (Job FilePath) := #[]
@@ -58,7 +65,8 @@ target libscileanc pkg : FilePath := do
       let oFile := pkg.buildDir / "c" / (file.fileName.stripSuffix ".c" ++ ".o")
       let srcJob ← inputTextFile file.path
       let weakArgs := #["-I", (← getLeanIncludeDir).toString]
-      oFiles := oFiles.push (← buildO oFile srcJob weakArgs #["-fPIC", "-O3", "-DNDEBUG"] "gcc" getLeanTrace)
+      let cFlags := #["-fPIC", "-O3", "-DNDEBUG"] ++ cFlagsOSX
+      oFiles := oFiles.push (← buildO oFile srcJob weakArgs cFlags "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
   buildStaticLib (pkg.sharedLibDir / name) oFiles
 
@@ -255,5 +263,9 @@ lean_exe GEMMFocus where
 
 lean_exe GEMMCorrectness where
   root := `examples.GEMMCorrectness
+  moreLinkArgs := metalLinkArgs
+
+lean_exe AttentionTest where
+  root := `examples.AttentionTest
   moreLinkArgs := metalLinkArgs
 

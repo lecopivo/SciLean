@@ -327,4 +327,32 @@ opaque biasGelu (n stride : USize) (input bias : @& ByteArray) : ByteArray
 @[extern "scilean_metal_layer_norm_f32"]
 opaque layerNorm (n hiddenSize : USize) (input gamma beta : @& ByteArray) : ByteArray
 
+/-! ## Attention Operations -/
+
+-- Flash Attention (single head): output = softmax(Q*K^T / sqrt(d)) * V
+-- Q, K, V: [seq_len, head_dim] stored as ByteArray (Float32)
+-- Returns output: [seq_len, head_dim]
+-- Uses online softmax for memory efficiency (no full attention matrix materialized)
+@[extern "scilean_metal_flash_attention_f32"]
+opaque flashAttention (seqLen headDim : USize) (Q K V : @& ByteArray) : ByteArray
+
+-- Flash Attention with causal mask (for autoregressive models)
+-- Only attends to positions <= current position
+-- Used for GPT-style decoder-only models
+@[extern "scilean_metal_flash_attention_causal_f32"]
+opaque flashAttentionCausal (seqLen headDim : USize) (Q K V : @& ByteArray) : ByteArray
+
+-- Multi-head attention
+-- Q, K, V: [batch, num_heads, seq_len, head_dim]
+-- Returns: [batch, num_heads, seq_len, head_dim]
+@[extern "scilean_metal_attention_multihead_f32"]
+opaque attentionMultiHead (batchSize numHeads seqLen headDim : USize)
+    (Q K V : @& ByteArray) : ByteArray
+
+-- Batched softmax (row-wise)
+-- Input: [numRows, rowSize], applies softmax to each row independently
+-- Commonly used for attention weights
+@[extern "scilean_metal_softmax_batched_f32"]
+opaque softmaxBatched (numRows rowSize : USize) (x : @& ByteArray) : ByteArray
+
 end SciLean.Metal.Float32

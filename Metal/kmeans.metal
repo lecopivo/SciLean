@@ -1468,3 +1468,120 @@ kernel void fill_const(
 ) {
     x[i] = value;
 }
+
+// ============================================================
+// Fused Attention Kernels
+// ============================================================
+// Implements scaled dot-product attention: softmax(Q*K^T / sqrt(d_k)) * V
+// Memory-efficient: one threadgroup per query position
+
+// ============================================================
+// Flash Attention - Simple Serial Version
+// ============================================================
+// Single thread per query for correctness. Each threadgroup handles one query.
+// Slower but correct - can optimize later.
+
+kernel void flash_attention(
+    device const float* Q [[buffer(0)]],    // [seq_len, head_dim]
+    device const float* K [[buffer(1)]],    // [seq_len, head_dim]
+    device const float* V [[buffer(2)]],    // [seq_len, head_dim]
+    device float* output [[buffer(3)]],     // [seq_len, head_dim]
+    constant uint& seq_len [[buffer(4)]],
+    constant uint& head_dim [[buffer(5)]],
+    constant float& scale [[buffer(6)]],
+    uint q_idx [[thread_position_in_grid]]
+) {
+    if (q_idx >= seq_len) return;
+
+    // First pass: compute max score for numerical stability
+    float max_score = -INFINITY;
+    for (uint k_idx = 0; k_idx < seq_len; k_idx++) {
+        float score = 0.0f;
+        for (uint d = 0; d < head_dim; d++) {
+            score += Q[q_idx * head_dim + d] * K[k_idx * head_dim + d];
+        }
+        score *= scale;
+        max_score = max(max_score, score);
+    }
+
+    // Second pass: compute exp sum
+    float sum_exp = 0.0f;
+    for (uint k_idx = 0; k_idx < seq_len; k_idx++) {
+        float score = 0.0f;
+        for (uint d = 0; d < head_dim; d++) {
+            score += Q[q_idx * head_dim + d] * K[k_idx * head_dim + d];
+        }
+        score *= scale;
+        sum_exp += exp(score - max_score);
+    }
+
+    // Third pass: compute weighted sum with V
+    float inv_sum = 1.0f / sum_exp;
+    for (uint d = 0; d < head_dim; d++) {
+        float out_d = 0.0f;
+        for (uint k_idx = 0; k_idx < seq_len; k_idx++) {
+            float score = 0.0f;
+            for (uint dd = 0; dd < head_dim; dd++) {
+                score += Q[q_idx * head_dim + dd] * K[k_idx * head_dim + dd];
+            }
+            score *= scale;
+            float weight = exp(score - max_score) * inv_sum;
+            out_d += weight * V[k_idx * head_dim + d];
+        }
+        output[q_idx * head_dim + d] = out_d;
+    }
+}
+
+// Causal (masked) attention - only attends to positions <= current position
+// Simple serial version: one thread per query
+kernel void flash_attention_causal(
+    device const float* Q [[buffer(0)]],
+    device const float* K [[buffer(1)]],
+    device const float* V [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& seq_len [[buffer(4)]],
+    constant uint& head_dim [[buffer(5)]],
+    constant float& scale [[buffer(6)]],
+    uint q_idx [[thread_position_in_grid]]
+) {
+    if (q_idx >= seq_len) return;
+
+    // First pass: compute max score for numerical stability
+    // Only consider positions <= q_idx (causal mask)
+    float max_score = -INFINITY;
+    for (uint k_idx = 0; k_idx <= q_idx; k_idx++) {
+        float score = 0.0f;
+        for (uint d = 0; d < head_dim; d++) {
+            score += Q[q_idx * head_dim + d] * K[k_idx * head_dim + d];
+        }
+        score *= scale;
+        max_score = max(max_score, score);
+    }
+
+    // Second pass: compute exp sum
+    float sum_exp = 0.0f;
+    for (uint k_idx = 0; k_idx <= q_idx; k_idx++) {
+        float score = 0.0f;
+        for (uint d = 0; d < head_dim; d++) {
+            score += Q[q_idx * head_dim + d] * K[k_idx * head_dim + d];
+        }
+        score *= scale;
+        sum_exp += exp(score - max_score);
+    }
+
+    // Third pass: compute weighted sum with V
+    float inv_sum = 1.0f / sum_exp;
+    for (uint d = 0; d < head_dim; d++) {
+        float out_d = 0.0f;
+        for (uint k_idx = 0; k_idx <= q_idx; k_idx++) {
+            float score = 0.0f;
+            for (uint dd = 0; dd < head_dim; dd++) {
+                score += Q[q_idx * head_dim + dd] * K[k_idx * head_dim + dd];
+            }
+            score *= scale;
+            float weight = exp(score - max_score) * inv_sum;
+            out_d += weight * V[k_idx * head_dim + d];
+        }
+        output[q_idx * head_dim + d] = out_d;
+    }
+}
