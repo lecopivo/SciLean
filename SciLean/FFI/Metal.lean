@@ -309,4 +309,22 @@ def softmax (sz : USize) (x : ByteArray) : ByteArray :=
   -- Use fused version if available
   softmaxFused sz x
 
+-- Bias + ReLU: output = max(0, input + bias)
+-- n = total elements, stride = features per sample (bias length)
+-- Useful for dense layers: y = relu(Wx + b)
+@[extern "scilean_metal_bias_relu_f32"]
+opaque biasRelu (n stride : USize) (input bias : @& ByteArray) : ByteArray
+
+-- Bias + GELU: output = GELU(input + bias)
+-- GELU approximation: x * 0.5 * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
+-- Used in transformer models like GPT/BERT
+@[extern "scilean_metal_bias_gelu_f32"]
+opaque biasGelu (n stride : USize) (input bias : @& ByteArray) : ByteArray
+
+-- Layer Normalization: output = gamma * (input - mean) / sqrt(var + eps) + beta
+-- n = total elements, hiddenSize = features per sample
+-- gamma/beta are learned scale/shift parameters
+@[extern "scilean_metal_layer_norm_f32"]
+opaque layerNorm (n hiddenSize : USize) (input gamma beta : @& ByteArray) : ByteArray
+
 end SciLean.Metal.Float32

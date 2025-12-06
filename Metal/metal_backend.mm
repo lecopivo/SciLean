@@ -2030,4 +2030,152 @@ LEAN_EXPORT lean_obj_res scilean_accelerate_gemm_f32(
     return C;
 }
 
+// ============================================================
+// Fused ML Operations (Float32)
+// ============================================================
+
+// Bias + ReLU: output = max(0, input + bias)
+// input: [batch_size, features], bias: [features]
+// stride = features (number of bias elements repeated per batch)
+LEAN_EXPORT lean_obj_res scilean_metal_bias_relu_f32(
+    size_t n,           // total elements
+    size_t stride,      // bias stride (features per sample)
+    b_lean_obj_arg input,
+    b_lean_obj_arg bias
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_relu");
+        if (!pipeline) return lean_box(0);
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input, n, true);
+        id<MTLBuffer> biasBuf = create_buffer_from_byte_array_f32(bias, stride, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t n32 = (uint32_t)n;
+        uint32_t stride32 = (uint32_t)stride;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:biasBuf offset:0 atIndex:1];
+        [encoder setBuffer:outputBuf offset:0 atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+        [encoder setBytes:&stride32 length:sizeof(stride32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
+// Bias + GELU: output = input * 0.5 * (1 + tanh(sqrt(2/π) * (input + 0.044715 * input³)))
+LEAN_EXPORT lean_obj_res scilean_metal_bias_gelu_f32(
+    size_t n,
+    size_t stride,
+    b_lean_obj_arg input,
+    b_lean_obj_arg bias
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_gelu");
+        if (!pipeline) return lean_box(0);
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input, n, true);
+        id<MTLBuffer> biasBuf = create_buffer_from_byte_array_f32(bias, stride, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t n32 = (uint32_t)n;
+        uint32_t stride32 = (uint32_t)stride;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:biasBuf offset:0 atIndex:1];
+        [encoder setBuffer:outputBuf offset:0 atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+        [encoder setBytes:&stride32 length:sizeof(stride32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
+// Layer Norm: output = gamma * (input - mean) / sqrt(var + eps) + beta
+// Simplified version: each sample normalized independently
+// n = total elements, hiddenSize = features per sample
+LEAN_EXPORT lean_obj_res scilean_metal_layer_norm_f32(
+    size_t n,
+    size_t hiddenSize,
+    b_lean_obj_arg input,
+    b_lean_obj_arg gamma,
+    b_lean_obj_arg beta
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"layer_norm");
+        if (!pipeline) return lean_box(0);
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input, n, true);
+        id<MTLBuffer> gammaBuf = create_buffer_from_byte_array_f32(gamma, hiddenSize, true);
+        id<MTLBuffer> betaBuf = create_buffer_from_byte_array_f32(beta, hiddenSize, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:n * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t n32 = (uint32_t)n;
+        uint32_t hiddenSize32 = (uint32_t)hiddenSize;
+        float eps = 1e-5f;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:gammaBuf offset:0 atIndex:1];
+        [encoder setBuffer:betaBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:4];
+        [encoder setBytes:&hiddenSize32 length:sizeof(hiddenSize32) atIndex:5];
+        [encoder setBytes:&eps length:sizeof(eps) atIndex:6];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, n);
+    }
+}
+
 } // extern "C"
