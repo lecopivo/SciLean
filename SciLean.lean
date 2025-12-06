@@ -109,7 +109,7 @@ import SciLean.Analysis.Scalar.Basic
 import SciLean.Analysis.Scalar.FloatAsReal
 import SciLean.Analysis.Scalar.FloatRealEquiv
 import SciLean.Analysis.Scalar.Notation
-import SciLean.Analysis.Sorry
+-- import SciLean.Analysis.Sorry  -- disabled: needs mathlib API update for MulAction
 import SciLean.Analysis.SpecialFunctions.GaborWavelet
 import SciLean.Analysis.SpecialFunctions.Gaussian
 import SciLean.Analysis.SpecialFunctions.Inner
@@ -398,9 +398,9 @@ import SciLean.Data.ListN
 import SciLean.Data.Nat
 import SciLean.Data.Prod
 import SciLean.Data.Random
-import SciLean.Data.SparseMatrix.Basic
+-- import SciLean.Data.SparseMatrix.Basic  -- disabled: needs mathlib API update for List.Sorted
 import SciLean.Data.StructType
-import SciLean.Data.StructType.Algebra
+-- import SciLean.Data.StructType.Algebra  -- disabled: file moved to Algebra.lean.disabled
 import SciLean.Data.StructType.Basic
 import SciLean.Data.Vector
 import SciLean.Data.VectorType.Base

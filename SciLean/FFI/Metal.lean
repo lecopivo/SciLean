@@ -179,6 +179,12 @@ opaque gemmSimd (m k n : USize) (A B : @& ByteArray) : ByteArray
 @[extern "scilean_metal_gemm_simd_opt_f32"]
 opaque gemmSimdOpt (m k n : USize) (A B : @& ByteArray) : ByteArray
 
+-- M4-optimized GEMM: float4 loads, 128×128 tiles, no bounds checks
+-- REQUIRES: M, N, K are multiples of 128
+-- 16 simdgroups (512 threads), 4×4 accumulator grid per simdgroup
+@[extern "scilean_metal_gemm_m4_f32"]
+opaque gemmM4 (m k n : USize) (A B : @& ByteArray) : ByteArray
+
 -- MPS matrix multiply on GPU (Float32): Apple's Metal Performance Shaders
 -- This uses Apple's highly optimized GEMM that leverages the Neural Engine and GPU
 @[extern "scilean_metal_gemm_mps_f32"]
@@ -191,25 +197,23 @@ opaque gemmAccelerate (m k n : USize) (A B : @& ByteArray) : ByteArray
 
 -- Smart GEMM (Float32): selects best kernel based on matrix size
 -- Benchmarks (M4 Pro, December 2024):
---   256×256:  Simd 366 GFLOP/s (low overhead wins)
---   512×512:  SimdOpt 1.6 TFLOP/s (shared memory helps)
---   1024×1024: Simd 5.6 TFLOP/s (direct loads faster than double-buffering)
---   2048×2048: MPS 13.0 TFLOP/s (Apple's optimized library)
--- NOTE: Using native USize arithmetic to avoid BigNat allocation overhead
+--   256×256:  Simd 366 GFLOP/s (low overhead)
+--   512×512:  Simd 1.5 TFLOP/s
+--   1024×1024: MPS 4.0 TFLOP/s (MPS wins due to better scheduling)
+--   2048×2048: MPS 12.0 TFLOP/s
+--   4096×4096: MPS 20.6 TFLOP/s (near peak M4 GPU)
+-- Strategy: Use MPS for anything >= 512×512, Simd for small
 @[inline] def gemmAuto (m k n : USize) (A B : @& ByteArray) : ByteArray :=
   let size := m * n  -- USize multiplication, no BigNat
   let aligned := m % 8 == 0 && k % 8 == 0 && n % 8 == 0  -- USize modulo
-  if size >= (1536 : USize) * 1536 then
-    -- MPS dominates for large matrices (10+ TFLOP/s)
+  if size >= (512 : USize) * 512 then
+    -- MPS dominates for medium+ matrices (4-20 TFLOP/s)
     gemmMPS m k n A B
-  else if aligned && size >= (384 : USize) * 384 && size < (768 : USize) * 768 then
-    -- SimdOpt for ~512×512 range (shared memory prefetch helps here)
-    gemmSimdOpt m k n A B
   else if aligned && size >= (256 : USize) * 256 then
-    -- Simd for medium aligned matrices (5-6 TFLOP/s)
+    -- Simd for small aligned matrices
     gemmSimd m k n A B
   else if size >= (128 : USize) * 128 then
-    -- Tiled for smaller or non-aligned matrices (~3 TFLOP/s)
+    -- Tiled for smaller or non-aligned
     gemmTiled m k n A B
   else
     gemm m k n A B

@@ -33,7 +33,7 @@ def inclArgs :=
 
 package scilean {
   moreLinkArgs := linkArgs ++ metalLinkArgs
-  leanOptions := #[⟨`doc.verso, true⟩]
+  -- leanOptions := #[⟨`doc.verso, true⟩]  -- disabled for now
 }
 
 
@@ -79,6 +79,7 @@ target libscileanmetal pkg : FilePath := do
 @[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
+  precompileModules := true
 }
 
 -- C-based FFI modules (precompiled for editor support)
@@ -233,4 +234,5 @@ lean_exe Float32Benchmark where
 
 lean_exe Numpy100 where
   root := `examples.Numpy100
+  -- LeanBLAS needs explicit linking for local path dependency
   moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]

@@ -1,12 +1,13 @@
+import SciLean
 /-
-Numpy-100 Exercises in SciLean
+
+# Numpy-100 Exercises in SciLean
 
 This demonstrates the high-level DataArrayN API with Float^[n] notation.
 Metal GPU acceleration happens transparently underneath.
 
 Reference: https://github.com/rougier/numpy-100
 -/
-import SciLean
 
 open SciLean
 
@@ -14,14 +15,16 @@ set_default_scalar Float
 
 -- Exercise 3: Create a zero vector of size 10
 def exercise3 : Float^[10] := 0
-
+-- Note: Can't use #eval with FFI - must compile and run via `main`
+#check exercise3
 -- Exercise 6: Build a null vector (size 10) with fifth element set to 1
 def exercise6 : Float^[10] := ⊞ (i : Idx 10) => if i.1 == 4 then 1.0 else 0.0
 
 -- Exercise 7: Generate a vector containing values from 10 to 49
 def exercise7 : Float^[40] := ⊞ (i : Idx 40) => (i.1 + 10).toFloat
 
--- Exercise 8: Reverse vector order (implemented via index manipulation)
+-- Exercise 8: Reverse vector order (implemented via
+ index manipulation)
 def exercise8 (n : Nat) (v : Float^[n]) : Float^[n] :=
   ⊞ (i : Idx n) => v[⟨(n - 1 - i.1.toNat).toUSize, sorry_proof⟩]
 

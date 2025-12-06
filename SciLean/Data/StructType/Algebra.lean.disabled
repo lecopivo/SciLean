@@ -1,7 +1,7 @@
 import SciLean.Analysis.Normed.IsContinuousLinearMap
 import SciLean.Algebra.IsAffineMap
 import SciLean.Topology.Continuous
-import SciLean.Analysis.Sorry
+-- import SciLean.Analysis.Sorry  -- disabled: needs mathlib API update for MulAction
 
 import SciLean.Data.StructType.Basic
 

@@ -339,6 +339,135 @@ kernel void gemm_simd_opt(
     }
 }
 
+// ============================================================
+// M4-Optimized GEMM: No bounds checks, float4 loads, 128×128 tiles
+// ============================================================
+// REQUIRES: M, N, K are multiples of 128
+// Uses Metal 3 features available on M4
+
+#define M4_TILE_M 128
+#define M4_TILE_N 128
+#define M4_TILE_K 32
+
+kernel void gemm_m4(
+    device const float4* A [[buffer(0)]],  // Treat as float4 for vectorized loads
+    device const float4* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& M [[buffer(3)]],
+    constant uint& K [[buffer(4)]],
+    constant uint& N [[buffer(5)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint simd_id [[simdgroup_index_in_threadgroup]]
+) {
+    // Shared memory: 128×32 for A, 32×128 for B
+    threadgroup float As[M4_TILE_M][M4_TILE_K + 1];  // +1 to avoid bank conflicts
+    threadgroup float Bs[M4_TILE_K][M4_TILE_N + 1];
+
+    // Each threadgroup: 128×128 output, 512 threads = 16 simdgroups
+    // Each simdgroup: 32×32 output (4×4 grid of 8×8)
+    uint tg_row = tgid.y * M4_TILE_M;
+    uint tg_col = tgid.x * M4_TILE_N;
+
+    // Simdgroup layout: 4×4 grid
+    uint simd_row = tg_row + (simd_id / 4) * 32;
+    uint simd_col = tg_col + (simd_id % 4) * 32;
+
+    // 4×4 grid of 8×8 accumulators = 32×32 per simdgroup
+    simdgroup_float8x8 acc[4][4];
+    #pragma unroll
+    for (int i = 0; i < 4; i++) {
+        #pragma unroll
+        for (int j = 0; j < 4; j++) {
+            acc[i][j] = simdgroup_float8x8(0);
+        }
+    }
+
+    // Thread ID for loading (512 threads)
+    uint linear_tid = tid.y * 32 + tid.x;
+    uint K4 = K / 4;  // K in float4 units
+    uint N4 = N / 4;
+
+    // Main loop over K
+    for (uint k = 0; k < K; k += M4_TILE_K) {
+        // Load A tile: 128×32 = 4096 floats, 512 threads → 8 floats each
+        // Using float4 loads: 2 float4 per thread
+        #pragma unroll
+        for (uint i = 0; i < 2; i++) {
+            uint idx = linear_tid * 2 + i;
+            uint ar = idx / 8;   // row in tile (0-127)
+            uint ac4 = idx % 8;  // col in float4 units
+            uint global_row = tg_row + ar;
+            uint global_k4 = (k / 4) + ac4;
+
+            float4 val = A[global_row * K4 + global_k4];
+            As[ar][ac4 * 4 + 0] = val.x;
+            As[ar][ac4 * 4 + 1] = val.y;
+            As[ar][ac4 * 4 + 2] = val.z;
+            As[ar][ac4 * 4 + 3] = val.w;
+        }
+
+        // Load B tile: 32×128 = 4096 floats
+        #pragma unroll
+        for (uint i = 0; i < 2; i++) {
+            uint idx = linear_tid * 2 + i;
+            uint br = idx / 32;  // row in tile (0-31)
+            uint bc4 = idx % 32; // col in float4 units
+            uint global_k = k + br;
+            uint global_c4 = (tg_col / 4) + bc4;
+
+            float4 val = B[global_k * N4 + global_c4];
+            Bs[br][bc4 * 4 + 0] = val.x;
+            Bs[br][bc4 * 4 + 1] = val.y;
+            Bs[br][bc4 * 4 + 2] = val.z;
+            Bs[br][bc4 * 4 + 3] = val.w;
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Compute: 32 in K tile, 8 at a time
+        uint simd_row_local = (simd_id / 4) * 32;
+        uint simd_col_local = (simd_id % 4) * 32;
+
+        #pragma unroll
+        for (uint kk = 0; kk < M4_TILE_K; kk += 8) {
+            simdgroup_float8x8 a[4], b[4];
+
+            // Load 4 A blocks (32×8 region)
+            #pragma unroll
+            for (int ai = 0; ai < 4; ai++) {
+                simdgroup_load(a[ai], &As[simd_row_local + ai * 8][kk], M4_TILE_K + 1);
+            }
+
+            // Load 4 B blocks (8×32 region)
+            #pragma unroll
+            for (int bi = 0; bi < 4; bi++) {
+                simdgroup_load(b[bi], &Bs[kk][simd_col_local + bi * 8], M4_TILE_N + 1);
+            }
+
+            // Full 4×4 multiply-accumulate
+            #pragma unroll
+            for (int ai = 0; ai < 4; ai++) {
+                #pragma unroll
+                for (int bi = 0; bi < 4; bi++) {
+                    simdgroup_multiply_accumulate(acc[ai][bi], a[ai], b[bi], acc[ai][bi]);
+                }
+            }
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Store 32×32 output (no bounds check - assume aligned)
+    #pragma unroll
+    for (int ai = 0; ai < 4; ai++) {
+        #pragma unroll
+        for (int bi = 0; bi < 4; bi++) {
+            simdgroup_store(acc[ai][bi], C + (simd_row + ai * 8) * N + simd_col + bi * 8, N);
+        }
+    }
+}
+
 // Element-wise operations
 kernel void add(
     device const float* a [[buffer(0)]],

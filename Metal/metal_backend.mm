@@ -908,6 +908,64 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_simd_opt_f32(
     }
 }
 
+// M4-optimized GEMM: float4 loads, 128×128 tiles, no bounds checks
+// REQUIRES: M, N, K are multiples of 128
+LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_f32(
+    size_t m, size_t k, size_t n,
+    b_lean_obj_arg A,
+    b_lean_obj_arg B
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_m4");
+        if (!pipeline) {
+            // Fall back to simd if M4 kernel not found
+            return scilean_metal_gemm_simd_f32(m, k, n, A, B);
+        }
+
+        id<MTLBuffer> Abuf = create_buffer_from_byte_array_f32(A, m * k, true);
+        id<MTLBuffer> Bbuf = create_buffer_from_byte_array_f32(B, k * n, true);
+        id<MTLBuffer> Cbuf = [device newBufferWithLength:m * n * sizeof(float)
+                                                 options:MTLResourceStorageModeShared];
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:Abuf offset:0 atIndex:0];
+        [encoder setBuffer:Bbuf offset:0 atIndex:1];
+        [encoder setBuffer:Cbuf offset:0 atIndex:2];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:3];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
+
+        // 16 simdgroups of 32 threads = 512 threads per threadgroup
+        // Each threadgroup computes 128×128 output
+        const NSUInteger M4_TILE_M = 128;
+        const NSUInteger M4_TILE_N = 128;
+        MTLSize threadgroupSize = MTLSizeMake(32, 16, 1);  // 512 threads
+        MTLSize numThreadgroups = MTLSizeMake(
+            n / M4_TILE_N,  // No rounding - requires aligned size
+            m / M4_TILE_M,
+            1);
+
+        [encoder dispatchThreadgroups:numThreadgroups threadsPerThreadgroup:threadgroupSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(Cbuf, m * n);
+    }
+}
+
 // Fill (Float32)
 LEAN_EXPORT lean_obj_res scilean_metal_fill_f32(size_t n, b_lean_obj_arg value_box) {
     if (!ensure_metal_initialized()) {

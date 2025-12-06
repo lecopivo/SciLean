@@ -190,7 +190,37 @@ def main : IO Unit := do
 
   -- ═══════════════════════════════════════════════════════════
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  IO.println "LARGE MATRIX TEST (Tiled vs MPS)"
+  IO.println "M4-OPTIMIZED GEMM (requires 128-aligned sizes)"
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "(float4 loads, 128×128 tiles, no bounds checks)"
+  IO.println ""
+
+  for n in [1024, 2048, 4096] do
+    let matA32 := generateFloat32Data (n * n)
+    let matB32 := generateFloat32Data (n * n)
+    let flops := 2.0 * n.toFloat * n.toFloat * n.toFloat / 1e9
+
+    -- M4 optimized (float4 loads, 128×128 tiles)
+    let m4Ms ← timeByteArray 5 (fun () => Metal.Float32.gemmM4 n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsM4 := if m4Ms > 0.001 then flops / (m4Ms / 1000.0) else 0.0
+
+    -- Simd for comparison
+    let simdMs ← timeByteArray 5 (fun () => Metal.Float32.gemmSimd n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsSimd := if simdMs > 0.001 then flops / (simdMs / 1000.0) else 0.0
+
+    -- MPS for comparison
+    let mpsMs ← timeByteArray 5 (fun () => Metal.Float32.gemmMPS n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsMPS := if mpsMs > 0.001 then flops / (mpsMs / 1000.0) else 0.0
+
+    IO.println s!"  {n}×{n}:"
+    IO.println s!"    M4:   {m4Ms.toString.take 7}ms  {gflopsM4.toString.take 6} GFLOP/s"
+    IO.println s!"    Simd: {simdMs.toString.take 7}ms  {gflopsSimd.toString.take 6} GFLOP/s"
+    IO.println s!"    MPS:  {mpsMs.toString.take 7}ms  {gflopsMPS.toString.take 6} GFLOP/s"
+    IO.println ""
+
+  -- ═══════════════════════════════════════════════════════════
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "LARGE MATRIX TEST"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   for n in [3072, 4096] do
@@ -198,13 +228,13 @@ def main : IO Unit := do
     let matB32 := generateFloat32Data (n * n)
     let flops := 2.0 * n.toFloat * n.toFloat * n.toFloat / 1e9
 
-    let tiledMs ← timeByteArray 3 (fun () => Metal.Float32.gemmTiled n.toUSize n.toUSize n.toUSize matA32 matB32)
-    let gflopsTiled := if tiledMs > 0.001 then flops / (tiledMs / 1000.0) else 0.0
+    let m4Ms ← timeByteArray 3 (fun () => Metal.Float32.gemmM4 n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsM4 := if m4Ms > 0.001 then flops / (m4Ms / 1000.0) else 0.0
 
     let mpsMs ← timeByteArray 3 (fun () => Metal.Float32.gemmMPS n.toUSize n.toUSize n.toUSize matA32 matB32)
     let gflopsMPS := if mpsMs > 0.001 then flops / (mpsMs / 1000.0) else 0.0
 
-    IO.println s!"  {n}×{n}: Tiled {tiledMs.toString.take 8}ms ({gflopsTiled.toString.take 6} GFLOP/s), MPS {mpsMs.toString.take 8}ms ({gflopsMPS.toString.take 6} GFLOP/s)"
+    IO.println s!"  {n}×{n}: M4 {m4Ms.toString.take 8}ms ({gflopsM4.toString.take 6} GFLOP/s), MPS {mpsMs.toString.take 8}ms ({gflopsMPS.toString.take 6} GFLOP/s)"
 
   -- ═══════════════════════════════════════════════════════════
   IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
