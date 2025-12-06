@@ -908,8 +908,9 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_simd_opt_f32(
     }
 }
 
-// M4-optimized GEMM: float4 loads, 128×128 tiles, no bounds checks
-// REQUIRES: M, N, K are multiples of 128
+// M4-optimized GEMM: simdgroup operations, 64×64 tiles
+// REQUIRES: M, N, K are multiples of 64
+// Memory: As[64][33] + Bs[32][65] = 16768 bytes (fits 32KB limit)
 LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_f32(
     size_t m, size_t k, size_t n,
     b_lean_obj_arg A,
@@ -922,7 +923,7 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_f32(
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_m4");
         if (!pipeline) {
-            // Fall back to simd if M4 kernel not found
+            // Fall back to simd if M4 kernel not available
             return scilean_metal_gemm_simd_f32(m, k, n, A, B);
         }
 
@@ -946,11 +947,11 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_f32(
         [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
         [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
 
-        // 16 simdgroups of 32 threads = 512 threads per threadgroup
-        // Each threadgroup computes 128×128 output
-        const NSUInteger M4_TILE_M = 128;
-        const NSUInteger M4_TILE_N = 128;
-        MTLSize threadgroupSize = MTLSizeMake(32, 16, 1);  // 512 threads
+        // 8 simdgroups of 32 threads = 256 threads per threadgroup
+        // Each threadgroup computes 64×64 output
+        const NSUInteger M4_TILE_M = 64;
+        const NSUInteger M4_TILE_N = 64;
+        MTLSize threadgroupSize = MTLSizeMake(32, 8, 1);  // 256 threads = 8 simdgroups
         MTLSize numThreadgroups = MTLSizeMake(
             n / M4_TILE_N,  // No rounding - requires aligned size
             m / M4_TILE_M,
@@ -966,13 +967,123 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_f32(
     }
 }
 
-// Fill (Float32)
-LEAN_EXPORT lean_obj_res scilean_metal_fill_f32(size_t n, b_lean_obj_arg value_box) {
+// M4-Pro GEMM: Double-buffered with software pipelining
+// REQUIRES: M, N, K are multiples of 64
+LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_pro_f32(
+    size_t m, size_t k, size_t n,
+    b_lean_obj_arg A,
+    b_lean_obj_arg B
+) {
     if (!ensure_metal_initialized()) {
         return lean_box(0);
     }
 
-    float value = lean_unbox_float32(value_box);
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_m4_pro");
+        if (!pipeline) {
+            return scilean_metal_gemm_m4_f32(m, k, n, A, B);
+        }
+
+        id<MTLBuffer> Abuf = create_buffer_from_byte_array_f32(A, m * k, true);
+        id<MTLBuffer> Bbuf = create_buffer_from_byte_array_f32(B, k * n, true);
+        id<MTLBuffer> Cbuf = [device newBufferWithLength:m * n * sizeof(float)
+                                                 options:MTLResourceStorageModeShared];
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:Abuf offset:0 atIndex:0];
+        [encoder setBuffer:Bbuf offset:0 atIndex:1];
+        [encoder setBuffer:Cbuf offset:0 atIndex:2];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:3];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
+
+        const NSUInteger M4P_TILE_M = 64;
+        const NSUInteger M4P_TILE_N = 64;
+        MTLSize threadgroupSize = MTLSizeMake(32, 8, 1);  // 256 threads = 8 simdgroups
+        MTLSize numThreadgroups = MTLSizeMake(
+            n / M4P_TILE_N,
+            m / M4P_TILE_M,
+            1);
+
+        [encoder dispatchThreadgroups:numThreadgroups threadsPerThreadgroup:threadgroupSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(Cbuf, m * n);
+    }
+}
+
+// M4-Max GEMM: Larger tiles (128×64) for better compute density
+// REQUIRES: M multiple of 128, N, K multiples of 64
+LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_max_f32(
+    size_t m, size_t k, size_t n,
+    b_lean_obj_arg A,
+    b_lean_obj_arg B
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_m4_max");
+        if (!pipeline) {
+            return scilean_metal_gemm_m4_f32(m, k, n, A, B);
+        }
+
+        id<MTLBuffer> Abuf = create_buffer_from_byte_array_f32(A, m * k, true);
+        id<MTLBuffer> Bbuf = create_buffer_from_byte_array_f32(B, k * n, true);
+        id<MTLBuffer> Cbuf = [device newBufferWithLength:m * n * sizeof(float)
+                                                 options:MTLResourceStorageModeShared];
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:Abuf offset:0 atIndex:0];
+        [encoder setBuffer:Bbuf offset:0 atIndex:1];
+        [encoder setBuffer:Cbuf offset:0 atIndex:2];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:3];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
+
+        const NSUInteger M4X_TILE_M = 128;
+        const NSUInteger M4X_TILE_N = 64;
+        // 512 threads = 16 simdgroups, 32×16 threadgroup layout
+        MTLSize threadgroupSize = MTLSizeMake(32, 16, 1);
+        MTLSize numThreadgroups = MTLSizeMake(
+            n / M4X_TILE_N,
+            m / M4X_TILE_M,
+            1);
+
+        [encoder dispatchThreadgroups:numThreadgroups threadsPerThreadgroup:threadgroupSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(Cbuf, m * n);
+    }
+}
+
+// Fill (Float32)
+// Note: Float32 is passed unboxed (as raw float) in Lean 4.26
+LEAN_EXPORT lean_obj_res scilean_metal_fill_f32(size_t n, float value) {
+    if (!ensure_metal_initialized()) {
+        return lean_box(0);
+    }
 
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"fill_const");
@@ -1069,54 +1180,115 @@ METAL_BINARY_OP_F32(max, "max_op")
 METAL_BINARY_OP_F32(min, "min_op")
 
 // Reduce sum (Float32)
-LEAN_EXPORT lean_obj_res scilean_metal_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
+// Note: Returns unboxed float in Lean 4.26
+LEAN_EXPORT float scilean_metal_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
     if (!ensure_metal_initialized()) {
-        return lean_box_float32(0.0f);
+        return 0.0f;
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"reduce_sum");
-        if (!pipeline) return lean_box_float32(0.0f);
-
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
-        id<MTLBuffer> outbuf = [device newBufferWithLength:sizeof(float)
-                                                   options:MTLResourceStorageModeShared];
+
+        // For small arrays (<=1024), use simple single-threadgroup reduction
+        if (n <= 1024) {
+            id<MTLComputePipelineState> pipeline = get_pipeline(@"reduce_sum");
+            if (!pipeline) return 0.0f;
+
+            id<MTLBuffer> outbuf = [device newBufferWithLength:sizeof(float)
+                                                       options:MTLResourceStorageModeShared];
+
+            uint32_t n32 = (uint32_t)n;
+            NSUInteger threadGroupSize = MIN(1024, n);
+
+            id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+            id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+            [encoder setComputePipelineState:pipeline];
+            [encoder setBuffer:xbuf offset:0 atIndex:0];
+            [encoder setBuffer:outbuf offset:0 atIndex:1];
+            [encoder setBytes:&n32 length:sizeof(n32) atIndex:2];
+            [encoder setThreadgroupMemoryLength:threadGroupSize * sizeof(float) atIndex:0];
+
+            MTLSize gridSize = MTLSizeMake(threadGroupSize, 1, 1);
+            MTLSize tgSize = MTLSizeMake(threadGroupSize, 1, 1);
+
+            [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+            [encoder endEncoding];
+
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+
+            float* result = (float*)[outbuf contents];
+            return result[0];
+        }
+
+        // For large arrays, use two-pass GPU reduction
+        id<MTLComputePipelineState> largePipeline = get_pipeline(@"reduce_sum_large");
+        id<MTLComputePipelineState> smallPipeline = get_pipeline(@"reduce_sum");
+        if (!largePipeline || !smallPipeline) {
+            // Fallback to CPU if kernels unavailable
+            float* data = (float*)lean_sarray_cptr(x);
+            float sum = 0.0f;
+            for (size_t i = 0; i < n; i++) sum += data[i];
+            return sum;
+        }
+
+        // Pass 1: Reduce to partial sums (one per threadgroup)
+        const NSUInteger blockSize = 256;
+        NSUInteger numBlocks = MIN(256, (n + blockSize - 1) / blockSize);
+
+        id<MTLBuffer> partialBuf = [device newBufferWithLength:numBlocks * sizeof(float)
+                                                       options:MTLResourceStorageModeShared];
 
         uint32_t n32 = (uint32_t)n;
-        NSUInteger threadGroupSize = MIN(1024, n);
+        uint32_t numBlocks32 = (uint32_t)numBlocks;
 
         id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
         id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
 
-        [encoder setComputePipelineState:pipeline];
+        [encoder setComputePipelineState:largePipeline];
         [encoder setBuffer:xbuf offset:0 atIndex:0];
-        [encoder setBuffer:outbuf offset:0 atIndex:1];
+        [encoder setBuffer:partialBuf offset:0 atIndex:1];
         [encoder setBytes:&n32 length:sizeof(n32) atIndex:2];
-        [encoder setThreadgroupMemoryLength:threadGroupSize * sizeof(float) atIndex:0];
+        [encoder setBytes:&numBlocks32 length:sizeof(numBlocks32) atIndex:3];
 
-        MTLSize gridSize = MTLSizeMake(threadGroupSize, 1, 1);
-        MTLSize tgSize = MTLSizeMake(threadGroupSize, 1, 1);
+        MTLSize tgSize = MTLSizeMake(blockSize, 1, 1);
+        MTLSize numThreadgroups = MTLSizeMake(numBlocks, 1, 1);
+        [encoder dispatchThreadgroups:numThreadgroups threadsPerThreadgroup:tgSize];
 
-        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        // Pass 2: Reduce partial sums to final result
+        id<MTLBuffer> outbuf = [device newBufferWithLength:sizeof(float)
+                                                   options:MTLResourceStorageModeShared];
+
+        [encoder setComputePipelineState:smallPipeline];
+        [encoder setBuffer:partialBuf offset:0 atIndex:0];
+        [encoder setBuffer:outbuf offset:0 atIndex:1];
+        [encoder setBytes:&numBlocks32 length:sizeof(numBlocks32) atIndex:2];
+        [encoder setThreadgroupMemoryLength:numBlocks * sizeof(float) atIndex:0];
+
+        MTLSize finalGrid = MTLSizeMake(numBlocks, 1, 1);
+        MTLSize finalTg = MTLSizeMake(numBlocks, 1, 1);
+        [encoder dispatchThreads:finalGrid threadsPerThreadgroup:finalTg];
+
         [encoder endEncoding];
-
         [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
 
         float* result = (float*)[outbuf contents];
-        return lean_box_float32(result[0]);
+        return result[0];
     }
 }
 
 // Reduce max (Float32)
-LEAN_EXPORT lean_obj_res scilean_metal_reduce_max_f32(size_t n, b_lean_obj_arg x) {
+// Note: Returns unboxed float in Lean 4.26
+LEAN_EXPORT float scilean_metal_reduce_max_f32(size_t n, b_lean_obj_arg x) {
     if (!ensure_metal_initialized()) {
-        return lean_box_float32(-INFINITY);
+        return -INFINITY;
     }
 
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"reduce_max");
-        if (!pipeline) return lean_box_float32(-INFINITY);
+        if (!pipeline) return -INFINITY;
 
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
         id<MTLBuffer> outbuf = [device newBufferWithLength:sizeof(float)
@@ -1144,19 +1316,20 @@ LEAN_EXPORT lean_obj_res scilean_metal_reduce_max_f32(size_t n, b_lean_obj_arg x
         [commandBuffer waitUntilCompleted];
 
         float* result = (float*)[outbuf contents];
-        return lean_box_float32(result[0]);
+        return result[0];
     }
 }
 
 // Reduce min (Float32)
-LEAN_EXPORT lean_obj_res scilean_metal_reduce_min_f32(size_t n, b_lean_obj_arg x) {
+// Note: Returns unboxed float in Lean 4.26
+LEAN_EXPORT float scilean_metal_reduce_min_f32(size_t n, b_lean_obj_arg x) {
     if (!ensure_metal_initialized()) {
-        return lean_box_float32(INFINITY);
+        return INFINITY;
     }
 
     @autoreleasepool {
         id<MTLComputePipelineState> pipeline = get_pipeline(@"reduce_min");
-        if (!pipeline) return lean_box_float32(INFINITY);
+        if (!pipeline) return INFINITY;
 
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
         id<MTLBuffer> outbuf = [device newBufferWithLength:sizeof(float)
@@ -1184,7 +1357,7 @@ LEAN_EXPORT lean_obj_res scilean_metal_reduce_min_f32(size_t n, b_lean_obj_arg x
         [commandBuffer waitUntilCompleted];
 
         float* result = (float*)[outbuf contents];
-        return lean_box_float32(result[0]);
+        return result[0];  // Return raw float, Lean 4.26 expects unboxed Float32
     }
 }
 
@@ -1595,35 +1768,37 @@ LEAN_EXPORT lean_obj_res scilean_accelerate_gemm_f32(
     b_lean_obj_arg A,
     b_lean_obj_arg B
 ) {
-    // Allocate output
-    lean_obj_res C = lean_alloc_sarray(1, m * n * sizeof(float), m * n * sizeof(float));
+    // Get input data - copy to local arrays to ensure correct alignment
+    size_t a_elems = m * k;
+    size_t b_elems = k * n;
+    size_t c_elems = m * n;
 
-    float* aData = (float*)lean_sarray_cptr(A);
-    float* bData = (float*)lean_sarray_cptr(B);
-    float* cData = (float*)lean_sarray_cptr(C);
+    // Allocate aligned temporary buffers for BLAS
+    float* aData = (float*)malloc(a_elems * sizeof(float));
+    float* bData = (float*)malloc(b_elems * sizeof(float));
+    float* cData = (float*)malloc(c_elems * sizeof(float));
+
+    // Copy input data
+    memcpy(aData, lean_sarray_cptr(A), a_elems * sizeof(float));
+    memcpy(bData, lean_sarray_cptr(B), b_elems * sizeof(float));
 
     // Initialize C to zero
-    memset(cData, 0, m * n * sizeof(float));
+    memset(cData, 0, c_elems * sizeof(float));
 
-    // cblas_sgemm: C = alpha*A*B + beta*C
-    // Row-major layout (CblasRowMajor)
+    // Use vDSP for matrix multiply
+    // vDSP_mmul: C = A * B
     // A is m×k, B is k×n, C is m×n
-    cblas_sgemm(
-        CblasRowMajor,  // Row-major storage
-        CblasNoTrans,   // Don't transpose A
-        CblasNoTrans,   // Don't transpose B
-        (int)m,         // Rows of A and C
-        (int)n,         // Columns of B and C
-        (int)k,         // Columns of A, rows of B
-        1.0f,           // alpha
-        aData,          // A
-        (int)k,         // Leading dimension of A
-        bData,          // B
-        (int)n,         // Leading dimension of B
-        0.0f,           // beta
-        cData,          // C
-        (int)n          // Leading dimension of C
-    );
+    vDSP_mmul(aData, 1, bData, 1, cData, 1, m, n, k);
+
+    // Allocate Lean output and copy result
+    size_t c_size = c_elems * sizeof(float);
+    lean_obj_res C = lean_alloc_sarray(1, c_size, c_size);
+    memcpy(lean_sarray_cptr(C), cData, c_size);
+
+    // Cleanup
+    free(aData);
+    free(bData);
+    free(cData);
 
     return C;
 }

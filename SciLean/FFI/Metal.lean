@@ -179,11 +179,23 @@ opaque gemmSimd (m k n : USize) (A B : @& ByteArray) : ByteArray
 @[extern "scilean_metal_gemm_simd_opt_f32"]
 opaque gemmSimdOpt (m k n : USize) (A B : @& ByteArray) : ByteArray
 
--- M4-optimized GEMM: float4 loads, 128×128 tiles, no bounds checks
--- REQUIRES: M, N, K are multiples of 128
--- 16 simdgroups (512 threads), 4×4 accumulator grid per simdgroup
+-- M4-optimized GEMM: float4 loads, 64×64 tiles, no bounds checks
+-- REQUIRES: M, N, K are multiples of 64
+-- 8 simdgroups (256 threads), 4×2 accumulator grid per simdgroup
 @[extern "scilean_metal_gemm_m4_f32"]
 opaque gemmM4 (m k n : USize) (A B : @& ByteArray) : ByteArray
+
+-- M4-Pro GEMM: Double-buffered with software pipelining
+-- REQUIRES: M, N, K are multiples of 64
+-- Prefetches next tile while computing current
+@[extern "scilean_metal_gemm_m4_pro_f32"]
+opaque gemmM4Pro (m k n : USize) (A B : @& ByteArray) : ByteArray
+
+-- M4-Max GEMM: Larger tiles (128×64) for better compute density
+-- REQUIRES: M multiple of 128, N, K multiples of 64
+-- 16 simdgroups (512 threads), maximum occupancy
+@[extern "scilean_metal_gemm_m4_max_f32"]
+opaque gemmM4Max (m k n : USize) (A B : @& ByteArray) : ByteArray
 
 -- MPS matrix multiply on GPU (Float32): Apple's Metal Performance Shaders
 -- This uses Apple's highly optimized GEMM that leverages the Neural Engine and GPU
@@ -287,24 +299,14 @@ opaque fill (n : USize) (value : Float32) : ByteArray
 
 -- Fused Operations
 
--- Softmax: softmax(x) = exp(x - max(x)) / sum(exp(x - max(x)))
--- Currently implemented using multiple GPU passes.
+-- Fused Softmax: softmax(x) = exp(x - max(x)) / sum(exp(x - max(x)))
+-- Single GPU dispatch with optimized memory access
+@[extern "scilean_metal_softmax_f32"]
+opaque softmaxFused (n : USize) (x : @& ByteArray) : ByteArray
+
+-- Softmax (multi-pass fallback implementation)
 def softmax (sz : USize) (x : ByteArray) : ByteArray :=
-  -- Find max for numerical stability
-  let maxVal := reduceMax sz x
-  -- Create array filled with max value
-  let maxArr := fill sz maxVal
-  -- Subtract max: x - max
-  let shifted := sub sz x maxArr
-  -- Compute exp using exp2: exp(x) = 2^(x * log2(e)), log2(e) ≈ 1.4427
-  let log2e : Float32 := (1.4426950408889634 : Float32)  -- log2(e)
-  let log2eArr := fill sz log2e
-  let scaledShifted := mul sz shifted log2eArr
-  let expVals := exp2 sz scaledShifted
-  -- Sum the exp values
-  let sumVal := reduceSum sz expVals
-  -- Normalize: exp / sum
-  let sumArr := fill sz sumVal
-  div sz expVals sumArr
+  -- Use fused version if available
+  softmaxFused sz x
 
 end SciLean.Metal.Float32

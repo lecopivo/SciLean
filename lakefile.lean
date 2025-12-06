@@ -18,7 +18,7 @@ def metalLinkArgs :=
     #["-Wl,-syslibroot,/Applications/Xcode-26.1.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
       "-lobjc",
       "-framework", "Metal", "-framework", "Foundation", "-framework", "CoreFoundation",
-      "-framework", "MetalPerformanceShaders"]
+      "-framework", "MetalPerformanceShaders", "-framework", "Accelerate"]
   else
     #[]
 def inclArgs :=
@@ -236,3 +236,24 @@ lean_exe Numpy100 where
   root := `examples.Numpy100
   -- LeanBLAS needs explicit linking for local path dependency
   moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
+
+lean_exe OverheadTest where
+  root := `examples.OverheadTest
+  moreLinkArgs := metalLinkArgs
+
+lean_exe LargeGEMM where
+  root := `examples.LargeGEMM
+  moreLinkArgs := metalLinkArgs
+
+lean_exe GEMMComparison where
+  root := `examples.GEMMComparison
+  moreLinkArgs := metalLinkArgs
+
+lean_exe GEMMFocus where
+  root := `examples.GEMMFocus
+  moreLinkArgs := metalLinkArgs
+
+lean_exe GEMMCorrectness where
+  root := `examples.GEMMCorrectness
+  moreLinkArgs := metalLinkArgs
+
