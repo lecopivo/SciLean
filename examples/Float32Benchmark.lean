@@ -167,19 +167,25 @@ def main : IO Unit := do
     let simdMs ← timeByteArray 5 (fun () => Metal.Float32.gemmSimd n.toUSize n.toUSize n.toUSize matA32 matB32)
     let gflopsSimd := if simdMs > 0.001 then flops / (simdMs / 1000.0) else 0.0
 
+    -- SimdOpt (shared memory prefetch + double buffering)
+    let simdOptMs ← timeByteArray 5 (fun () => Metal.Float32.gemmSimdOpt n.toUSize n.toUSize n.toUSize matA32 matB32)
+    let gflopsSimdOpt := if simdOptMs > 0.001 then flops / (simdOptMs / 1000.0) else 0.0
+
     -- MPS (Apple's optimized library)
     let mpsMs ← timeByteArray 5 (fun () => Metal.Float32.gemmMPS n.toUSize n.toUSize n.toUSize matA32 matB32)
     let gflopsMPS := if mpsMs > 0.001 then flops / (mpsMs / 1000.0) else 0.0
 
     let tiledSpeedup := if tiledMs > 0.001 then naiveMs / tiledMs else 0.0
     let simdSpeedup := if simdMs > 0.001 then naiveMs / simdMs else 0.0
+    let simdOptSpeedup := if simdOptMs > 0.001 then naiveMs / simdOptMs else 0.0
     let mpsSpeedup := if mpsMs > 0.001 then naiveMs / mpsMs else 0.0
 
     IO.println s!"  {n}×{n} ({flops.toString.take 5} GFLOPS):"
-    IO.println s!"    Naive:  {naiveMs.toString.take 7}ms  {gflopsNaive.toString.take 6} GFLOP/s"
-    IO.println s!"    Tiled:  {tiledMs.toString.take 7}ms  {gflopsTiled.toString.take 6} GFLOP/s  ({tiledSpeedup.toString.take 4}x)"
-    IO.println s!"    Simd:   {simdMs.toString.take 7}ms  {gflopsSimd.toString.take 6} GFLOP/s  ({simdSpeedup.toString.take 4}x)"
-    IO.println s!"    MPS:    {mpsMs.toString.take 7}ms  {gflopsMPS.toString.take 6} GFLOP/s  ({mpsSpeedup.toString.take 4}x)"
+    IO.println s!"    Naive:   {naiveMs.toString.take 7}ms  {gflopsNaive.toString.take 6} GFLOP/s"
+    IO.println s!"    Tiled:   {tiledMs.toString.take 7}ms  {gflopsTiled.toString.take 6} GFLOP/s  ({tiledSpeedup.toString.take 4}x)"
+    IO.println s!"    Simd:    {simdMs.toString.take 7}ms  {gflopsSimd.toString.take 6} GFLOP/s  ({simdSpeedup.toString.take 4}x)"
+    IO.println s!"    SimdOpt: {simdOptMs.toString.take 7}ms  {gflopsSimdOpt.toString.take 6} GFLOP/s  ({simdOptSpeedup.toString.take 4}x)"
+    IO.println s!"    MPS:     {mpsMs.toString.take 7}ms  {gflopsMPS.toString.take 6} GFLOP/s  ({mpsSpeedup.toString.take 4}x)"
     IO.println ""
 
   -- ═══════════════════════════════════════════════════════════
