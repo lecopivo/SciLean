@@ -10,6 +10,54 @@ static id<MTLCommandQueue> commandQueue = nil;
 static id<MTLLibrary> library = nil;
 static NSMutableDictionary<NSString*, id<MTLComputePipelineState>>* pipelines = nil;
 
+// Buffer pool for reducing allocation overhead
+// Buckets: 256B, 1KB, 4KB, 16KB, 64KB, 256KB, 1MB, 4MB, 16MB
+static const size_t BUFFER_BUCKET_SIZES[] = {256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216};
+static const size_t NUM_BUFFER_BUCKETS = sizeof(BUFFER_BUCKET_SIZES) / sizeof(BUFFER_BUCKET_SIZES[0]);
+static const size_t MAX_POOLED_BUFFERS_PER_BUCKET = 4;
+static NSMutableArray<id<MTLBuffer>>* bufferPool[NUM_BUFFER_BUCKETS] = {nil};
+
+static size_t get_buffer_bucket(size_t size) {
+    for (size_t i = 0; i < NUM_BUFFER_BUCKETS; i++) {
+        if (size <= BUFFER_BUCKET_SIZES[i]) return i;
+    }
+    return NUM_BUFFER_BUCKETS; // Too large for pool
+}
+
+static id<MTLBuffer> get_pooled_buffer(size_t size) {
+    size_t bucket = get_buffer_bucket(size);
+    if (bucket >= NUM_BUFFER_BUCKETS) {
+        // Too large, allocate directly
+        return [device newBufferWithLength:size options:MTLResourceStorageModeShared];
+    }
+
+    NSMutableArray* pool = bufferPool[bucket];
+    if (pool && pool.count > 0) {
+        id<MTLBuffer> buffer = [pool lastObject];
+        [pool removeLastObject];
+        return buffer;
+    }
+
+    // Allocate new buffer of bucket size
+    return [device newBufferWithLength:BUFFER_BUCKET_SIZES[bucket] options:MTLResourceStorageModeShared];
+}
+
+static void return_pooled_buffer(id<MTLBuffer> buffer) {
+    if (!buffer) return;
+
+    size_t bucket = get_buffer_bucket(buffer.length);
+    if (bucket >= NUM_BUFFER_BUCKETS) return; // Don't pool large buffers
+
+    if (!bufferPool[bucket]) {
+        bufferPool[bucket] = [NSMutableArray arrayWithCapacity:MAX_POOLED_BUFFERS_PER_BUCKET];
+    }
+
+    if (bufferPool[bucket].count < MAX_POOLED_BUFFERS_PER_BUCKET) {
+        [bufferPool[bucket] addObject:buffer];
+    }
+    // Otherwise let ARC release it
+}
+
 // Initialize Metal
 static bool ensure_metal_initialized() {
     if (device != nil) return true;
@@ -1078,9 +1126,21 @@ LEAN_EXPORT lean_obj_res scilean_metal_gemm_m4_max_f32(
     }
 }
 
+// Threshold for CPU fallback: below this, CPU is faster due to GPU dispatch overhead
+static const size_t CPU_THRESHOLD_ELEMENTS = 4096;
+
 // Fill (Float32)
 // Note: Float32 is passed unboxed (as raw float) in Lean 4.26
 LEAN_EXPORT lean_obj_res scilean_metal_fill_f32(size_t n, float value) {
+    // CPU fallback for small arrays (avoids ~250µs GPU dispatch overhead)
+    if (n <= CPU_THRESHOLD_ELEMENTS) {
+        lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+        float* data = (float*)lean_sarray_cptr(arr);
+        // Use vDSP for vectorized fill if available
+        vDSP_vfill(&value, data, 1, n);
+        return arr;
+    }
+
     if (!ensure_metal_initialized()) {
         return lean_box(0);
     }
@@ -1113,6 +1173,102 @@ LEAN_EXPORT lean_obj_res scilean_metal_fill_f32(size_t n, float value) {
     }
 }
 
+// ============================================================
+// CPU-accelerated operations for small arrays (Accelerate/vDSP)
+// ============================================================
+
+// Helper: allocate output array and get input/output pointers
+static lean_obj_res cpu_unary_alloc(b_lean_obj_arg x, size_t n, const float** in, float** out) {
+    lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+    *in = (const float*)lean_sarray_cptr(x);
+    *out = (float*)lean_sarray_cptr(arr);
+    return arr;
+}
+
+// CPU neg: out = -x
+static lean_obj_res cpu_neg_f32(size_t n, b_lean_obj_arg x) {
+    const float* in; float* out;
+    lean_obj_res arr = cpu_unary_alloc(x, n, &in, &out);
+    vDSP_vneg(in, 1, out, 1, n);
+    return arr;
+}
+
+// CPU sqrt: out = sqrt(x)
+static lean_obj_res cpu_sqrt_f32(size_t n, b_lean_obj_arg x) {
+    const float* in; float* out;
+    lean_obj_res arr = cpu_unary_alloc(x, n, &in, &out);
+    vvsqrtf(out, in, (const int*)&n);
+    return arr;
+}
+
+// CPU add: out = a + b
+static lean_obj_res cpu_add_f32(size_t n, b_lean_obj_arg a, b_lean_obj_arg b) {
+    lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+    const float* ain = (const float*)lean_sarray_cptr(a);
+    const float* bin = (const float*)lean_sarray_cptr(b);
+    float* out = (float*)lean_sarray_cptr(arr);
+    vDSP_vadd(ain, 1, bin, 1, out, 1, n);
+    return arr;
+}
+
+// CPU sub: out = a - b
+static lean_obj_res cpu_sub_f32(size_t n, b_lean_obj_arg a, b_lean_obj_arg b) {
+    lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+    const float* ain = (const float*)lean_sarray_cptr(a);
+    const float* bin = (const float*)lean_sarray_cptr(b);
+    float* out = (float*)lean_sarray_cptr(arr);
+    vDSP_vsub(bin, 1, ain, 1, out, 1, n);  // Note: vDSP_vsub is C = A - B but uses (B, A, C) order
+    return arr;
+}
+
+// CPU mul: out = a * b
+static lean_obj_res cpu_mul_f32(size_t n, b_lean_obj_arg a, b_lean_obj_arg b) {
+    lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+    const float* ain = (const float*)lean_sarray_cptr(a);
+    const float* bin = (const float*)lean_sarray_cptr(b);
+    float* out = (float*)lean_sarray_cptr(arr);
+    vDSP_vmul(ain, 1, bin, 1, out, 1, n);
+    return arr;
+}
+
+// CPU div: out = a / b
+static lean_obj_res cpu_div_f32(size_t n, b_lean_obj_arg a, b_lean_obj_arg b) {
+    lean_obj_res arr = lean_alloc_sarray(1, n * sizeof(float), n * sizeof(float));
+    const float* ain = (const float*)lean_sarray_cptr(a);
+    const float* bin = (const float*)lean_sarray_cptr(b);
+    float* out = (float*)lean_sarray_cptr(arr);
+    vDSP_vdiv(bin, 1, ain, 1, out, 1, n);  // Note: vDSP_vdiv is C = A / B but uses (B, A, C) order
+    return arr;
+}
+
+// CPU reduce sum
+static float cpu_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
+    const float* in = (const float*)lean_sarray_cptr(x);
+    float sum;
+    vDSP_sve(in, 1, &sum, n);
+    return sum;
+}
+
+// CPU reduce max
+static float cpu_reduce_max_f32(size_t n, b_lean_obj_arg x) {
+    const float* in = (const float*)lean_sarray_cptr(x);
+    float maxval;
+    vDSP_maxv(in, 1, &maxval, n);
+    return maxval;
+}
+
+// CPU reduce min
+static float cpu_reduce_min_f32(size_t n, b_lean_obj_arg x) {
+    const float* in = (const float*)lean_sarray_cptr(x);
+    float minval;
+    vDSP_minv(in, 1, &minval, n);
+    return minval;
+}
+
+// ============================================================
+// Float32 operations with CPU fallback for small arrays
+// ============================================================
+
 // Unary op macro for Float32
 #define METAL_UNARY_OP_F32(name, kernel) \
 LEAN_EXPORT lean_obj_res scilean_metal_##name##_f32(size_t n, b_lean_obj_arg x) { \
@@ -1138,11 +1294,38 @@ LEAN_EXPORT lean_obj_res scilean_metal_##name##_f32(size_t n, b_lean_obj_arg x) 
     } \
 }
 
-METAL_UNARY_OP_F32(neg, "neg")
+// Unary op with CPU fallback
+#define METAL_UNARY_OP_F32_CPU(name, kernel, cpu_fn) \
+LEAN_EXPORT lean_obj_res scilean_metal_##name##_f32(size_t n, b_lean_obj_arg x) { \
+    if (n <= CPU_THRESHOLD_ELEMENTS) return cpu_fn(n, x); \
+    if (!ensure_metal_initialized()) return lean_box(0); \
+    @autoreleasepool { \
+        id<MTLComputePipelineState> pipeline = get_pipeline(@kernel); \
+        if (!pipeline) return lean_box(0); \
+        id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true); \
+        id<MTLBuffer> outbuf = [device newBufferWithLength:n * sizeof(float) \
+                                                   options:MTLResourceStorageModeShared]; \
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer]; \
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder]; \
+        [encoder setComputePipelineState:pipeline]; \
+        [encoder setBuffer:xbuf offset:0 atIndex:0]; \
+        [encoder setBuffer:outbuf offset:0 atIndex:1]; \
+        MTLSize gridSize = MTLSizeMake(n, 1, 1); \
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n); \
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)]; \
+        [encoder endEncoding]; \
+        [commandBuffer commit]; \
+        [commandBuffer waitUntilCompleted]; \
+        return buffer_to_byte_array_f32(outbuf, n); \
+    } \
+}
+
+// Use CPU fallback for common ops
+METAL_UNARY_OP_F32_CPU(neg, "neg", cpu_neg_f32)
 METAL_UNARY_OP_F32(exp2, "exp2_op")
 METAL_UNARY_OP_F32(log2, "log2_op")
 METAL_UNARY_OP_F32(sin, "sin_op")
-METAL_UNARY_OP_F32(sqrt, "sqrt_op")
+METAL_UNARY_OP_F32_CPU(sqrt, "sqrt_op", cpu_sqrt_f32)
 METAL_UNARY_OP_F32(reciprocal, "reciprocal")
 
 // Binary op macro for Float32
@@ -1172,16 +1355,50 @@ LEAN_EXPORT lean_obj_res scilean_metal_##name##_f32(size_t n, b_lean_obj_arg a, 
     } \
 }
 
-METAL_BINARY_OP_F32(add, "add")
-METAL_BINARY_OP_F32(sub, "sub")
-METAL_BINARY_OP_F32(mul, "mul")
-METAL_BINARY_OP_F32(div, "div_op")
+// Binary op with CPU fallback
+#define METAL_BINARY_OP_F32_CPU(name, kernel, cpu_fn) \
+LEAN_EXPORT lean_obj_res scilean_metal_##name##_f32(size_t n, b_lean_obj_arg a, b_lean_obj_arg b) { \
+    if (n <= CPU_THRESHOLD_ELEMENTS) return cpu_fn(n, a, b); \
+    if (!ensure_metal_initialized()) return lean_box(0); \
+    @autoreleasepool { \
+        id<MTLComputePipelineState> pipeline = get_pipeline(@kernel); \
+        if (!pipeline) return lean_box(0); \
+        id<MTLBuffer> abuf = create_buffer_from_byte_array_f32(a, n, true); \
+        id<MTLBuffer> bbuf = create_buffer_from_byte_array_f32(b, n, true); \
+        id<MTLBuffer> outbuf = [device newBufferWithLength:n * sizeof(float) \
+                                                   options:MTLResourceStorageModeShared]; \
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer]; \
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder]; \
+        [encoder setComputePipelineState:pipeline]; \
+        [encoder setBuffer:abuf offset:0 atIndex:0]; \
+        [encoder setBuffer:bbuf offset:0 atIndex:1]; \
+        [encoder setBuffer:outbuf offset:0 atIndex:2]; \
+        MTLSize gridSize = MTLSizeMake(n, 1, 1); \
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n); \
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)]; \
+        [encoder endEncoding]; \
+        [commandBuffer commit]; \
+        [commandBuffer waitUntilCompleted]; \
+        return buffer_to_byte_array_f32(outbuf, n); \
+    } \
+}
+
+// Use CPU fallback for common binary ops
+METAL_BINARY_OP_F32_CPU(add, "add", cpu_add_f32)
+METAL_BINARY_OP_F32_CPU(sub, "sub", cpu_sub_f32)
+METAL_BINARY_OP_F32_CPU(mul, "mul", cpu_mul_f32)
+METAL_BINARY_OP_F32_CPU(div, "div_op", cpu_div_f32)
 METAL_BINARY_OP_F32(max, "max_op")
 METAL_BINARY_OP_F32(min, "min_op")
 
 // Reduce sum (Float32)
 // Note: Returns unboxed float in Lean 4.26
 LEAN_EXPORT float scilean_metal_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
+    // CPU fallback for small arrays
+    if (n <= CPU_THRESHOLD_ELEMENTS) {
+        return cpu_reduce_sum_f32(n, x);
+    }
+
     if (!ensure_metal_initialized()) {
         return 0.0f;
     }
@@ -1189,7 +1406,7 @@ LEAN_EXPORT float scilean_metal_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
     @autoreleasepool {
         id<MTLBuffer> xbuf = create_buffer_from_byte_array_f32(x, n, true);
 
-        // For small arrays (<=1024), use simple single-threadgroup reduction
+        // For medium arrays (<=1024 but we already handled small above), use simple single-threadgroup reduction
         if (n <= 1024) {
             id<MTLComputePipelineState> pipeline = get_pipeline(@"reduce_sum");
             if (!pipeline) return 0.0f;
@@ -1282,6 +1499,11 @@ LEAN_EXPORT float scilean_metal_reduce_sum_f32(size_t n, b_lean_obj_arg x) {
 // Reduce max (Float32)
 // Note: Returns unboxed float in Lean 4.26
 LEAN_EXPORT float scilean_metal_reduce_max_f32(size_t n, b_lean_obj_arg x) {
+    // CPU fallback for small arrays
+    if (n <= CPU_THRESHOLD_ELEMENTS) {
+        return cpu_reduce_max_f32(n, x);
+    }
+
     if (!ensure_metal_initialized()) {
         return -INFINITY;
     }
@@ -1323,6 +1545,11 @@ LEAN_EXPORT float scilean_metal_reduce_max_f32(size_t n, b_lean_obj_arg x) {
 // Reduce min (Float32)
 // Note: Returns unboxed float in Lean 4.26
 LEAN_EXPORT float scilean_metal_reduce_min_f32(size_t n, b_lean_obj_arg x) {
+    // CPU fallback for small arrays
+    if (n <= CPU_THRESHOLD_ELEMENTS) {
+        return cpu_reduce_min_f32(n, x);
+    }
+
     if (!ensure_metal_initialized()) {
         return INFINITY;
     }
