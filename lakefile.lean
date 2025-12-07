@@ -253,6 +253,10 @@ lean_exe LargeGEMM where
   root := `examples.LargeGEMM
   moreLinkArgs := metalLinkArgs
 
+lean_exe MetalMinimalBenchmark where
+  root := `examples.MetalMinimalBenchmark
+  moreLinkArgs := metalLinkArgs
+
 lean_exe GEMMComparison where
   root := `examples.GEMMComparison
   moreLinkArgs := metalLinkArgs

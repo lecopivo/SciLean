@@ -278,10 +278,54 @@ def main : IO Unit := do
     IO.println s!"    Winner: {winner}"
     IO.println ""
 
+  -- ═══════════════════════════════════════════════════════════
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "FLASH ATTENTION (Single-Head)"
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "softmax(Q @ K^T / sqrt(d)) @ V\n"
+
+  for (seqLen, headDim) in [(128, 64), (256, 64), (512, 64), (1024, 64)] do
+    let Q := generateFloat32Data (seqLen * headDim)
+    let K := generateFloat32Data (seqLen * headDim)
+    let V := generateFloat32Data (seqLen * headDim)
+    let flops := 4.0 * seqLen.toFloat * seqLen.toFloat * headDim.toFloat / 1e9
+
+    let attnMs ← timeByteArray 10 (fun () =>
+      Metal.Float32.flashAttention seqLen.toUSize headDim.toUSize Q K V)
+    let gflops := if attnMs > 0.001 then flops / (attnMs / 1000.0) else 0.0
+    IO.println s!"  seq={seqLen}, d={headDim}: {attnMs.toString.take 8}ms ({gflops.toString.take 6} GFLOP/s)"
+
+  -- ═══════════════════════════════════════════════════════════
+  IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "CAUSAL ATTENTION (masked)"
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  for (seqLen, headDim) in [(128, 64), (256, 64), (512, 64)] do
+    let Q := generateFloat32Data (seqLen * headDim)
+    let K := generateFloat32Data (seqLen * headDim)
+    let V := generateFloat32Data (seqLen * headDim)
+    let flops := 2.0 * seqLen.toFloat * seqLen.toFloat * headDim.toFloat / 1e9  -- causal ~half
+
+    let attnMs ← timeByteArray 10 (fun () =>
+      Metal.Float32.flashAttentionCausal seqLen.toUSize headDim.toUSize Q K V)
+    let gflops := if attnMs > 0.001 then flops / (attnMs / 1000.0) else 0.0
+    IO.println s!"  seq={seqLen}, d={headDim}: {attnMs.toString.take 8}ms ({gflops.toString.take 6} GFLOP/s)"
+
+  -- ═══════════════════════════════════════════════════════════
+  IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  IO.println "SOFTMAX (comparison with MLX/PyTorch)"
+  IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  for n in [10000, 100000, 1000000] do
+    let data := generateFloat32Data n
+    let sftmxMs ← timeByteArray 10 (fun () => Metal.Float32.softmax n.toUSize data)
+    IO.println s!"  N={n}: {sftmxMs.toString.take 8}ms"
+
+  IO.println "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   IO.println "Benchmark complete!"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   IO.println "\nSummary:"
   IO.println "  MPS (GPU): Apple's Metal Performance Shaders library"
   IO.println "  Accelerate (AMX): Apple's CPU BLAS using AMX coprocessor"
+  IO.println "  Flash Attention: Custom Metal kernel for transformer attention"
   IO.println "  Both are highly optimized - comparing helps understand workload"
