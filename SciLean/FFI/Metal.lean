@@ -384,6 +384,18 @@ opaque conv2dFast (batchSize inChannels outChannels : USize)
     (useRelu : UInt8)
     (input kernel bias : @& ByteArray) : ByteArray
 
+-- Conv2D GEMM: Convolution using im2col + GEMM approach
+-- Converts conv to matrix multiply for better use of GEMM optimizations
+-- May be faster for large convolutions due to optimized GEMM kernel
+@[extern "scilean_metal_conv2d_gemm_f32"]
+opaque conv2dGemm (batchSize inChannels outChannels : USize)
+    (inHeight inWidth : USize)
+    (kernelH kernelW : USize)
+    (strideH strideW : USize)
+    (padH padW : USize)
+    (useRelu : UInt8)
+    (input kernel bias : @& ByteArray) : ByteArray
+
 -- MaxPool2D: Max pooling over 2D input
 -- Input: NCHW format [batch, channels, height, width]
 -- Output: NCHW format [batch, channels, out_height, out_width]

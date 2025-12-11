@@ -2004,6 +2004,65 @@ kernel void conv2d_tiled(
     output[out_idx] = acc;
 }
 
+// Im2col kernel - materializes implicit im2col matrix for conv as GEMM
+// This creates a [K, N] matrix where K = in_channels * kernel_h * kernel_w
+// and N = out_height * out_width (spatial positions)
+// Then conv becomes: output = weights [M, K] * im2col [K, N]
+kernel void conv2d_im2col(
+    device const float* input [[buffer(0)]],
+    device float* im2col [[buffer(1)]],
+    constant uint& batch [[buffer(2)]],
+    constant uint& in_channels [[buffer(3)]],
+    constant uint& in_height [[buffer(4)]],
+    constant uint& in_width [[buffer(5)]],
+    constant uint& kernel_h [[buffer(6)]],
+    constant uint& kernel_w [[buffer(7)]],
+    constant uint& stride_h [[buffer(8)]],
+    constant uint& stride_w [[buffer(9)]],
+    constant uint& pad_h [[buffer(10)]],
+    constant uint& pad_w [[buffer(11)]],
+    constant uint& out_height [[buffer(12)]],
+    constant uint& out_width [[buffer(13)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    // gid.x = spatial position (oh * out_width + ow)
+    // gid.y = K index (ic * kernel_h * kernel_w + kh * kernel_w + kw)
+
+    uint n_idx = gid.x;  // Spatial position
+    uint k_idx = gid.y;  // K dimension
+
+    uint out_spatial = out_height * out_width;
+    if (n_idx >= out_spatial) return;
+
+    uint K = in_channels * kernel_h * kernel_w;
+    if (k_idx >= K) return;
+
+    // Decode K index
+    uint ic = k_idx / (kernel_h * kernel_w);
+    uint rem = k_idx % (kernel_h * kernel_w);
+    uint kh = rem / kernel_w;
+    uint kw = rem % kernel_w;
+
+    // Decode spatial position
+    uint oh = n_idx / out_width;
+    uint ow = n_idx % out_width;
+
+    // Compute input position
+    int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+    int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+    float val = 0.0f;
+    if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+        uint in_idx = batch * in_channels * in_height * in_width
+                    + ic * in_height * in_width
+                    + ih * in_width + iw;
+        val = input[in_idx];
+    }
+
+    // im2col is stored as [K, N] where N = out_spatial
+    im2col[k_idx * out_spatial + n_idx] = val;
+}
+
 // Winograd-inspired Conv2D for 3x3 kernels (specialized fast path)
 // Uses F(2x2, 3x3) Winograd to reduce multiplications
 kernel void conv2d_3x3_winograd(

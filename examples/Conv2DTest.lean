@@ -273,7 +273,7 @@ def main : IO Unit := do
 
   -- Benchmark
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  IO.println "BENCHMARK: Conv2D Performance (Naive vs Fast)"
+  IO.println "BENCHMARK: Conv2D Performance (Naive vs Fast vs GEMM)"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   for (h, w, ic, oc) in [(28, 28, 1, 32), (28, 28, 32, 64), (14, 14, 64, 128), (224, 224, 3, 64)] do
@@ -322,16 +322,38 @@ def main : IO Unit := do
     let _ ← acc2.get
     let msFast := (stop2 - start2).toFloat / 1000000.0 / iters.toFloat
 
+    -- Warmup GEMM
+    for _ in [:3] do
+      let _ := Metal.Float32.conv2dGemm 1 ic.toUSize oc.toUSize
+                                        h.toUSize w.toUSize
+                                        3 3 1 1 1 1 0
+                                        benchInput benchKernel benchBias
+
+    -- Timed GEMM
+    let acc3 ← IO.mkRef (0 : Nat)
+    let start3 ← IO.monoNanosNow
+    for _ in [:iters] do
+      let out := Metal.Float32.conv2dGemm 1 ic.toUSize oc.toUSize
+                                          h.toUSize w.toUSize
+                                          3 3 1 1 1 1 0
+                                          benchInput benchKernel benchBias
+      acc3.modify (· + out.size)
+    let stop3 ← IO.monoNanosNow
+    let _ ← acc3.get
+    let msGemm := (stop3 - start3).toFloat / 1000000.0 / iters.toFloat
+
     -- FLOPS: 2 * outH * outW * outC * inC * kH * kW
     let outH := h  -- same padding
     let outW := w
     let flops := 2.0 * outH.toFloat * outW.toFloat * oc.toFloat * ic.toFloat * 9.0
     let gflopsNaive := if msNaive > 0.001 then flops / (msNaive / 1000.0) / 1e9 else 0.0
     let gflopsFast := if msFast > 0.001 then flops / (msFast / 1000.0) / 1e9 else 0.0
+    let gflopsGemm := if msGemm > 0.001 then flops / (msGemm / 1000.0) / 1e9 else 0.0
 
     IO.println s!"  {h}x{w} x{ic}→{oc}:"
     IO.println s!"    Naive: {msNaive.toString.take 7}ms ({gflopsNaive.toString.take 5} GFLOP/s)"
     IO.println s!"    Fast:  {msFast.toString.take 7}ms ({gflopsFast.toString.take 5} GFLOP/s)"
+    IO.println s!"    GEMM:  {msGemm.toString.take 7}ms ({gflopsGemm.toString.take 5} GFLOP/s)"
 
   IO.println ""
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
