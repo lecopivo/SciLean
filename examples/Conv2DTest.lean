@@ -273,7 +273,7 @@ def main : IO Unit := do
 
   -- Benchmark
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  IO.println "BENCHMARK: Conv2D Performance"
+  IO.println "BENCHMARK: Conv2D Performance (Naive vs Fast)"
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   for (h, w, ic, oc) in [(28, 28, 1, 32), (28, 28, 32, 64), (14, 14, 64, 128), (224, 224, 3, 64)] do
@@ -281,34 +281,57 @@ def main : IO Unit := do
     let benchKernel := generateFloat32Data (oc * ic * 3 * 3)
     let benchBias := constantFloat32 oc 0.0
 
-    -- Warmup
+    -- Warmup naive
     for _ in [:3] do
       let _ := Metal.Float32.conv2d 1 ic.toUSize oc.toUSize
                                     h.toUSize w.toUSize
-                                    3 3 1 1 1 1 1
+                                    3 3 1 1 1 1 0
                                     benchInput benchKernel benchBias
 
-    -- Timed - more iterations for faster ops
+    -- Timed naive
     let iters := 100
     let acc ← IO.mkRef (0 : Nat)
     let start ← IO.monoNanosNow
     for _ in [:iters] do
       let out := Metal.Float32.conv2d 1 ic.toUSize oc.toUSize
                                       h.toUSize w.toUSize
-                                      3 3 1 1 1 1 1
+                                      3 3 1 1 1 1 0
                                       benchInput benchKernel benchBias
       acc.modify (· + out.size)
     let stop ← IO.monoNanosNow
-    let _ ← acc.get  -- force evaluation
-    let ms := (stop - start).toFloat / 1000000.0 / iters.toFloat
+    let _ ← acc.get
+    let msNaive := (stop - start).toFloat / 1000000.0 / iters.toFloat
+
+    -- Warmup fast
+    for _ in [:3] do
+      let _ := Metal.Float32.conv2dFast 1 ic.toUSize oc.toUSize
+                                        h.toUSize w.toUSize
+                                        3 3 1 1 1 1 0
+                                        benchInput benchKernel benchBias
+
+    -- Timed fast
+    let acc2 ← IO.mkRef (0 : Nat)
+    let start2 ← IO.monoNanosNow
+    for _ in [:iters] do
+      let out := Metal.Float32.conv2dFast 1 ic.toUSize oc.toUSize
+                                          h.toUSize w.toUSize
+                                          3 3 1 1 1 1 0
+                                          benchInput benchKernel benchBias
+      acc2.modify (· + out.size)
+    let stop2 ← IO.monoNanosNow
+    let _ ← acc2.get
+    let msFast := (stop2 - start2).toFloat / 1000000.0 / iters.toFloat
 
     -- FLOPS: 2 * outH * outW * outC * inC * kH * kW
     let outH := h  -- same padding
     let outW := w
     let flops := 2.0 * outH.toFloat * outW.toFloat * oc.toFloat * ic.toFloat * 9.0
-    let gflops := if ms > 0.001 then flops / (ms / 1000.0) / 1e9 else 0.0
+    let gflopsNaive := if msNaive > 0.001 then flops / (msNaive / 1000.0) / 1e9 else 0.0
+    let gflopsFast := if msFast > 0.001 then flops / (msFast / 1000.0) / 1e9 else 0.0
 
-    IO.println s!"  {h}x{w} x{ic}→{oc}: {ms.toString.take 7}ms ({gflops.toString.take 5} GFLOP/s)"
+    IO.println s!"  {h}x{w} x{ic}→{oc}:"
+    IO.println s!"    Naive: {msNaive.toString.take 7}ms ({gflopsNaive.toString.take 5} GFLOP/s)"
+    IO.println s!"    Fast:  {msFast.toString.take 7}ms ({gflopsFast.toString.take 5} GFLOP/s)"
 
   IO.println ""
   IO.println "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

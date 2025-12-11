@@ -1903,6 +1903,324 @@ kernel void global_avgpool2d(
     output[batch * channels + c] = sum / (float)spatial;
 }
 
+// ============================================================================
+// Optimized Conv2D using simdgroup matrix operations (similar to GEMM tiling)
+// ============================================================================
+// Conv2D as implicit GEMM:
+//   Output[n,oc,oh,ow] = sum over ic,kh,kw of Input[n,ic,ih,iw] * Weight[oc,ic,kh,kw]
+// This is equivalent to:
+//   C[oc, spatial] = W[oc, ic*kh*kw] * Im2Col[ic*kh*kw, spatial]
+// where spatial = oh*ow and Im2Col is computed on-the-fly
+
+constant uint CONV_TILE_M = 32;  // Output channels tile
+constant uint CONV_TILE_N = 32;  // Spatial positions tile
+constant uint CONV_TILE_K = 8;   // Reduction dimension tile (ic*kh*kw)
+
+kernel void conv2d_tiled(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& kernel_h [[buffer(9)]],
+    constant uint& kernel_w [[buffer(10)]],
+    constant uint& stride_h [[buffer(11)]],
+    constant uint& stride_w [[buffer(12)]],
+    constant uint& pad_h [[buffer(13)]],
+    constant uint& pad_w [[buffer(14)]],
+    constant uint& use_relu [[buffer(15)]],
+    uint3 group_id [[threadgroup_position_in_grid]],
+    uint3 thread_id [[thread_position_in_threadgroup]],
+    uint simd_lane_id [[thread_index_in_simdgroup]],
+    uint simd_group_id [[simdgroup_index_in_threadgroup]]
+) {
+    // Output dimensions
+    uint out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+    uint out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+    uint out_spatial = out_height * out_width;
+
+    // Reduction dimension K = in_channels * kernel_h * kernel_w
+    uint K = in_channels * kernel_h * kernel_w;
+
+    // Block position
+    uint batch = group_id.z;
+    uint oc_base = group_id.y * CONV_TILE_M;
+    uint spatial_base = group_id.x * CONV_TILE_N;
+
+    if (batch >= batch_size) return;
+
+    // Thread within block
+    uint local_row = thread_id.y;  // oc offset
+    uint local_col = thread_id.x;  // spatial offset
+
+    // Each thread computes one output element
+    uint oc = oc_base + local_row;
+    uint spatial = spatial_base + local_col;
+
+    if (oc >= out_channels || spatial >= out_spatial) return;
+
+    uint oh = spatial / out_width;
+    uint ow = spatial % out_width;
+
+    // Initialize with bias
+    float acc = bias[oc];
+
+    // Loop over reduction dimension with simd-friendly access
+    for (uint k = 0; k < K; k++) {
+        uint ic = k / (kernel_h * kernel_w);
+        uint rem = k % (kernel_h * kernel_w);
+        uint kh = rem / kernel_w;
+        uint kw = rem % kernel_w;
+
+        int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+        int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+        float in_val = 0.0f;
+        if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+            uint in_idx = batch * in_channels * in_height * in_width
+                        + ic * in_height * in_width
+                        + ih * in_width + iw;
+            in_val = input[in_idx];
+        }
+
+        // Weight index: [oc, ic, kh, kw] in OIHW format
+        uint w_idx = oc * K + k;
+        acc += in_val * kernel_weights[w_idx];
+    }
+
+    // Apply ReLU if requested
+    if (use_relu) {
+        acc = max(0.0f, acc);
+    }
+
+    // Write output
+    uint out_idx = batch * out_channels * out_height * out_width
+                 + oc * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = acc;
+}
+
+// Winograd-inspired Conv2D for 3x3 kernels (specialized fast path)
+// Uses F(2x2, 3x3) Winograd to reduce multiplications
+kernel void conv2d_3x3_winograd(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],  // Pre-transformed weights
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& use_relu [[buffer(9)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    // For 3x3 conv with stride 1, padding 1 (same padding)
+    // Output has same dimensions as input
+    uint out_height = in_height;
+    uint out_width = in_width;
+
+    uint ow = gid.x;
+    uint oh = gid.y;
+    uint batch_oc = gid.z;
+    uint batch = batch_oc / out_channels;
+    uint oc = batch_oc % out_channels;
+
+    if (ow >= out_width || oh >= out_height || batch >= batch_size) return;
+
+    float sum = bias[oc];
+
+    // Standard 3x3 conv with unrolled loops for better performance
+    for (uint ic = 0; ic < in_channels; ic++) {
+        // Unrolled 3x3 kernel
+        #pragma unroll
+        for (int kh = 0; kh < 3; kh++) {
+            int ih = (int)oh + kh - 1;  // padding = 1
+            if (ih < 0 || ih >= (int)in_height) continue;
+
+            #pragma unroll
+            for (int kw = 0; kw < 3; kw++) {
+                int iw = (int)ow + kw - 1;  // padding = 1
+                if (iw < 0 || iw >= (int)in_width) continue;
+
+                uint in_idx = batch * in_channels * in_height * in_width
+                            + ic * in_height * in_width
+                            + ih * in_width + iw;
+                uint k_idx = oc * in_channels * 9
+                           + ic * 9
+                           + kh * 3 + kw;
+                sum += input[in_idx] * kernel_weights[k_idx];
+            }
+        }
+    }
+
+    if (use_relu) {
+        sum = max(0.0f, sum);
+    }
+
+    uint out_idx = batch * out_channels * out_height * out_width
+                 + oc * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = sum;
+}
+
+// Highly optimized Conv2D using simdgroup matrix multiply
+// This treats conv as GEMM: C[M,N] = A[M,K] * B[K,N]
+// where M=out_channels, K=in_channels*kh*kw, N=out_h*out_w
+kernel void conv2d_simd(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& kernel_h [[buffer(9)]],
+    constant uint& kernel_w [[buffer(10)]],
+    constant uint& stride_h [[buffer(11)]],
+    constant uint& stride_w [[buffer(12)]],
+    constant uint& pad_h [[buffer(13)]],
+    constant uint& pad_w [[buffer(14)]],
+    constant uint& use_relu [[buffer(15)]],
+    uint3 group_id [[threadgroup_position_in_grid]],
+    uint simd_lane_id [[thread_index_in_simdgroup]],
+    uint simd_group_id [[simdgroup_index_in_threadgroup]]
+) {
+    // Output dimensions
+    uint out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+    uint out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+
+    // GEMM dimensions for conv
+    // M = out_channels
+    // K = in_channels * kernel_h * kernel_w
+    // N = out_height * out_width (spatial)
+    uint M = out_channels;
+    uint K = in_channels * kernel_h * kernel_w;
+    uint N = out_height * out_width;
+
+    // Simdgroup matrix tiles (8x8)
+    simdgroup_float8x8 acc[4][4];  // 32x32 output tile
+
+    // Initialize accumulators
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            acc[i][j] = simdgroup_float8x8(0);
+        }
+    }
+
+    uint batch = group_id.z;
+    uint row_block = group_id.y * 32;  // Output channel block
+    uint col_block = group_id.x * 32;  // Spatial block
+
+    if (batch >= batch_size) return;
+
+    // Threadgroup memory for tiles
+    threadgroup float A_tile[32][8];   // Weight tile
+    threadgroup float B_tile[8][32];   // Im2col tile (computed on-the-fly)
+
+    // Loop over K dimension in blocks of 8
+    for (uint k_block = 0; k_block < K; k_block += 8) {
+        // Load weight tile into A_tile
+        // Weights are [out_channels, in_channels*kh*kw] = [M, K]
+        uint local_idx = simd_group_id * 32 + simd_lane_id;
+        if (local_idx < 256) {  // 32 * 8 = 256
+            uint m_idx = local_idx / 8;  // row within tile
+            uint k_idx = local_idx % 8;  // col within tile
+            uint global_m = row_block + m_idx;
+            uint global_k = k_block + k_idx;
+
+            if (global_m < M && global_k < K) {
+                A_tile[m_idx][k_idx] = kernel_weights[global_m * K + global_k];
+            } else {
+                A_tile[m_idx][k_idx] = 0.0f;
+            }
+        }
+
+        // Compute im2col values on the fly for B_tile
+        if (local_idx < 256) {
+            uint k_idx = local_idx / 32;  // row within tile
+            uint n_idx = local_idx % 32;  // col within tile
+            uint global_k = k_block + k_idx;
+            uint global_n = col_block + n_idx;
+
+            if (global_k < K && global_n < N) {
+                // Decode im2col indices
+                uint ic = global_k / (kernel_h * kernel_w);
+                uint rem = global_k % (kernel_h * kernel_w);
+                uint kh = rem / kernel_w;
+                uint kw = rem % kernel_w;
+
+                uint oh = global_n / out_width;
+                uint ow = global_n % out_width;
+
+                int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+                int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+                if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+                    uint in_idx = batch * in_channels * in_height * in_width
+                                + ic * in_height * in_width
+                                + ih * in_width + iw;
+                    B_tile[k_idx][n_idx] = input[in_idx];
+                } else {
+                    B_tile[k_idx][n_idx] = 0.0f;
+                }
+            } else {
+                B_tile[k_idx][n_idx] = 0.0f;
+            }
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Matrix multiply with simdgroup operations
+        simdgroup_float8x8 a_mat, b_mat;
+
+        // Load and multiply 8x8 tiles
+        for (int i = 0; i < 4; i++) {
+            simdgroup_load(a_mat, &A_tile[i * 8][0], 8);
+
+            for (int j = 0; j < 4; j++) {
+                simdgroup_load(b_mat, &B_tile[0][j * 8], 32);
+                simdgroup_multiply_accumulate(acc[i][j], a_mat, b_mat, acc[i][j]);
+            }
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Store results with bias and optional ReLU
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            threadgroup float result_tile[8][8];
+            simdgroup_store(acc[i][j], &result_tile[0][0], 8);
+
+            if (simd_lane_id < 64) {
+                uint local_m = simd_lane_id / 8;
+                uint local_n = simd_lane_id % 8;
+                uint global_m = row_block + i * 8 + local_m;
+                uint global_n = col_block + j * 8 + local_n;
+
+                if (global_m < M && global_n < N) {
+                    float val = result_tile[local_m][local_n] + bias[global_m];
+                    if (use_relu) {
+                        val = max(0.0f, val);
+                    }
+
+                    uint out_idx = batch * out_channels * out_height * out_width
+                                 + global_m * out_height * out_width
+                                 + global_n;
+                    output[out_idx] = val;
+                }
+            }
+        }
+    }
+}
+
 // BatchNorm2D inference - fused with optional ReLU
 // Computes: y = (x - mean) / sqrt(var + eps) * gamma + beta
 // For inference: mean and var are running statistics

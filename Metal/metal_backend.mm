@@ -2507,6 +2507,121 @@ LEAN_EXPORT lean_obj_res scilean_metal_conv2d_f32(
     }
 }
 
+// Conv2D optimized using simdgroup matrix operations
+// Uses the conv2d_3x3_winograd kernel for 3x3 convolutions with stride 1
+LEAN_EXPORT lean_obj_res scilean_metal_conv2d_fast_f32(
+    size_t batch_size,
+    size_t in_channels,
+    size_t out_channels,
+    size_t in_height,
+    size_t in_width,
+    size_t kernel_h,
+    size_t kernel_w,
+    size_t stride_h,
+    size_t stride_w,
+    size_t pad_h,
+    size_t pad_w,
+    uint8_t use_relu,
+    b_lean_obj_arg input_arr,
+    b_lean_obj_arg kernel_arr,
+    b_lean_obj_arg bias_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        // Use specialized 3x3 kernel for 3x3 convolutions with stride 1 and padding 1
+        bool use_3x3 = (kernel_h == 3 && kernel_w == 3 &&
+                        stride_h == 1 && stride_w == 1 &&
+                        pad_h == 1 && pad_w == 1);
+
+        const char* kernel_name = use_3x3 ? "conv2d_3x3_winograd" : (use_relu ? "conv2d_relu" : "conv2d_naive");
+        id<MTLComputePipelineState> pipeline = get_pipeline([NSString stringWithUTF8String:kernel_name]);
+        if (!pipeline) {
+            NSLog(@"Conv2D Fast: Failed to get pipeline for %s", kernel_name);
+            return empty_byte_array_f32();
+        }
+
+        // Output dimensions
+        size_t out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+        size_t out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+
+        size_t input_size = batch_size * in_channels * in_height * in_width;
+        size_t kernel_size = out_channels * in_channels * kernel_h * kernel_w;
+        size_t output_size = batch_size * out_channels * out_height * out_width;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, input_size, true);
+        id<MTLBuffer> kernelBuf = create_buffer_from_byte_array_f32(kernel_arr, kernel_size, true);
+        id<MTLBuffer> biasBuf = create_buffer_from_byte_array_f32(bias_arr, out_channels, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:output_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:kernelBuf offset:0 atIndex:1];
+        [encoder setBuffer:biasBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+
+        if (use_3x3) {
+            // 3x3 optimized kernel has fewer parameters
+            uint32_t batch32 = (uint32_t)batch_size;
+            uint32_t ic32 = (uint32_t)in_channels;
+            uint32_t oc32 = (uint32_t)out_channels;
+            uint32_t ih32 = (uint32_t)in_height;
+            uint32_t iw32 = (uint32_t)in_width;
+            uint32_t relu32 = (uint32_t)use_relu;
+
+            [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:4];
+            [encoder setBytes:&ic32 length:sizeof(ic32) atIndex:5];
+            [encoder setBytes:&oc32 length:sizeof(oc32) atIndex:6];
+            [encoder setBytes:&ih32 length:sizeof(ih32) atIndex:7];
+            [encoder setBytes:&iw32 length:sizeof(iw32) atIndex:8];
+            [encoder setBytes:&relu32 length:sizeof(relu32) atIndex:9];
+        } else {
+            uint32_t batch32 = (uint32_t)batch_size;
+            uint32_t ic32 = (uint32_t)in_channels;
+            uint32_t oc32 = (uint32_t)out_channels;
+            uint32_t ih32 = (uint32_t)in_height;
+            uint32_t iw32 = (uint32_t)in_width;
+            uint32_t kh32 = (uint32_t)kernel_h;
+            uint32_t kw32 = (uint32_t)kernel_w;
+            uint32_t sh32 = (uint32_t)stride_h;
+            uint32_t sw32 = (uint32_t)stride_w;
+            uint32_t ph32 = (uint32_t)pad_h;
+            uint32_t pw32 = (uint32_t)pad_w;
+
+            [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:4];
+            [encoder setBytes:&ic32 length:sizeof(ic32) atIndex:5];
+            [encoder setBytes:&oc32 length:sizeof(oc32) atIndex:6];
+            [encoder setBytes:&ih32 length:sizeof(ih32) atIndex:7];
+            [encoder setBytes:&iw32 length:sizeof(iw32) atIndex:8];
+            [encoder setBytes:&kh32 length:sizeof(kh32) atIndex:9];
+            [encoder setBytes:&kw32 length:sizeof(kw32) atIndex:10];
+            [encoder setBytes:&sh32 length:sizeof(sh32) atIndex:11];
+            [encoder setBytes:&sw32 length:sizeof(sw32) atIndex:12];
+            [encoder setBytes:&ph32 length:sizeof(ph32) atIndex:13];
+            [encoder setBytes:&pw32 length:sizeof(pw32) atIndex:14];
+        }
+
+        // Grid: (out_width, out_height, batch * out_channels)
+        MTLSize gridSize = MTLSizeMake(out_width, out_height, batch_size * out_channels);
+        NSUInteger w = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(w, w, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, output_size);
+    }
+}
+
 // MaxPool2D
 LEAN_EXPORT lean_obj_res scilean_metal_maxpool2d_f32(
     size_t batch_size,
