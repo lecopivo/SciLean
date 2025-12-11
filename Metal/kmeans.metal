@@ -1585,3 +1585,365 @@ kernel void flash_attention_causal(
         output[q_idx * head_dim + d] = out_d;
     }
 }
+
+// ============================================================================
+// Conv2D kernels for CNN inference
+// ============================================================================
+
+// Conv2D naive - one thread per output element
+// Input: NCHW format (batch, channels, height, width)
+// Kernel: OIHW format (out_channels, in_channels, kernel_h, kernel_w)
+// Output: NCHW format
+kernel void conv2d_naive(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& kernel_h [[buffer(9)]],
+    constant uint& kernel_w [[buffer(10)]],
+    constant uint& stride_h [[buffer(11)]],
+    constant uint& stride_w [[buffer(12)]],
+    constant uint& pad_h [[buffer(13)]],
+    constant uint& pad_w [[buffer(14)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    // Output dimensions
+    uint out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+    uint out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+
+    // gid.x = output column, gid.y = output row, gid.z = batch * out_channels + oc
+    uint ow = gid.x;
+    uint oh = gid.y;
+    uint batch_oc = gid.z;
+    uint batch = batch_oc / out_channels;
+    uint oc = batch_oc % out_channels;
+
+    if (ow >= out_width || oh >= out_height || batch >= batch_size) return;
+
+    float sum = bias[oc];
+
+    // Convolution
+    for (uint ic = 0; ic < in_channels; ic++) {
+        for (uint kh = 0; kh < kernel_h; kh++) {
+            for (uint kw = 0; kw < kernel_w; kw++) {
+                int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+                int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+                if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+                    uint in_idx = batch * in_channels * in_height * in_width
+                                + ic * in_height * in_width
+                                + ih * in_width + iw;
+                    uint k_idx = oc * in_channels * kernel_h * kernel_w
+                               + ic * kernel_h * kernel_w
+                               + kh * kernel_w + kw;
+                    sum += input[in_idx] * kernel_weights[k_idx];
+                }
+            }
+        }
+    }
+
+    uint out_idx = batch * out_channels * out_height * out_width
+                 + oc * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = sum;
+}
+
+// Conv2D with implicit GEMM (im2col approach without materializing im2col)
+// More efficient for larger convolutions
+kernel void conv2d_implicit_gemm(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& kernel_h [[buffer(9)]],
+    constant uint& kernel_w [[buffer(10)]],
+    constant uint& stride_h [[buffer(11)]],
+    constant uint& stride_w [[buffer(12)]],
+    constant uint& pad_h [[buffer(13)]],
+    constant uint& pad_w [[buffer(14)]],
+    uint2 gid [[thread_position_in_grid]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint2 tg_size [[threads_per_threadgroup]]
+) {
+    // Output dimensions
+    uint out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+    uint out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+    uint out_spatial = out_height * out_width;
+
+    // gid.x = spatial position (oh * out_width + ow) across all batches
+    // gid.y = output channel
+    uint spatial_batch = gid.x;
+    uint oc = gid.y;
+
+    if (oc >= out_channels) return;
+
+    uint batch = spatial_batch / out_spatial;
+    uint spatial = spatial_batch % out_spatial;
+    uint oh = spatial / out_width;
+    uint ow = spatial % out_width;
+
+    if (batch >= batch_size) return;
+
+    // Kernel reduction dimension: in_channels * kernel_h * kernel_w
+    uint K = in_channels * kernel_h * kernel_w;
+
+    float sum = bias[oc];
+
+    // Compute dot product between im2col column and kernel row
+    for (uint k = 0; k < K; k++) {
+        uint ic = k / (kernel_h * kernel_w);
+        uint rem = k % (kernel_h * kernel_w);
+        uint kh = rem / kernel_w;
+        uint kw = rem % kernel_w;
+
+        int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+        int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+        float in_val = 0.0f;
+        if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+            uint in_idx = batch * in_channels * in_height * in_width
+                        + ic * in_height * in_width
+                        + ih * in_width + iw;
+            in_val = input[in_idx];
+        }
+
+        uint k_idx = oc * K + k;
+        sum += in_val * kernel_weights[k_idx];
+    }
+
+    uint out_idx = batch * out_channels * out_height * out_width
+                 + oc * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = sum;
+}
+
+// Conv2D fused with ReLU activation
+kernel void conv2d_relu(
+    device const float* input [[buffer(0)]],
+    device const float* kernel_weights [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* output [[buffer(3)]],
+    constant uint& batch_size [[buffer(4)]],
+    constant uint& in_channels [[buffer(5)]],
+    constant uint& out_channels [[buffer(6)]],
+    constant uint& in_height [[buffer(7)]],
+    constant uint& in_width [[buffer(8)]],
+    constant uint& kernel_h [[buffer(9)]],
+    constant uint& kernel_w [[buffer(10)]],
+    constant uint& stride_h [[buffer(11)]],
+    constant uint& stride_w [[buffer(12)]],
+    constant uint& pad_h [[buffer(13)]],
+    constant uint& pad_w [[buffer(14)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    uint out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+    uint out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+
+    uint ow = gid.x;
+    uint oh = gid.y;
+    uint batch_oc = gid.z;
+    uint batch = batch_oc / out_channels;
+    uint oc = batch_oc % out_channels;
+
+    if (ow >= out_width || oh >= out_height || batch >= batch_size) return;
+
+    float sum = bias[oc];
+
+    for (uint ic = 0; ic < in_channels; ic++) {
+        for (uint kh = 0; kh < kernel_h; kh++) {
+            for (uint kw = 0; kw < kernel_w; kw++) {
+                int ih = (int)(oh * stride_h + kh) - (int)pad_h;
+                int iw = (int)(ow * stride_w + kw) - (int)pad_w;
+
+                if (ih >= 0 && ih < (int)in_height && iw >= 0 && iw < (int)in_width) {
+                    uint in_idx = batch * in_channels * in_height * in_width
+                                + ic * in_height * in_width
+                                + ih * in_width + iw;
+                    uint k_idx = oc * in_channels * kernel_h * kernel_w
+                               + ic * kernel_h * kernel_w
+                               + kh * kernel_w + kw;
+                    sum += input[in_idx] * kernel_weights[k_idx];
+                }
+            }
+        }
+    }
+
+    uint out_idx = batch * out_channels * out_height * out_width
+                 + oc * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = max(0.0f, sum);  // ReLU
+}
+
+// MaxPool2D - one thread per output element
+kernel void maxpool2d(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& batch_size [[buffer(2)]],
+    constant uint& channels [[buffer(3)]],
+    constant uint& in_height [[buffer(4)]],
+    constant uint& in_width [[buffer(5)]],
+    constant uint& pool_h [[buffer(6)]],
+    constant uint& pool_w [[buffer(7)]],
+    constant uint& stride_h [[buffer(8)]],
+    constant uint& stride_w [[buffer(9)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    uint out_height = (in_height - pool_h) / stride_h + 1;
+    uint out_width = (in_width - pool_w) / stride_w + 1;
+
+    uint ow = gid.x;
+    uint oh = gid.y;
+    uint batch_c = gid.z;
+    uint batch = batch_c / channels;
+    uint c = batch_c % channels;
+
+    if (ow >= out_width || oh >= out_height || batch >= batch_size) return;
+
+    float max_val = -INFINITY;
+
+    for (uint ph = 0; ph < pool_h; ph++) {
+        for (uint pw = 0; pw < pool_w; pw++) {
+            uint ih = oh * stride_h + ph;
+            uint iw = ow * stride_w + pw;
+            uint in_idx = batch * channels * in_height * in_width
+                        + c * in_height * in_width
+                        + ih * in_width + iw;
+            max_val = max(max_val, input[in_idx]);
+        }
+    }
+
+    uint out_idx = batch * channels * out_height * out_width
+                 + c * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = max_val;
+}
+
+// AvgPool2D - one thread per output element
+kernel void avgpool2d(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& batch_size [[buffer(2)]],
+    constant uint& channels [[buffer(3)]],
+    constant uint& in_height [[buffer(4)]],
+    constant uint& in_width [[buffer(5)]],
+    constant uint& pool_h [[buffer(6)]],
+    constant uint& pool_w [[buffer(7)]],
+    constant uint& stride_h [[buffer(8)]],
+    constant uint& stride_w [[buffer(9)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    uint out_height = (in_height - pool_h) / stride_h + 1;
+    uint out_width = (in_width - pool_w) / stride_w + 1;
+
+    uint ow = gid.x;
+    uint oh = gid.y;
+    uint batch_c = gid.z;
+    uint batch = batch_c / channels;
+    uint c = batch_c % channels;
+
+    if (ow >= out_width || oh >= out_height || batch >= batch_size) return;
+
+    float sum = 0.0f;
+    float count = (float)(pool_h * pool_w);
+
+    for (uint ph = 0; ph < pool_h; ph++) {
+        for (uint pw = 0; pw < pool_w; pw++) {
+            uint ih = oh * stride_h + ph;
+            uint iw = ow * stride_w + pw;
+            uint in_idx = batch * channels * in_height * in_width
+                        + c * in_height * in_width
+                        + ih * in_width + iw;
+            sum += input[in_idx];
+        }
+    }
+
+    uint out_idx = batch * channels * out_height * out_width
+                 + c * out_height * out_width
+                 + oh * out_width + ow;
+    output[out_idx] = sum / count;
+}
+
+// Global Average Pooling - reduces spatial dimensions to 1x1
+kernel void global_avgpool2d(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& batch_size [[buffer(2)]],
+    constant uint& channels [[buffer(3)]],
+    constant uint& height [[buffer(4)]],
+    constant uint& width [[buffer(5)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    uint batch = gid.x;
+    uint c = gid.y;
+
+    if (batch >= batch_size || c >= channels) return;
+
+    float sum = 0.0f;
+    uint spatial = height * width;
+
+    for (uint h = 0; h < height; h++) {
+        for (uint w = 0; w < width; w++) {
+            uint in_idx = batch * channels * height * width
+                        + c * height * width
+                        + h * width + w;
+            sum += input[in_idx];
+        }
+    }
+
+    output[batch * channels + c] = sum / (float)spatial;
+}
+
+// BatchNorm2D inference - fused with optional ReLU
+// Computes: y = (x - mean) / sqrt(var + eps) * gamma + beta
+// For inference: mean and var are running statistics
+kernel void batchnorm2d_inference(
+    device const float* input [[buffer(0)]],
+    device const float* gamma [[buffer(1)]],    // scale
+    device const float* beta [[buffer(2)]],     // bias
+    device const float* running_mean [[buffer(3)]],
+    device const float* running_var [[buffer(4)]],
+    device float* output [[buffer(5)]],
+    constant uint& batch_size [[buffer(6)]],
+    constant uint& channels [[buffer(7)]],
+    constant uint& height [[buffer(8)]],
+    constant uint& width [[buffer(9)]],
+    constant float& eps [[buffer(10)]],
+    constant uint& apply_relu [[buffer(11)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    uint w_idx = gid.x;
+    uint h_idx = gid.y;
+    uint batch_c = gid.z;
+    uint batch = batch_c / channels;
+    uint c = batch_c % channels;
+
+    if (w_idx >= width || h_idx >= height || batch >= batch_size) return;
+
+    uint idx = batch * channels * height * width
+             + c * height * width
+             + h_idx * width + w_idx;
+
+    float x = input[idx];
+    float mean = running_mean[c];
+    float var = running_var[c];
+    float g = gamma[c];
+    float b = beta[c];
+
+    float y = (x - mean) * rsqrt(var + eps) * g + b;
+
+    if (apply_relu) {
+        y = max(0.0f, y);
+    }
+
+    output[idx] = y;
+}

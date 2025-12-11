@@ -257,6 +257,10 @@ lean_exe MetalMinimalBenchmark where
   root := `examples.MetalMinimalBenchmark
   moreLinkArgs := metalLinkArgs
 
+lean_exe Conv2DTest where
+  root := `examples.Conv2DTest
+  moreLinkArgs := metalLinkArgs
+
 lean_exe GEMMComparison where
   root := `examples.GEMMComparison
   moreLinkArgs := metalLinkArgs

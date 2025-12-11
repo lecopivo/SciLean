@@ -2408,4 +2408,373 @@ LEAN_EXPORT lean_obj_res scilean_metal_softmax_batched_f32(
     }
 }
 
+// ============================================================================
+// Conv2D operations
+// ============================================================================
+
+// Conv2D with optional ReLU
+// Input: NCHW format [batch, in_channels, height, width]
+// Kernel: OIHW format [out_channels, in_channels, kernel_h, kernel_w]
+// Bias: [out_channels]
+// Output: NCHW format
+LEAN_EXPORT lean_obj_res scilean_metal_conv2d_f32(
+    size_t batch_size,
+    size_t in_channels,
+    size_t out_channels,
+    size_t in_height,
+    size_t in_width,
+    size_t kernel_h,
+    size_t kernel_w,
+    size_t stride_h,
+    size_t stride_w,
+    size_t pad_h,
+    size_t pad_w,
+    uint8_t use_relu,
+    b_lean_obj_arg input_arr,
+    b_lean_obj_arg kernel_arr,
+    b_lean_obj_arg bias_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        const char* kernel_name = use_relu ? "conv2d_relu" : "conv2d_naive";
+        id<MTLComputePipelineState> pipeline = get_pipeline([NSString stringWithUTF8String:kernel_name]);
+        if (!pipeline) {
+            NSLog(@"Conv2D: Failed to get pipeline for %s", kernel_name);
+            return empty_byte_array_f32();
+        }
+
+        // Output dimensions
+        size_t out_height = (in_height + 2 * pad_h - kernel_h) / stride_h + 1;
+        size_t out_width = (in_width + 2 * pad_w - kernel_w) / stride_w + 1;
+
+        size_t input_size = batch_size * in_channels * in_height * in_width;
+        size_t kernel_size = out_channels * in_channels * kernel_h * kernel_w;
+        size_t output_size = batch_size * out_channels * out_height * out_width;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, input_size, true);
+        id<MTLBuffer> kernelBuf = create_buffer_from_byte_array_f32(kernel_arr, kernel_size, true);
+        id<MTLBuffer> biasBuf = create_buffer_from_byte_array_f32(bias_arr, out_channels, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:output_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t ic32 = (uint32_t)in_channels;
+        uint32_t oc32 = (uint32_t)out_channels;
+        uint32_t ih32 = (uint32_t)in_height;
+        uint32_t iw32 = (uint32_t)in_width;
+        uint32_t kh32 = (uint32_t)kernel_h;
+        uint32_t kw32 = (uint32_t)kernel_w;
+        uint32_t sh32 = (uint32_t)stride_h;
+        uint32_t sw32 = (uint32_t)stride_w;
+        uint32_t ph32 = (uint32_t)pad_h;
+        uint32_t pw32 = (uint32_t)pad_w;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:kernelBuf offset:0 atIndex:1];
+        [encoder setBuffer:biasBuf offset:0 atIndex:2];
+        [encoder setBuffer:outputBuf offset:0 atIndex:3];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:4];
+        [encoder setBytes:&ic32 length:sizeof(ic32) atIndex:5];
+        [encoder setBytes:&oc32 length:sizeof(oc32) atIndex:6];
+        [encoder setBytes:&ih32 length:sizeof(ih32) atIndex:7];
+        [encoder setBytes:&iw32 length:sizeof(iw32) atIndex:8];
+        [encoder setBytes:&kh32 length:sizeof(kh32) atIndex:9];
+        [encoder setBytes:&kw32 length:sizeof(kw32) atIndex:10];
+        [encoder setBytes:&sh32 length:sizeof(sh32) atIndex:11];
+        [encoder setBytes:&sw32 length:sizeof(sw32) atIndex:12];
+        [encoder setBytes:&ph32 length:sizeof(ph32) atIndex:13];
+        [encoder setBytes:&pw32 length:sizeof(pw32) atIndex:14];
+
+        // Grid: (out_width, out_height, batch * out_channels)
+        MTLSize gridSize = MTLSizeMake(out_width, out_height, batch_size * out_channels);
+        NSUInteger w = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(w, w, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, output_size);
+    }
+}
+
+// MaxPool2D
+LEAN_EXPORT lean_obj_res scilean_metal_maxpool2d_f32(
+    size_t batch_size,
+    size_t channels,
+    size_t in_height,
+    size_t in_width,
+    size_t pool_h,
+    size_t pool_w,
+    size_t stride_h,
+    size_t stride_w,
+    b_lean_obj_arg input_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"maxpool2d");
+        if (!pipeline) {
+            NSLog(@"MaxPool2D: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t out_height = (in_height - pool_h) / stride_h + 1;
+        size_t out_width = (in_width - pool_w) / stride_w + 1;
+
+        size_t input_size = batch_size * channels * in_height * in_width;
+        size_t output_size = batch_size * channels * out_height * out_width;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, input_size, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:output_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t c32 = (uint32_t)channels;
+        uint32_t ih32 = (uint32_t)in_height;
+        uint32_t iw32 = (uint32_t)in_width;
+        uint32_t ph32 = (uint32_t)pool_h;
+        uint32_t pw32 = (uint32_t)pool_w;
+        uint32_t sh32 = (uint32_t)stride_h;
+        uint32_t sw32 = (uint32_t)stride_w;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:outputBuf offset:0 atIndex:1];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:2];
+        [encoder setBytes:&c32 length:sizeof(c32) atIndex:3];
+        [encoder setBytes:&ih32 length:sizeof(ih32) atIndex:4];
+        [encoder setBytes:&iw32 length:sizeof(iw32) atIndex:5];
+        [encoder setBytes:&ph32 length:sizeof(ph32) atIndex:6];
+        [encoder setBytes:&pw32 length:sizeof(pw32) atIndex:7];
+        [encoder setBytes:&sh32 length:sizeof(sh32) atIndex:8];
+        [encoder setBytes:&sw32 length:sizeof(sw32) atIndex:9];
+
+        MTLSize gridSize = MTLSizeMake(out_width, out_height, batch_size * channels);
+        NSUInteger w = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(w, w, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, output_size);
+    }
+}
+
+// AvgPool2D
+LEAN_EXPORT lean_obj_res scilean_metal_avgpool2d_f32(
+    size_t batch_size,
+    size_t channels,
+    size_t in_height,
+    size_t in_width,
+    size_t pool_h,
+    size_t pool_w,
+    size_t stride_h,
+    size_t stride_w,
+    b_lean_obj_arg input_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"avgpool2d");
+        if (!pipeline) {
+            NSLog(@"AvgPool2D: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t out_height = (in_height - pool_h) / stride_h + 1;
+        size_t out_width = (in_width - pool_w) / stride_w + 1;
+
+        size_t input_size = batch_size * channels * in_height * in_width;
+        size_t output_size = batch_size * channels * out_height * out_width;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, input_size, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:output_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t c32 = (uint32_t)channels;
+        uint32_t ih32 = (uint32_t)in_height;
+        uint32_t iw32 = (uint32_t)in_width;
+        uint32_t ph32 = (uint32_t)pool_h;
+        uint32_t pw32 = (uint32_t)pool_w;
+        uint32_t sh32 = (uint32_t)stride_h;
+        uint32_t sw32 = (uint32_t)stride_w;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:outputBuf offset:0 atIndex:1];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:2];
+        [encoder setBytes:&c32 length:sizeof(c32) atIndex:3];
+        [encoder setBytes:&ih32 length:sizeof(ih32) atIndex:4];
+        [encoder setBytes:&iw32 length:sizeof(iw32) atIndex:5];
+        [encoder setBytes:&ph32 length:sizeof(ph32) atIndex:6];
+        [encoder setBytes:&pw32 length:sizeof(pw32) atIndex:7];
+        [encoder setBytes:&sh32 length:sizeof(sh32) atIndex:8];
+        [encoder setBytes:&sw32 length:sizeof(sw32) atIndex:9];
+
+        MTLSize gridSize = MTLSizeMake(out_width, out_height, batch_size * channels);
+        NSUInteger w = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(w, w, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, output_size);
+    }
+}
+
+// Global Average Pooling - reduces spatial dimensions to 1x1
+LEAN_EXPORT lean_obj_res scilean_metal_global_avgpool2d_f32(
+    size_t batch_size,
+    size_t channels,
+    size_t height,
+    size_t width,
+    b_lean_obj_arg input_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"global_avgpool2d");
+        if (!pipeline) {
+            NSLog(@"GlobalAvgPool2D: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t input_size = batch_size * channels * height * width;
+        size_t output_size = batch_size * channels;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, input_size, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:output_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t c32 = (uint32_t)channels;
+        uint32_t h32 = (uint32_t)height;
+        uint32_t w32 = (uint32_t)width;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:outputBuf offset:0 atIndex:1];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:2];
+        [encoder setBytes:&c32 length:sizeof(c32) atIndex:3];
+        [encoder setBytes:&h32 length:sizeof(h32) atIndex:4];
+        [encoder setBytes:&w32 length:sizeof(w32) atIndex:5];
+
+        MTLSize gridSize = MTLSizeMake(batch_size, channels, 1);
+        NSUInteger tg = MIN(pipeline.maxTotalThreadsPerThreadgroup, 256);
+        MTLSize tgSize = MTLSizeMake(MIN(tg, batch_size), 1, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, output_size);
+    }
+}
+
+// BatchNorm2D inference
+LEAN_EXPORT lean_obj_res scilean_metal_batchnorm2d_f32(
+    size_t batch_size,
+    size_t channels,
+    size_t height,
+    size_t width,
+    float eps,
+    uint8_t apply_relu,
+    b_lean_obj_arg input_arr,
+    b_lean_obj_arg gamma_arr,
+    b_lean_obj_arg beta_arr,
+    b_lean_obj_arg mean_arr,
+    b_lean_obj_arg var_arr
+) {
+    if (!ensure_metal_initialized()) {
+        return empty_byte_array_f32();
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"batchnorm2d_inference");
+        if (!pipeline) {
+            NSLog(@"BatchNorm2D: Failed to get pipeline");
+            return empty_byte_array_f32();
+        }
+
+        size_t spatial_size = batch_size * channels * height * width;
+
+        id<MTLBuffer> inputBuf = create_buffer_from_byte_array_f32(input_arr, spatial_size, true);
+        id<MTLBuffer> gammaBuf = create_buffer_from_byte_array_f32(gamma_arr, channels, true);
+        id<MTLBuffer> betaBuf = create_buffer_from_byte_array_f32(beta_arr, channels, true);
+        id<MTLBuffer> meanBuf = create_buffer_from_byte_array_f32(mean_arr, channels, true);
+        id<MTLBuffer> varBuf = create_buffer_from_byte_array_f32(var_arr, channels, true);
+        id<MTLBuffer> outputBuf = [device newBufferWithLength:spatial_size * sizeof(float)
+                                                      options:MTLResourceStorageModeShared];
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t c32 = (uint32_t)channels;
+        uint32_t h32 = (uint32_t)height;
+        uint32_t w32 = (uint32_t)width;
+        uint32_t relu32 = (uint32_t)apply_relu;
+
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:inputBuf offset:0 atIndex:0];
+        [encoder setBuffer:gammaBuf offset:0 atIndex:1];
+        [encoder setBuffer:betaBuf offset:0 atIndex:2];
+        [encoder setBuffer:meanBuf offset:0 atIndex:3];
+        [encoder setBuffer:varBuf offset:0 atIndex:4];
+        [encoder setBuffer:outputBuf offset:0 atIndex:5];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:6];
+        [encoder setBytes:&c32 length:sizeof(c32) atIndex:7];
+        [encoder setBytes:&h32 length:sizeof(h32) atIndex:8];
+        [encoder setBytes:&w32 length:sizeof(w32) atIndex:9];
+        [encoder setBytes:&eps length:sizeof(eps) atIndex:10];
+        [encoder setBytes:&relu32 length:sizeof(relu32) atIndex:11];
+
+        MTLSize gridSize = MTLSizeMake(width, height, batch_size * channels);
+        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(tgw, tgw, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        [encoder endEncoding];
+
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        return buffer_to_byte_array_f32(outputBuf, spatial_size);
+    }
+}
+
 } // extern "C"

@@ -355,4 +355,59 @@ opaque attentionMultiHead (batchSize numHeads seqLen headDim : USize)
 @[extern "scilean_metal_softmax_batched_f32"]
 opaque softmaxBatched (numRows rowSize : USize) (x : @& ByteArray) : ByteArray
 
+/-! ## Convolutional Neural Network Operations -/
+
+-- Conv2D: 2D convolution with optional fused ReLU
+-- Input: NCHW format [batch, in_channels, height, width]
+-- Kernel: OIHW format [out_channels, in_channels, kernel_h, kernel_w]
+-- Bias: [out_channels]
+-- Output: NCHW format [batch, out_channels, out_height, out_width]
+-- where out_height = (in_height + 2*pad_h - kernel_h) / stride_h + 1
+@[extern "scilean_metal_conv2d_f32"]
+opaque conv2d (batchSize inChannels outChannels : USize)
+    (inHeight inWidth : USize)
+    (kernelH kernelW : USize)
+    (strideH strideW : USize)
+    (padH padW : USize)
+    (useRelu : UInt8)
+    (input kernel bias : @& ByteArray) : ByteArray
+
+-- MaxPool2D: Max pooling over 2D input
+-- Input: NCHW format [batch, channels, height, width]
+-- Output: NCHW format [batch, channels, out_height, out_width]
+-- where out_height = (in_height - pool_h) / stride_h + 1
+@[extern "scilean_metal_maxpool2d_f32"]
+opaque maxPool2d (batchSize channels : USize)
+    (inHeight inWidth : USize)
+    (poolH poolW : USize)
+    (strideH strideW : USize)
+    (input : @& ByteArray) : ByteArray
+
+-- AvgPool2D: Average pooling over 2D input
+-- Input: NCHW format [batch, channels, height, width]
+-- Output: NCHW format [batch, channels, out_height, out_width]
+@[extern "scilean_metal_avgpool2d_f32"]
+opaque avgPool2d (batchSize channels : USize)
+    (inHeight inWidth : USize)
+    (poolH poolW : USize)
+    (strideH strideW : USize)
+    (input : @& ByteArray) : ByteArray
+
+-- Global Average Pooling: Reduces spatial dimensions to 1x1
+-- Input: NCHW format [batch, channels, height, width]
+-- Output: [batch, channels]
+@[extern "scilean_metal_global_avgpool2d_f32"]
+opaque globalAvgPool2d (batchSize channels height width : USize)
+    (input : @& ByteArray) : ByteArray
+
+-- BatchNorm2D inference: Batch normalization for CNN inference
+-- Computes: y = gamma * (x - mean) / sqrt(var + eps) + beta
+-- Input: NCHW format [batch, channels, height, width]
+-- gamma, beta, mean, var: [channels]
+-- applyRelu: 1 to fuse ReLU, 0 otherwise
+@[extern "scilean_metal_batchnorm2d_f32"]
+opaque batchNorm2d (batchSize channels height width : USize)
+    (eps : Float32) (applyRelu : UInt8)
+    (input gamma beta mean var : @& ByteArray) : ByteArray
+
 end SciLean.Metal.Float32
