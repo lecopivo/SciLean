@@ -147,13 +147,13 @@ def _root_.Aesop.Nanos.print (n : Aesop.Nanos) : String :=
     s!"{n.nanos}ns"
   else if n.nanos < 1000000 then
     let str := toString (n.nanos.toFloat / 1000)
-    match str.split λ c => c == '.' with
+    match str.splitToList (fun c => c == '.') with
     | [beforePoint] => beforePoint ++ "μs"
     | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "μs"
     | _ => unreachable!
   else
     let str := toString (n.nanos.toFloat / 1000000)
-    match str.split λ c => c == '.' with
+    match str.splitToList (fun c => c == '.') with
     | [beforePoint] => beforePoint ++ "ms"
     | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "ms"
     | _ => unreachable!

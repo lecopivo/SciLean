@@ -32,7 +32,8 @@ def inclArgs :=
 
 
 package scilean {
-  moreLinkArgs := linkArgs ++ metalLinkArgs
+  -- Global link args should be minimal; Metal frameworks are added per-executable.
+  moreLinkArgs := linkArgs
   -- leanOptions := #[⟨`doc.verso, true⟩]  -- disabled for now
 }
 
@@ -139,10 +140,12 @@ lean_exe Ballistic {
 
 lean_exe ComputeBackendTest {
   root := `examples.ComputeBackendTest
+  moreLinkArgs := metalLinkArgs
 }
 
 lean_exe BackendBenchmark {
   root := `examples.BackendBenchmark
+  moreLinkArgs := metalLinkArgs
 }
 
 lean_exe WalkOnSpheres {
@@ -277,3 +280,6 @@ lean_exe AttentionTest where
   root := `examples.AttentionTest
   moreLinkArgs := metalLinkArgs
 
+lean_exe GpuBufferBenchmark where
+  root := `examples.GpuBufferBenchmark
+  moreLinkArgs := metalLinkArgs

@@ -22,6 +22,107 @@ opaque isAvailable : Unit → Bool
 def withGPU [Inhabited α] (gpuFn cpuFn : Unit → α) : α :=
   if isAvailable () then gpuFn () else cpuFn ()
 
+/-! ## GPU-Resident Buffers
+
+GPU-resident buffers stay on the GPU between operations, eliminating the overhead
+of copying data to/from CPU memory on every operation. This is critical for
+performance in ML workloads where data flows through many operations.
+
+Usage pattern:
+```
+-- Upload once
+let weights ← GpuBuffer.fromByteArray weightData
+let input ← GpuBuffer.fromByteArray inputData
+
+-- Chain operations on GPU (no copies!)
+let h1 ← GpuBuffer.gemm weights input m k n
+let h2 ← GpuBuffer.relu h1
+
+-- Download only final result
+let output ← h2.toByteArray
+```
+-/
+
+/-- Opaque handle to a GPU-resident Metal buffer.
+    Data stays on GPU until explicitly downloaded. -/
+opaque GpuBufferPointed : NonemptyType
+def GpuBuffer : Type := GpuBufferPointed.type
+instance : Nonempty GpuBuffer := GpuBufferPointed.property
+
+namespace GpuBuffer
+
+/-- Allocate an uninitialized GPU buffer of given size (in floats) -/
+@[extern "scilean_gpu_alloc_f32"]
+opaque alloc (numFloats : USize) : IO GpuBuffer
+
+/-- Upload ByteArray (Float32 data) to GPU -/
+@[extern "scilean_gpu_upload_f32"]
+opaque fromByteArray (data : @& ByteArray) : IO GpuBuffer
+
+/-- Download GPU buffer to ByteArray -/
+@[extern "scilean_gpu_download_f32"]
+opaque toByteArray (buf : @& GpuBuffer) : IO ByteArray
+
+/-- Get size of buffer in bytes -/
+@[extern "scilean_gpu_size"]
+opaque sizeBytes (buf : @& GpuBuffer) : USize
+
+/-- Free GPU buffer (optional - will be freed on GC anyway) -/
+@[extern "scilean_gpu_free"]
+opaque free (buf : GpuBuffer) : IO Unit
+
+/-! ### GPU-to-GPU Operations (no CPU copies!) -/
+
+/-- Matrix multiply on GPU: C = A * B
+    A is [m, k], B is [k, n], returns C [m, n]
+    Both inputs and output stay on GPU -/
+@[extern "scilean_gpu_gemm_f32"]
+opaque gemm (A B : @& GpuBuffer) (m k n : USize) : IO GpuBuffer
+
+/-- Element-wise add: C = A + B -/
+@[extern "scilean_gpu_add_f32"]
+opaque add (A B : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- Element-wise multiply: C = A * B -/
+@[extern "scilean_gpu_mul_f32"]
+opaque mul (A B : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- ReLU activation (in-place capable) -/
+@[extern "scilean_gpu_relu_f32"]
+opaque relu (x : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- Softmax along rows -/
+@[extern "scilean_gpu_softmax_f32"]
+opaque softmax (x : @& GpuBuffer) (numRows rowSize : USize) : IO GpuBuffer
+
+/-- Conv2D on GPU-resident buffers
+    Input: [batch, inChannels, height, width] in NCHW format
+    Kernel: [outChannels, inChannels, kH, kW]
+    Bias: [outChannels]
+    Returns output on GPU -/
+@[extern "scilean_gpu_conv2d_f32"]
+opaque conv2d (input kernel bias : @& GpuBuffer)
+    (batchSize inChannels outChannels : USize)
+    (inHeight inWidth : USize)
+    (kernelH kernelW : USize)
+    (strideH strideW : USize)
+    (padH padW : USize)
+    (useRelu : UInt8) : IO GpuBuffer
+
+/-- MaxPool2D on GPU-resident buffers -/
+@[extern "scilean_gpu_maxpool2d_f32"]
+opaque maxPool2d (input : @& GpuBuffer)
+    (batchSize channels : USize)
+    (inHeight inWidth : USize)
+    (poolH poolW : USize)
+    (strideH strideW : USize) : IO GpuBuffer
+
+/-- Bias + ReLU fused operation: y = max(0, x + bias) -/
+@[extern "scilean_gpu_bias_relu_f32"]
+opaque biasRelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
+
+end GpuBuffer
+
 /-! ## Matrix Operations -/
 
 -- Matrix-vector multiply on GPU: y = A * x. A is m x n, x is n-dim, returns m-dim y

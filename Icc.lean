@@ -1,3 +1,6 @@
+import Lean
+open Lean Elab
+
 def Icc.unexpand : Syntax → MacroM Syntax
   | `(Icc $a $b) => `(Set.Icc $a $b)
   | `(Icc ($a + $c) ($b - $d)) => `(Set.Icc ($a + $c) ($b - $d))

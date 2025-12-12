@@ -384,6 +384,8 @@ import SciLean.Data.DataArray.PlainDataType
 import SciLean.Data.DataArray.RnEquiv
 import SciLean.Data.DataArray.TensorOperations
 import SciLean.Data.DataArray.TensorProduct
+import SciLean.Data.TensorBackend
+-- import SciLean.Data.TensorBackendMetal  -- Metal backend (requires Metal.lean FFI)
 import SciLean.Data.FinProd
 import SciLean.Data.Float
 import SciLean.Data.FloatArray
