@@ -684,7 +684,7 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule
     (A : Finset I) :
     HasAdjoint K
       (fun f : I → X => A.sum (fun i => f i))
-      (fun k i => A.toSet.indicator (fun _ => k) i) := by
+      (fun k i => ((A : Set I)).indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
@@ -697,7 +697,7 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule'
     (A : Finset I) :
     HasAdjoint K
       (fun f : I → X => A.sum f)
-      (fun k i => A.toSet.indicator (fun _ => k) i) := by
+      (fun k i => ((A : Set I)).indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
@@ -708,7 +708,7 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule
     (A : Finset I) :
     HasAdjointUpdate K
       (fun f : I → X => A.sum (fun i => f i))
-      (fun k f i => f i + A.toSet.indicator (fun _ => k) i) := by
+      (fun k f i => f i + ((A : Set I)).indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop
@@ -721,7 +721,7 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule'
     (A : Finset I) :
     HasAdjointUpdate K
       (fun f : I → X => A.sum f)
-      (fun k f i => f i + A.toSet.indicator (fun _ => k) i) := by
+      (fun k f i => f i + ((A : Set I)).indicator (fun _ => k) i) := by
   constructor
   case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
   case is_linear => fun_prop

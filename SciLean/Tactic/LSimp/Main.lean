@@ -309,8 +309,11 @@ partial def reduceStep (e : Expr) : LSimpM Expr := do
     | some e => return e
     | none   => pure ()
   if cfg.zeta then
-    if let some (args, _, _, v, b) := e.letFunAppArgs? then
-      return mkAppN (b.instantiate1 v) args
+    match f with
+    | .letE _ _ v b _ =>
+        let args := e.getAppArgs
+        return mkAppN (b.instantiate1 v) args
+    | _ => pure ()
     if e.isLet then
       return e.letBody!.instantiate1 e.letValue!
   match (← unfold? e) with

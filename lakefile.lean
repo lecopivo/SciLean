@@ -88,13 +88,16 @@ target libscileanmetal pkg : FilePath := do
 @[default_target]
 lean_lib SciLean {
   roots := #[`SciLean]
-  precompileModules := true
+  -- On macOS with Lean 4.26.0-rc2, Mathlib's shared library fails to link
+  -- due to an upstream lld duplicate-symbol issue. Disabling precompilation
+  -- avoids requiring `Mathlib:shared` during development.
+  precompileModules := if System.Platform.isOSX then false else true
 }
 
 -- C-based FFI modules (precompiled for editor support)
 lean_lib SciLean.FFI.Core where
   roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float, `SciLean.FFI.Float32Array, `SciLean.FFI.BLAS]
-  precompileModules := true
+  precompileModules := if System.Platform.isOSX then false else true
   moreLinkObjs := #[libscileanc]
 
 -- Metal backend (not precompiled - linked at executable time)

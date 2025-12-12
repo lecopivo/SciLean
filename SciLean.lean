@@ -607,6 +607,7 @@ import SciLean.Numerics.ODE.BackwardEuler
 import SciLean.Numerics.ODE.Basic
 import SciLean.Numerics.ODE.ForwardEuler
 import SciLean.Numerics.ODE.Solvers
+import SciLean.Numerics.ODE.RungeKutta
 import SciLean.Numerics.Optimization.ArgMin
 import SciLean.Numerics.Optimization.Optimjl
 import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
