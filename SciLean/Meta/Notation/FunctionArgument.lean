@@ -3,15 +3,18 @@ import Lean
 namespace SciLean.Meta.Notation
 
 /-!
-Small helpers for writing *named arguments* in term applications.
+Small helpers for writing function arguments uniformly in term applications.
 
 This is **not** binder syntax; it is meant to be used in expressions like:
 
 ```
-f (arg(x := 1)) (arg(y := 2))
+f (arg(x)) (arg(y : Nat))
 ```
 
-which expands to `f (x := 1) (y := 2)`.
+which expands to `f x (y : Nat)`.
+
+Note: named-argument forms like `(x := v)` only parse in *application argument position*
+in Lean (they are not general terms), so we intentionally do not provide `arg(x := v)` here.
 -/
 
 macro "arg" "(" x:ident ")" : term => `($x)
