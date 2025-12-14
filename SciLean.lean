@@ -497,6 +497,7 @@ import SciLean.Meta.GenerateFunProp
 import SciLean.Meta.GenerateFunTrans
 import SciLean.Meta.GenerateLinearMapSimp
 import SciLean.Meta.Notation.Do
+import SciLean.Meta.Notation.Einsum
 import SciLean.Meta.Notation.Let'
 import SciLean.Meta.SetSynthOrder
 import SciLean.Meta.SimpAttr
