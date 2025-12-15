@@ -1,14 +1,151 @@
 /*
  * SciLean Kernel - Dtype-parametric tensor operations
  *
- * Currently implements: f64, f32
- * TODO: f16, bf16, fp8, int types
+ * Implements: f64, f32, bf16, fp8 (e4m3, e5m2)
+ * TODO: f16, int types
  */
 
 #include "kernel.h"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+
+/* ============================================================================
+ * BFloat16 and FP8 Conversion Functions
+ *
+ * BFloat16: 1 sign + 8 exponent + 7 mantissa (same exponent as f32)
+ * FP8 E4M3: 1 sign + 4 exponent + 3 mantissa (ML inference)
+ * FP8 E5M2: 1 sign + 5 exponent + 2 mantissa (ML training)
+ * ============================================================================ */
+
+typedef uint16_t bf16_t;
+typedef uint8_t fp8_t;
+
+/* BFloat16 to Float32 - simple shift since exponent bits match */
+static inline float bf16_to_f32(bf16_t x) {
+    uint32_t bits = (uint32_t)x << 16;
+    float f;
+    memcpy(&f, &bits, sizeof(f));
+    return f;
+}
+
+/* Float32 to BFloat16 - truncate mantissa (could add rounding) */
+static inline bf16_t f32_to_bf16(float f) {
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(bits));
+    /* Simple truncation - for better accuracy, add round-to-nearest-even */
+    return (bf16_t)(bits >> 16);
+}
+
+/* FP8 E4M3 to Float32
+ * E4M3: bias=7, max exponent=15 (special: 15 with mantissa!=0 is NaN)
+ * Range: ±448 (no infinities, only NaNs at exp=15, mant!=0)
+ */
+static inline float fp8_e4m3_to_f32(fp8_t x) {
+    uint8_t sign = (x >> 7) & 1;
+    uint8_t exp = (x >> 3) & 0xF;
+    uint8_t mant = x & 0x7;
+
+    if (exp == 0) {
+        /* Subnormal or zero */
+        if (mant == 0) return sign ? -0.0f : 0.0f;
+        /* Subnormal: value = (-1)^sign * 2^(-6) * (mant/8) */
+        float val = ldexpf((float)mant / 8.0f, -6);
+        return sign ? -val : val;
+    } else if (exp == 15 && mant != 0) {
+        /* NaN */
+        return NAN;
+    } else {
+        /* Normal: value = (-1)^sign * 2^(exp-7) * (1 + mant/8) */
+        float val = ldexpf(1.0f + (float)mant / 8.0f, exp - 7);
+        return sign ? -val : val;
+    }
+}
+
+/* Float32 to FP8 E4M3 */
+static inline fp8_t f32_to_fp8_e4m3(float f) {
+    if (isnan(f)) return 0x7F; /* NaN representation */
+    if (f == 0.0f) return 0;
+    if (f == -0.0f) return 0x80;
+
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(bits));
+    uint8_t sign = (bits >> 31) & 1;
+    int32_t exp = ((bits >> 23) & 0xFF) - 127;  /* Unbias f32 exponent */
+    uint32_t mant = bits & 0x7FFFFF;
+
+    /* Rebias to E4M3 (bias=7) and clamp */
+    int32_t new_exp = exp + 7;
+
+    if (new_exp >= 15) {
+        /* Overflow to max (no inf in E4M3) */
+        return (sign << 7) | 0x7E; /* Max normal: exp=14, mant=6 gives ±448 */
+    } else if (new_exp <= 0) {
+        /* Underflow to subnormal or zero */
+        if (new_exp < -3) return sign << 7; /* Zero */
+        /* Subnormal */
+        uint8_t mant3 = (uint8_t)((mant >> 20) | 0x8) >> (1 - new_exp);
+        return (sign << 7) | (mant3 & 0x7);
+    } else {
+        /* Normal */
+        uint8_t mant3 = (uint8_t)(mant >> 20) & 0x7;
+        return (sign << 7) | (new_exp << 3) | mant3;
+    }
+}
+
+/* FP8 E5M2 to Float32
+ * E5M2: bias=15, has infinities and NaNs like IEEE
+ */
+static inline float fp8_e5m2_to_f32(fp8_t x) {
+    uint8_t sign = (x >> 7) & 1;
+    uint8_t exp = (x >> 2) & 0x1F;
+    uint8_t mant = x & 0x3;
+
+    if (exp == 0) {
+        /* Subnormal or zero */
+        if (mant == 0) return sign ? -0.0f : 0.0f;
+        float val = ldexpf((float)mant / 4.0f, -14);
+        return sign ? -val : val;
+    } else if (exp == 31) {
+        /* Inf or NaN */
+        if (mant == 0) return sign ? -INFINITY : INFINITY;
+        return NAN;
+    } else {
+        /* Normal */
+        float val = ldexpf(1.0f + (float)mant / 4.0f, exp - 15);
+        return sign ? -val : val;
+    }
+}
+
+/* Float32 to FP8 E5M2 */
+static inline fp8_t f32_to_fp8_e5m2(float f) {
+    if (isnan(f)) return 0x7F; /* NaN */
+    if (isinf(f)) return (f < 0) ? 0xFC : 0x7C; /* ±Inf */
+    if (f == 0.0f) return 0;
+    if (f == -0.0f) return 0x80;
+
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(bits));
+    uint8_t sign = (bits >> 31) & 1;
+    int32_t exp = ((bits >> 23) & 0xFF) - 127;
+    uint32_t mant = bits & 0x7FFFFF;
+
+    /* Rebias to E5M2 (bias=15) */
+    int32_t new_exp = exp + 15;
+
+    if (new_exp >= 31) {
+        /* Overflow to inf */
+        return (sign << 7) | 0x7C;
+    } else if (new_exp <= 0) {
+        /* Underflow */
+        if (new_exp < -2) return sign << 7;
+        uint8_t mant2 = (uint8_t)((mant >> 21) | 0x4) >> (1 - new_exp);
+        return (sign << 7) | (mant2 & 0x3);
+    } else {
+        uint8_t mant2 = (uint8_t)(mant >> 21) & 0x3;
+        return (sign << 7) | (new_exp << 2) | mant2;
+    }
+}
 
 /* ============================================================================
  * Internal helpers
@@ -66,9 +203,37 @@ LEAN_EXPORT lean_obj_res k_##name(lean_obj_arg dst, b_lean_obj_arg a,           
             for (size_t i = 0; i < n; i++) d[i] = pa[i] op pb[i];               \
             break;                                                              \
         }                                                                       \
-        default:                                                                \
-            /* TODO: other dtypes */                                            \
+        case DTYPE_BF16: {                                                      \
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);                           \
+            const bf16_t* pa = (const bf16_t*)byte_array_ptr(a);                \
+            const bf16_t* pb = (const bf16_t*)byte_array_ptr(b);                \
+            for (size_t i = 0; i < n; i++) {                                    \
+                float va = bf16_to_f32(pa[i]), vb = bf16_to_f32(pb[i]);         \
+                d[i] = f32_to_bf16(va op vb);                                   \
+            }                                                                   \
             break;                                                              \
+        }                                                                       \
+        case DTYPE_F8_E4M3: {                                                   \
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);                             \
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(a);                  \
+            const fp8_t* pb = (const fp8_t*)byte_array_ptr(b);                  \
+            for (size_t i = 0; i < n; i++) {                                    \
+                float va = fp8_e4m3_to_f32(pa[i]), vb = fp8_e4m3_to_f32(pb[i]); \
+                d[i] = f32_to_fp8_e4m3(va op vb);                               \
+            }                                                                   \
+            break;                                                              \
+        }                                                                       \
+        case DTYPE_F8_E5M2: {                                                   \
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);                             \
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(a);                  \
+            const fp8_t* pb = (const fp8_t*)byte_array_ptr(b);                  \
+            for (size_t i = 0; i < n; i++) {                                    \
+                float va = fp8_e5m2_to_f32(pa[i]), vb = fp8_e5m2_to_f32(pb[i]); \
+                d[i] = f32_to_fp8_e5m2(va op vb);                               \
+            }                                                                   \
+            break;                                                              \
+        }                                                                       \
+        default: break;                                                         \
     }                                                                           \
     return dst;                                                                 \
 }
@@ -100,6 +265,19 @@ LEAN_EXPORT lean_obj_res k_neg(lean_obj_arg dst, b_lean_obj_arg x,
             for (size_t i = 0; i < n; i++) d[i] = -px[i];
             break;
         }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) d[i] = px[i] ^ 0x8000; /* Flip sign bit */
+            break;
+        }
+        case DTYPE_F8_E4M3:
+        case DTYPE_F8_E5M2: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) d[i] = px[i] ^ 0x80; /* Flip sign bit */
+            break;
+        }
         default: break;
     }
     return dst;
@@ -119,6 +297,19 @@ LEAN_EXPORT lean_obj_res k_abs(lean_obj_arg dst, b_lean_obj_arg x,
             float* d = (float*)byte_array_ptr(dst);
             const float* px = (const float*)byte_array_ptr(x);
             for (size_t i = 0; i < n; i++) d[i] = fabsf(px[i]);
+            break;
+        }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) d[i] = px[i] & 0x7FFF; /* Clear sign bit */
+            break;
+        }
+        case DTYPE_F8_E4M3:
+        case DTYPE_F8_E5M2: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) d[i] = px[i] & 0x7F; /* Clear sign bit */
             break;
         }
         default: break;
@@ -141,6 +332,30 @@ LEAN_EXPORT lean_obj_res k_##name(lean_obj_arg dst, b_lean_obj_arg x,           
             float* d = (float*)byte_array_ptr(dst);                             \
             const float* px = (const float*)byte_array_ptr(x);                  \
             for (size_t i = 0; i < n; i++) d[i] = f32_fn(px[i]);                \
+            break;                                                              \
+        }                                                                       \
+        case DTYPE_BF16: {                                                      \
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);                           \
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);                \
+            for (size_t i = 0; i < n; i++) {                                    \
+                d[i] = f32_to_bf16(f32_fn(bf16_to_f32(px[i])));                 \
+            }                                                                   \
+            break;                                                              \
+        }                                                                       \
+        case DTYPE_F8_E4M3: {                                                   \
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);                             \
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);                  \
+            for (size_t i = 0; i < n; i++) {                                    \
+                d[i] = f32_to_fp8_e4m3(f32_fn(fp8_e4m3_to_f32(px[i])));         \
+            }                                                                   \
+            break;                                                              \
+        }                                                                       \
+        case DTYPE_F8_E5M2: {                                                   \
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);                             \
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);                  \
+            for (size_t i = 0; i < n; i++) {                                    \
+                d[i] = f32_to_fp8_e5m2(f32_fn(fp8_e5m2_to_f32(px[i])));         \
+            }                                                                   \
             break;                                                              \
         }                                                                       \
         default: break;                                                         \
@@ -172,6 +387,21 @@ LEAN_EXPORT double k_sum(b_lean_obj_arg x, size_t n, uint8_t dt) {
             for (size_t i = 0; i < n; i++) sum += (double)px[i];
             break;
         }
+        case DTYPE_BF16: {
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) sum += (double)bf16_to_f32(px[i]);
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) sum += (double)fp8_e4m3_to_f32(px[i]);
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < n; i++) sum += (double)fp8_e5m2_to_f32(px[i]);
+            break;
+        }
         default: break;
     }
     return sum;
@@ -191,6 +421,33 @@ LEAN_EXPORT double k_max(b_lean_obj_arg x, size_t n, uint8_t dt) {
             const float* px = (const float*)byte_array_ptr(x);
             max_val = (double)px[0];
             for (size_t i = 1; i < n; i++) if (px[i] > max_val) max_val = (double)px[i];
+            break;
+        }
+        case DTYPE_BF16: {
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            max_val = (double)bf16_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = bf16_to_f32(px[i]);
+                if (v > max_val) max_val = (double)v;
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            max_val = (double)fp8_e4m3_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e4m3_to_f32(px[i]);
+                if (v > max_val) max_val = (double)v;
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            max_val = (double)fp8_e5m2_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e5m2_to_f32(px[i]);
+                if (v > max_val) max_val = (double)v;
+            }
             break;
         }
         default:
@@ -220,6 +477,33 @@ LEAN_EXPORT size_t k_argmax(b_lean_obj_arg x, size_t n, uint8_t dt) {
             }
             break;
         }
+        case DTYPE_BF16: {
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            float max_val = bf16_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = bf16_to_f32(px[i]);
+                if (v > max_val) { max_val = v; max_idx = i; }
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float max_val = fp8_e4m3_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e4m3_to_f32(px[i]);
+                if (v > max_val) { max_val = v; max_idx = i; }
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float max_val = fp8_e5m2_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e5m2_to_f32(px[i]);
+                if (v > max_val) { max_val = v; max_idx = i; }
+            }
+            break;
+        }
         default: break;
     }
     return max_idx;
@@ -230,7 +514,8 @@ LEAN_EXPORT size_t k_argmax(b_lean_obj_arg x, size_t n, uint8_t dt) {
  * ============================================================================ */
 
 /* Naive GEMM: C[m,n] = alpha * A[m,k] @ B[k,n] + beta * C[m,n]
- * Row-major layout. For production, replace with BLAS call. */
+ * Row-major layout. For production, replace with BLAS call.
+ * bf16/fp8: accumulate in f32 for numerical stability, then convert back. */
 LEAN_EXPORT lean_obj_res k_gemm(lean_obj_arg C, b_lean_obj_arg A, b_lean_obj_arg B,
                                  size_t m, size_t k, size_t n,
                                  double alpha, double beta, uint8_t dt) {
@@ -263,6 +548,57 @@ LEAN_EXPORT lean_obj_res k_gemm(lean_obj_arg C, b_lean_obj_arg A, b_lean_obj_arg
                         sum += pa[i * k + l] * pb[l * n + j];
                     }
                     pc[i * n + j] = a * sum + b * pc[i * n + j];
+                }
+            }
+            break;
+        }
+        case DTYPE_BF16: {
+            bf16_t* pc = (bf16_t*)byte_array_ptr(C);
+            const bf16_t* pa = (const bf16_t*)byte_array_ptr(A);
+            const bf16_t* pb = (const bf16_t*)byte_array_ptr(B);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < m; i++) {
+                for (size_t j = 0; j < n; j++) {
+                    float sum = 0.0f;
+                    for (size_t l = 0; l < k; l++) {
+                        sum += bf16_to_f32(pa[i * k + l]) * bf16_to_f32(pb[l * n + j]);
+                    }
+                    float c_old = bf16_to_f32(pc[i * n + j]);
+                    pc[i * n + j] = f32_to_bf16(a * sum + b * c_old);
+                }
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* pc = (fp8_t*)byte_array_ptr(C);
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(A);
+            const fp8_t* pb = (const fp8_t*)byte_array_ptr(B);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < m; i++) {
+                for (size_t j = 0; j < n; j++) {
+                    float sum = 0.0f;
+                    for (size_t l = 0; l < k; l++) {
+                        sum += fp8_e4m3_to_f32(pa[i * k + l]) * fp8_e4m3_to_f32(pb[l * n + j]);
+                    }
+                    float c_old = fp8_e4m3_to_f32(pc[i * n + j]);
+                    pc[i * n + j] = f32_to_fp8_e4m3(a * sum + b * c_old);
+                }
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* pc = (fp8_t*)byte_array_ptr(C);
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(A);
+            const fp8_t* pb = (const fp8_t*)byte_array_ptr(B);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < m; i++) {
+                for (size_t j = 0; j < n; j++) {
+                    float sum = 0.0f;
+                    for (size_t l = 0; l < k; l++) {
+                        sum += fp8_e5m2_to_f32(pa[i * k + l]) * fp8_e5m2_to_f32(pb[l * n + j]);
+                    }
+                    float c_old = fp8_e5m2_to_f32(pc[i * n + j]);
+                    pc[i * n + j] = f32_to_fp8_e5m2(a * sum + b * c_old);
                 }
             }
             break;
@@ -303,6 +639,45 @@ LEAN_EXPORT lean_obj_res k_gemv(lean_obj_arg y, b_lean_obj_arg A, b_lean_obj_arg
             }
             break;
         }
+        case DTYPE_BF16: {
+            bf16_t* py = (bf16_t*)byte_array_ptr(y);
+            const bf16_t* pa = (const bf16_t*)byte_array_ptr(A);
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < m; i++) {
+                float sum = 0.0f;
+                for (size_t j = 0; j < n; j++) {
+                    sum += bf16_to_f32(pa[i * n + j]) * bf16_to_f32(px[j]);
+                }
+                py[i] = f32_to_bf16(sum);
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* py = (fp8_t*)byte_array_ptr(y);
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(A);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < m; i++) {
+                float sum = 0.0f;
+                for (size_t j = 0; j < n; j++) {
+                    sum += fp8_e4m3_to_f32(pa[i * n + j]) * fp8_e4m3_to_f32(px[j]);
+                }
+                py[i] = f32_to_fp8_e4m3(sum);
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* py = (fp8_t*)byte_array_ptr(y);
+            const fp8_t* pa = (const fp8_t*)byte_array_ptr(A);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            for (size_t i = 0; i < m; i++) {
+                float sum = 0.0f;
+                for (size_t j = 0; j < n; j++) {
+                    sum += fp8_e5m2_to_f32(pa[i * n + j]) * fp8_e5m2_to_f32(px[j]);
+                }
+                py[i] = f32_to_fp8_e5m2(sum);
+            }
+            break;
+        }
         default: break;
     }
     return y;
@@ -312,7 +687,8 @@ LEAN_EXPORT lean_obj_res k_gemv(lean_obj_arg y, b_lean_obj_arg A, b_lean_obj_arg
  * Tier 5: Fused Operations
  * ============================================================================ */
 
-/* Numerically stable softmax */
+/* Numerically stable softmax
+ * For bf16/fp8: compute in f32 for stability, convert back at the end */
 LEAN_EXPORT lean_obj_res k_softmax(lean_obj_arg dst, b_lean_obj_arg x,
                                     size_t n, uint8_t dt) {
     dst = ensure_exclusive(dst);
@@ -346,6 +722,65 @@ LEAN_EXPORT lean_obj_res k_softmax(lean_obj_arg dst, b_lean_obj_arg x,
             for (size_t i = 0; i < n; i++) d[i] /= sum;
             break;
         }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            /* Compute in f32 for numerical stability */
+            float max_val = bf16_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = bf16_to_f32(px[i]);
+                if (v > max_val) max_val = v;
+            }
+            float sum = 0.0f;
+            for (size_t i = 0; i < n; i++) {
+                float e = expf(bf16_to_f32(px[i]) - max_val);
+                d[i] = f32_to_bf16(e);  /* Store intermediate for memory */
+                sum += e;
+            }
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_bf16(bf16_to_f32(d[i]) / sum);
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float max_val = fp8_e4m3_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e4m3_to_f32(px[i]);
+                if (v > max_val) max_val = v;
+            }
+            float sum = 0.0f;
+            /* Need temp buffer for f32 values since fp8 precision is too low */
+            float* tmp = (float*)alloca(n * sizeof(float));
+            for (size_t i = 0; i < n; i++) {
+                tmp[i] = expf(fp8_e4m3_to_f32(px[i]) - max_val);
+                sum += tmp[i];
+            }
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_fp8_e4m3(tmp[i] / sum);
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float max_val = fp8_e5m2_to_f32(px[0]);
+            for (size_t i = 1; i < n; i++) {
+                float v = fp8_e5m2_to_f32(px[i]);
+                if (v > max_val) max_val = v;
+            }
+            float sum = 0.0f;
+            float* tmp = (float*)alloca(n * sizeof(float));
+            for (size_t i = 0; i < n; i++) {
+                tmp[i] = expf(fp8_e5m2_to_f32(px[i]) - max_val);
+                sum += tmp[i];
+            }
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_fp8_e5m2(tmp[i] / sum);
+            }
+            break;
+        }
         default: break;
     }
     return dst;
@@ -370,6 +805,33 @@ LEAN_EXPORT lean_obj_res k_axpby(lean_obj_arg y, double alpha, b_lean_obj_arg x,
             float a = (float)alpha, b = (float)beta;
             for (size_t i = 0; i < n; i++) {
                 py[i] = a * px[i] + b * py[i];
+            }
+            break;
+        }
+        case DTYPE_BF16: {
+            bf16_t* py = (bf16_t*)byte_array_ptr(y);
+            const bf16_t* px = (const bf16_t*)byte_array_ptr(x);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < n; i++) {
+                py[i] = f32_to_bf16(a * bf16_to_f32(px[i]) + b * bf16_to_f32(py[i]));
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* py = (fp8_t*)byte_array_ptr(y);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < n; i++) {
+                py[i] = f32_to_fp8_e4m3(a * fp8_e4m3_to_f32(px[i]) + b * fp8_e4m3_to_f32(py[i]));
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* py = (fp8_t*)byte_array_ptr(y);
+            const fp8_t* px = (const fp8_t*)byte_array_ptr(x);
+            float a = (float)alpha, b = (float)beta;
+            for (size_t i = 0; i < n; i++) {
+                py[i] = f32_to_fp8_e5m2(a * fp8_e5m2_to_f32(px[i]) + b * fp8_e5m2_to_f32(py[i]));
             }
             break;
         }
@@ -409,6 +871,40 @@ LEAN_EXPORT lean_obj_res k_transpose(lean_obj_arg dst, b_lean_obj_arg src,
         case DTYPE_F32: {
             float* d = (float*)byte_array_ptr(dst);
             const float* s = (const float*)byte_array_ptr(src);
+            for (size_t i0 = 0; i0 < rows; i0 += BLOCK_SIZE) {
+                for (size_t j0 = 0; j0 < cols; j0 += BLOCK_SIZE) {
+                    size_t i_end = (i0 + BLOCK_SIZE < rows) ? i0 + BLOCK_SIZE : rows;
+                    size_t j_end = (j0 + BLOCK_SIZE < cols) ? j0 + BLOCK_SIZE : cols;
+                    for (size_t i = i0; i < i_end; i++) {
+                        for (size_t j = j0; j < j_end; j++) {
+                            d[j * rows + i] = s[i * cols + j];
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            const bf16_t* s = (const bf16_t*)byte_array_ptr(src);
+            for (size_t i0 = 0; i0 < rows; i0 += BLOCK_SIZE) {
+                for (size_t j0 = 0; j0 < cols; j0 += BLOCK_SIZE) {
+                    size_t i_end = (i0 + BLOCK_SIZE < rows) ? i0 + BLOCK_SIZE : rows;
+                    size_t j_end = (j0 + BLOCK_SIZE < cols) ? j0 + BLOCK_SIZE : cols;
+                    for (size_t i = i0; i < i_end; i++) {
+                        for (size_t j = j0; j < j_end; j++) {
+                            d[j * rows + i] = s[i * cols + j];
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3:
+        case DTYPE_F8_E5M2: {
+            /* Both fp8 variants are 1 byte each */
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            const fp8_t* s = (const fp8_t*)byte_array_ptr(src);
             for (size_t i0 = 0; i0 < rows; i0 += BLOCK_SIZE) {
                 for (size_t j0 = 0; j0 < cols; j0 += BLOCK_SIZE) {
                     size_t i_end = (i0 + BLOCK_SIZE < rows) ? i0 + BLOCK_SIZE : rows;
@@ -569,6 +1065,27 @@ LEAN_EXPORT lean_obj_res k_rand_uniform(lean_obj_arg dst, size_t n, uint8_t dt) 
             }
             break;
         }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_bf16((float)u64_to_uniform(xoshiro256ss_next()));
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_fp8_e4m3((float)u64_to_uniform(xoshiro256ss_next()));
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            for (size_t i = 0; i < n; i++) {
+                d[i] = f32_to_fp8_e5m2((float)u64_to_uniform(xoshiro256ss_next()));
+            }
+            break;
+        }
         default: break;
     }
     return dst;
@@ -604,6 +1121,57 @@ LEAN_EXPORT lean_obj_res k_rand_normal(lean_obj_arg dst, size_t n, uint8_t dt) {
                 double n1, tmp;
                 box_muller(&n1, &tmp);
                 d[i] = (float)n1;
+            }
+            break;
+        }
+        case DTYPE_BF16: {
+            bf16_t* d = (bf16_t*)byte_array_ptr(dst);
+            size_t i = 0;
+            while (i + 1 < n) {
+                double n1, n2;
+                box_muller(&n1, &n2);
+                d[i] = f32_to_bf16((float)n1);
+                d[i + 1] = f32_to_bf16((float)n2);
+                i += 2;
+            }
+            if (i < n) {
+                double n1, tmp;
+                box_muller(&n1, &tmp);
+                d[i] = f32_to_bf16((float)n1);
+            }
+            break;
+        }
+        case DTYPE_F8_E4M3: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            size_t i = 0;
+            while (i + 1 < n) {
+                double n1, n2;
+                box_muller(&n1, &n2);
+                d[i] = f32_to_fp8_e4m3((float)n1);
+                d[i + 1] = f32_to_fp8_e4m3((float)n2);
+                i += 2;
+            }
+            if (i < n) {
+                double n1, tmp;
+                box_muller(&n1, &tmp);
+                d[i] = f32_to_fp8_e4m3((float)n1);
+            }
+            break;
+        }
+        case DTYPE_F8_E5M2: {
+            fp8_t* d = (fp8_t*)byte_array_ptr(dst);
+            size_t i = 0;
+            while (i + 1 < n) {
+                double n1, n2;
+                box_muller(&n1, &n2);
+                d[i] = f32_to_fp8_e5m2((float)n1);
+                d[i + 1] = f32_to_fp8_e5m2((float)n2);
+                i += 2;
+            }
+            if (i < n) {
+                double n1, tmp;
+                box_muller(&n1, &tmp);
+                d[i] = f32_to_fp8_e5m2((float)n1);
             }
             break;
         }
