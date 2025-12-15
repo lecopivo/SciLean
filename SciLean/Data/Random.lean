@@ -68,16 +68,16 @@ instance [Random Id α] [Random Id β] : Random Id (α × β) where
     let b ← rand β
     return (a,b)
 
--- open Random
--- instance
---     {I : Type} {nI} [IndexType I nI] [Fold I]
---     {R : Type} [PlainDataType R] [Random Id R] [Zero R] :
---     Random Id (R^[I]) where
---   random :=
---     let x : R^[I] := Id.run do
---       let mut x : DataArray R := DataArray.mkEmpty nI
---       for i in fullRange I do
---         x := x.push (← random (α:=R))
---         -- x := ArrayType.set x i (← random (α:=R))
---       return ⟨x, nI, sorry_proof⟩
---     sorry
+/-- Generate a random `DataArrayN` by sampling `nI` times from `rand R`.
+
+This iterates over the linear index type `Idx nI` to avoid needing a `FoldM` instance
+for the potentially composite index type `I`.
+-/
+instance {I : Type} {nI : Nat} [IndexType I nI]
+    {R : Type} [PlainDataType R] [Random Id R] :
+    Random Id (R^[I]) where
+  random := do
+    let mut data : DataArray R := DataArray.mkZero nI
+    for i in fullRange (Idx nI) do
+      data := data.set ⟨i.1, sorry_proof⟩ (← rand R)
+    return ⟨data, sorry_proof⟩

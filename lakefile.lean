@@ -278,6 +278,9 @@ lean_exe Numpy100 where
   -- LeanBLAS needs explicit linking for local path dependency
   moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
 
+lean_exe RandBenchmark where
+  root := `examples.RandBenchmark
+
 lean_exe OverheadTest where
   root := `examples.OverheadTest
   moreLinkArgs := metalLinkArgs

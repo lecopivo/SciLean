@@ -64,22 +64,28 @@ instance : LevelTwoData (DataArray Float) Float Float where
       A offA.toUSize ldaA.toUSize X offX.toUSize incX.toUSize b Y offY.toUSize incY.toUSize
 
   trmv order uplo trans diag N A offA lda X offX incX :=
-    dtrmv order uplo trans diag N.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtrmv order uplo trans diag' N.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
 
   tbmv order uplo trans diag N K A offA lda X offX incX :=
-    dtbmv order uplo trans diag N.toUSize K.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtbmv order uplo trans diag' N.toUSize K.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
 
   tpmv order uplo trans diag N A offA X offX incX :=
-    dtpmv order uplo trans diag N.toUSize A offA.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtpmv order uplo trans diag' N.toUSize A offA.toUSize X offX.toUSize incX.toUSize
 
   trsv order uplo trans diag N A offA lda X offX incX :=
-    dtrsv order uplo trans diag N.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtrsv order uplo trans diag' N.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
 
   tbsv order uplo trans diag N K A offA lda X offX incX :=
-    dtbsv order uplo trans diag N.toUSize K.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtbsv order uplo trans diag' N.toUSize K.toUSize A offA.toUSize lda.toUSize X offX.toUSize incX.toUSize
 
   tpsv order uplo trans diag N A offA X offX incX :=
-    dtpsv order uplo trans diag N.toUSize A offA.toUSize X offX.toUSize incX.toUSize
+    let diag' := if diag then Diag.Unit else Diag.NonUnit
+    dtpsv order uplo trans diag' N.toUSize A offA.toUSize X offX.toUSize incX.toUSize
 
   ger order M N a X offX incX Y offY incY A offA lda :=
     dger order M.toUSize N.toUSize a X offX.toUSize incX.toUSize Y offY.toUSize incY.toUSize A offA.toUSize lda.toUSize

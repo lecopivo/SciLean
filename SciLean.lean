@@ -352,6 +352,7 @@ import SciLean.Data.DataArray.Operations.Col
 import SciLean.Data.DataArray.Operations.Curry
 import SciLean.Data.DataArray.Operations.Row
 import SciLean.Data.DataArray.Operations.Uncurry
+import SciLean.Data.DataArray.Random
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
 -- import SciLean.Data.DataArray.Operations_old.Cross
