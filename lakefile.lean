@@ -120,6 +120,12 @@ lean_lib SciLean.FFI.Core where
   precompileModules := if System.Platform.isOSX then false else true
   moreLinkObjs := #[libscileanc, libleanblasc]
 
+-- Kernel: dtype-parametric tensor operations (minimal C kernel)
+lean_lib SciLean.Kernel where
+  roots := #[`SciLean.Kernel.DType, `SciLean.Kernel.Ops, `SciLean.Kernel.Spec, `SciLean.Kernel.Axioms, `SciLean.Kernel.AD, `SciLean.Kernel.Integration]
+  precompileModules := if System.Platform.isOSX then false else true
+  moreLinkObjs := #[libscileanc]
+
 -- Metal backend (not precompiled - linked at executable time)
 lean_lib SciLean.FFI.Metal where
   roots := #[`SciLean.FFI.Metal]
@@ -318,3 +324,13 @@ lean_exe AttentionTest where
 lean_exe GpuBufferBenchmark where
   root := `examples.GpuBufferBenchmark
   moreLinkArgs := metalLinkArgs
+
+lean_exe KernelTest where
+  root := `examples.KernelTest
+
+lean_exe IntegrationTest where
+  root := `examples.IntegrationTest
+
+lean_exe KernelBenchmark where
+  buildType := .release
+  root := `examples.KernelBenchmark
