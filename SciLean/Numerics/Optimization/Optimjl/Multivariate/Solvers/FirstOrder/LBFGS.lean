@@ -69,7 +69,7 @@ structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDat
    dg_history : Vector X m := ⊞ (i:Fin m) => (0:X)
    /-- ρₙ := 1 / ⟪∇f(xₙ₊₁) - ∇f(xₙ), xₙ₊₁ - xₙ⟫ -/
    ρ : R^[m] := (0 : R^[m])
-   /-- -/
+   /-- Pseudo-iteration counter used for indexing the history buffers. -/
    pseudo_iteration : ℤ := 0
    -- /-- preconditioner scale -/
    -- precon : R := 1
@@ -204,17 +204,27 @@ def perform_linesearch (method : LBFGS R m) (state : State R X m) (d : Objective
 
   let φ : R → R := fun α => d.f (state.x + α • state.s)
 
-  -- WARNING! Here we run IO code in pure code, the last `()` is `IO.RealWorld`
-  --          This hould be fixed, eiter remove LineSearch.call from IO or make this function in IO
-  -- TODO: Fix this properly - In Lean 4.26, IO.RealWorld can no longer be faked with ()
-  -- For now, use sorry to bypass this
-  (sorry : Except LineSearchError (State R X m))
-  -- match method.lineSearch.call φ φ₀ dφ₀ state.alpha () () with
-  -- | .ok ((α,φα),_) _ =>
-  --   state.alpha := α
-  --   return .ok state
-  -- | .error e _ =>
-  --   return .error e
+  -- NOTE:
+  -- `LineSearch0Obj.call` runs in `EIO`, so we cannot execute it in this pure
+  -- function. Until the line search API is refactored, use a small pure Armijo
+  -- backtracking line search.
+  let c₁ := method.lineSearch.inst.c₁ method.lineSearch.m
+  let ρ : R := 0.5
+  let maxIter : Nat := 50
+
+  let mut α := state.alpha
+  let mut φα := φ α
+  let mut iter : Nat := 0
+
+  while φα > φ₀ + c₁ * α * dφ₀ do
+    iter := iter + 1
+    if iter > maxIter then
+      return .error .maxIterationn
+    α := ρ * α
+    φα := φ α
+
+  state.alpha := α
+  return .ok state
 
 
 def updateState (method : LBFGS R m) (state : State R X m) (d : ObjectiveFunction R X) :
