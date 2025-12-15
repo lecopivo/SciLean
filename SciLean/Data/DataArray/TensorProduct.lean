@@ -40,10 +40,13 @@ instance {R : Type u'} [PlainDataType R]
     {I : Type u} {nI} [IndexType I nI] {J : Type v} {nJ} [IndexType J nJ] :
     MatrixMulNotation (R^[I,J]) := ⟨⟩
 
--- TODO: use BLAS `gemm`!!!
-instance [Fold.{_,0} I] [Fold.{_,0} J] [Fold K] :
+instance :
     TensorProductMul R (R^[I]) (R^[K]) (R^[J]) (R^[I,K]) (R^[K,J]) (R^[I,J]) where
-  matMul a A B b C := ⊞ (i:I) (j:J) => b • C[i,j] + a • ∑ᴵ (k:K), A[i,k] * B[k,j]
+  matMul a A B b C :=
+    let data :=
+      BLAS.LevelThreeData.gemm .RowMajor .NoTrans .NoTrans
+        nI nJ nK a A.data 0 nK B.data 0 nJ b C.data 0 nJ
+    ⟨data, sorry_proof⟩
 
 
 instance : TensorProductGetYX R (R^[I]) (R^[J]) (R^[I,J]) := ⟨⟩

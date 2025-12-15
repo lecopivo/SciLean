@@ -186,10 +186,15 @@ def contractMiddleAddRFloat
 /--
 Matrix-matrix multiplication
 
-Uses BLAS gemm for Float, naive loops otherwise.
+Uses `BLAS.LevelThreeData.gemm` (row-major).
+
+For a pure Lean fallback, see `contractMiddleAddRNaive`.
 -/
 def contractMiddleAddR (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] :=
-  contractMiddleAddRNaive a x y b z
+  let data :=
+    BLAS.LevelThreeData.gemm .RowMajor .NoTrans .NoTrans
+      nI nK nJ a x.data 0 nJ y.data 0 nK b z.data 0 nK
+  ⟨data, sorry_proof⟩
 
 ----------------------------------------------------------------------------------------------------
 -- Numpy-style wrappers ----------------------------------------------------------------------------

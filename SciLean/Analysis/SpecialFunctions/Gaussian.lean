@@ -175,7 +175,7 @@ theorem mul_gaussian_gaussian (μ₁ μ₂ : X) (σ₁ σ₂ : R) (x : X) :
     norm_num
     generalize hβ : (σ₁ * σ₁ + σ₂ * σ₂) = β
     have : 0 < β := by rw[←hβ]; sorry_proof
-    simp only [← inv_eq_pow, -pow_nat_to_real]
+    simp only [← inv_eq_pow]
     field_simp
 
   · apply congrArg
