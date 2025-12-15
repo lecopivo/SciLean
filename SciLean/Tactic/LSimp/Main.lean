@@ -72,7 +72,7 @@ partial def maybeLetBind (e : Expr) (name := `x) : LSimpM Result :=  do
 
     -- todo: add option to enable this
     -- attempt at reusing existing variables but it does not work see
-    -- for example see test/lsimp_fvar_reuse_issue.lean
+    -- for example see Test/lsimp_fvar_reuse_issue.lean
     -- in that example is seems that `ldsimp` introduces the `a` fvar into the context
     -- let lctx ← getLCtx
     -- let E ← inferType e

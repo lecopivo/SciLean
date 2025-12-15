@@ -1,10 +1,6 @@
 #include <lean/lean.h>
 
-#ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
-#else
 #include <cblas.h>
-#endif
 
 /**
  * Helper to ensure exclusive access to float array

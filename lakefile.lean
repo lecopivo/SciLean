@@ -50,13 +50,33 @@ require leanplot from ".." / "LeanPlot"
 -- SorryProof for type-safe sorry macros (local dependency)
 require sorryproof from ".." / "SorryProof"
 
+-- Link LeanBLAS's C FFI library into SciLean executables.
+--
+-- The BLAS bindings come from the `leanblas` package and require its native
+-- static library (`libleanblasc.a` / `libleanblasc.lib`) at link time.
+--
+-- Unfortunately, Lake currently does not propagate the output type/kind of
+-- custom targets across package boundaries, so we cannot directly reference the
+-- dependency's custom target as a `Target FilePath` here.
+--
+-- Instead, we define a local target that *depends* on `leanblas/libleanblasc`
+-- but returns the known output path. This keeps the build graph correct and
+-- makes executables link successfully.
+target libleanblasc : FilePath := do
+  let ws ← getWorkspace
+  let some leanblasPkg := ws.findPackage? `leanblas
+    | error "SciLean: dependency package `leanblas` not found in workspace."
+  let depJob : Job (CustomData `leanblas `libleanblasc) ← fetch <| leanblasPkg.target `libleanblasc
+  let libPath := leanblasPkg.sharedLibDir / nameToStaticLib "leanblasc"
+  depJob.mapM (sync := true) fun _ => pure libPath
 
--- Extra C compiler flags for macOS (use new Accelerate CBLAS interface)
+
+-- Extra C compiler flags for macOS
+--
+-- SciLean links against OpenBLAS by default, so we intentionally avoid
+-- Accelerate-only flags such as `-DACCELERATE_NEW_LAPACK`.
 def cFlagsOSX :=
-  if System.Platform.isOSX then
-    #["-DACCELERATE_NEW_LAPACK"]  -- Use updated CBLAS interface (macOS 13.3+)
-  else
-    #[]
+  (#[] : Array String)
 
 -- FFI - build all `*.c` files in `./C` directory and package them into `libscileanc.a/so` library
 target libscileanc pkg : FilePath := do
@@ -65,7 +85,7 @@ target libscileanc pkg : FilePath := do
     if file.path.extension == some "c" then
       let oFile := pkg.buildDir / "c" / (file.fileName.stripSuffix ".c" ++ ".o")
       let srcJob ← inputTextFile file.path
-      let weakArgs := #["-I", (← getLeanIncludeDir).toString]
+      let weakArgs := #["-I", (← getLeanIncludeDir).toString] ++ inclArgs
       let cFlags := #["-fPIC", "-O3", "-DNDEBUG"] ++ cFlagsOSX
       oFiles := oFiles.push (← buildO oFile srcJob weakArgs cFlags "gcc" getLeanTrace)
   let name := nameToStaticLib "scileanc"
@@ -98,7 +118,7 @@ lean_lib SciLean {
 lean_lib SciLean.FFI.Core where
   roots := #[`SciLean.FFI.ByteArray, `SciLean.FFI.FloatArray, `SciLean.FFI.Float, `SciLean.FFI.Float32Array, `SciLean.FFI.BLAS]
   precompileModules := if System.Platform.isOSX then false else true
-  moreLinkObjs := #[libscileanc]
+  moreLinkObjs := #[libscileanc, libleanblasc]
 
 -- Metal backend (not precompiled - linked at executable time)
 lean_lib SciLean.FFI.Metal where

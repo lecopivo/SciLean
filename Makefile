@@ -1,4 +1,4 @@
-TESTS := $(shell find test -name '*.lean')
+TESTS := $(shell find Test -name '*.lean')
 
 .PHONY: all build test lint examples
 

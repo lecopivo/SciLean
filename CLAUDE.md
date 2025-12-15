@@ -47,7 +47,7 @@ SciLean uses dependent types (`Float^[784]`, `Float^[128, 784]`) wrapping comput
 ## Build Commands
 - Build entire project: `lake build`
 - Run tests: `lake test`
-- Test a specific file: `lake build test.file_name` (e.g., `lake build test.calculus.revFDeriv_test`)
+- Test a specific file: `lake build Test.file_name` (e.g., `lake build Test.calculus.revFDeriv_test`)
 - Run an example: `lake build ExampleName && .lake/build/bin/ExampleName` (e.g., `lake build HarmonicOscillator && .lake/build/bin/HarmonicOscillator`)
 
 ## Code Style Guidelines

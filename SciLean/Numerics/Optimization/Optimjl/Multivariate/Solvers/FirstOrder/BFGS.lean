@@ -113,16 +113,26 @@ def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunct
 
   let φ : R → R := fun α => d.f (state.x + α • state.s)
 
-  -- WARNING! Here we run IO code in pure code, the last `()` is `IO.RealWorld`
-  --          This hould be fixed, eiter remove LineSearch.call from IO or make this function in IO
-  -- TODO: Fix this properly - In Lean 4.26, IO.RealWorld can no longer be faked with ()
-  -- For now, use sorry to bypass this
-  (sorry : Except LineSearchError (R×R))
-  -- match method.lineSearch.call φ φ₀ dφ₀ state.alpha () () with
-  -- | .ok (αφα,_) _ =>
-  --   return .ok αφα
-  -- | .error e _ =>
-  --   return .error e
+  -- NOTE:
+  -- `LineSearch0Obj.call` runs in `EIO`, so we cannot execute it in this pure
+  -- function. Until the line search API is refactored, use a small pure Armijo
+  -- backtracking line search.
+  let c₁ := method.lineSearch.inst.c₁ method.lineSearch.m
+  let ρ : R := 0.5
+  let maxIter : Nat := 50
+
+  let mut α := state.alpha
+  let mut φα := φ α
+  let mut iter : Nat := 0
+
+  while φα > φ₀ + c₁ * α * dφ₀ do
+    iter := iter + 1
+    if iter > maxIter then
+      return .error .maxIterationn
+    α := ρ * α
+    φα := φ α
+
+  return .ok (α, φα)
 
 
 def updateState (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (R^[n])) :
