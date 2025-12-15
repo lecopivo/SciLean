@@ -15,67 +15,68 @@ set_default_scalar Float
 
 -- Exercise 3: Create a zero vector of size 10
 def exercise3 : Float^[10] := 0
--- Note: Can't use #eval with FFI - must compile and run via `main`
-#check exercise3
+
 -- Exercise 6: Build a null vector (size 10) with fifth element set to 1
-def exercise6 : Float^[10] := ⊞ (i : Idx 10) => if i.1 == 4 then 1.0 else 0.0
+def exercise6 : Float^[10] := Id.run do
+  let mut z : Float^[10] := 0
+  z[(4 : Idx 10)] := 1.0
+  return z
 
 -- Exercise 7: Generate a vector containing values from 10 to 49
-def exercise7 : Float^[40] := ⊞ (i : Idx 40) => (i.1 + 10).toFloat
+def exercise7 : Float^[40] := DataArrayN.arange 40 (start := 10)
 
--- Exercise 8: Reverse vector order (implemented via
- index manipulation)
-def exercise8 (n : Nat) (v : Float^[n]) : Float^[n] :=
-  ⊞ (i : Idx n) => v[⟨(n - 1 - i.1.toNat).toUSize, sorry_proof⟩]
+-- Exercise 8: Reverse a vector (first element becomes last)
+def exercise8 {n : Nat} (v : Float^[n]) : Float^[n] :=
+  v.reverse
 
 -- Exercise 9: Build a 3x3 matrix with sequential values 0-8
-def exercise9 : Float^[3, 3] := ⊞ (i : Idx 3) (j : Idx 3) => (i.1 * 3 + j.1).toFloat
+def exercise9 : Float^[3, 3] :=
+  (DataArrayN.arange 9).reshape2 3 3 (by decide)
+
+-- Exercise 10: Find indices of non-zero elements from [1,2,0,0,4,0]
+def exercise10 : Array (Idx 6) :=
+  (⊞[1.0, 2.0, 0.0, 0.0, 4.0, 0.0] : Float^[6]).nonzeroIdx
 
 -- Exercise 11: Generate a 3x3 identity matrix
-def exercise11 : Float^[3, 3] := ⊞ (i : Idx 3) (j : Idx 3) => if i.1 == j.1 then 1.0 else 0.0
+def exercise11 : Float^[3, 3] := DataArrayN.eye 3
 
 -- Exercise 13: Make a random array and identify min/max
 -- Note: SciLean doesn't have random by default, using deterministic example
 def exercise13_demo : IO Unit := do
-  -- Create array with known values
-  let arr : Float^[10, 10] := ⊞ (i : Idx 10) (j : Idx 10) => (i.1 * 10 + j.1).toFloat
-  let minVal := arr.reduce min
-  let maxVal := arr.reduce max
+  let arr : Float^[10, 10] := (DataArrayN.arange 100).reshape2 10 10 (by decide)
+  let minVal := arr.rmin
+  let maxVal := arr.rmax
   IO.println s!"Min: {minVal}, Max: {maxVal}"
 
 -- Exercise 14: Generate a vector and compute its mean
 def exercise14 : IO Unit := do
-  let arr : Float^[30] := ⊞ (i : Idx 30) => i.1.toFloat
-  let sum := arr.foldl (· + ·) 0.0
-  let mean := sum / 30.0
-  IO.println s!"Mean: {mean}"
+  let arr : Float^[30] := DataArrayN.arange 30
+  IO.println s!"Mean: {arr.mean}"
 
 -- Exercise 22: Normalize a 5x5 matrix
 def normalizeMatrix (m n : Nat) (arr : Float^[m, n]) : Float^[m, n] :=
-  let minVal := arr.reduce min
-  let maxVal := arr.reduce max
+  let minVal := arr.rmin
+  let maxVal := arr.rmax
   let range := maxVal - minVal
-  arr.rmap (fun x => (x - minVal) / range)
+  arr.map (fun x => (x - minVal) / range)
 
 -- Exercise 24: Multiply 5x3 by 3x2 matrices
 def exercise24 : IO Unit := do
-  let A : Float^[5, 3] := ⊞ (i : Idx 5) (j : Idx 3) => (i.1 + j.1).toFloat
-  let B : Float^[3, 2] := ⊞ (i : Idx 3) (j : Idx 2) => (i.1 * j.1).toFloat
-  -- Matrix multiply uses Metal when available!
-  let C := DataArrayN.contractMiddleAddRNaive 1.0 A B 0.0 (0 : Float^[5, 2])
-  IO.println s!"Result shape: Float^[5,2]"
-  IO.println s!"C[0,0] = {C[⟨0, sorry_proof⟩, ⟨0, sorry_proof⟩]}"
+  let A : Float^[5, 3] := ⊞ (i : Idx 5) (j : Idx 3) => ((i : Nat) + (j : Nat)).toFloat
+  let B : Float^[3, 2] := ⊞ (i : Idx 3) (j : Idx 2) => ((i : Nat) * (j : Nat)).toFloat
+  let C := A.matmul B
+  IO.println s!"C[0,0] = {C[0,0]}"
 
 -- Exercise 37: Create 5x5 matrix with row values from 0-4
-def exercise37 : Float^[5, 5] := ⊞ (_i : Idx 5) (j : Idx 5) => j.1.toFloat
+def exercise37 : Float^[5, 5] := ⊞ (_i : Idx 5) (j : Idx 5) => (j : Nat).toFloat
 
 -- Exercise 38: Build array from generator producing integers
-def exercise38 : Float^[10] := ⊞ (i : Idx 10) => (i.1 * i.1).toFloat  -- squares
+def exercise38 : Float^[10] := ⊞ (i : Idx 10) => ((i : Nat) * (i : Nat)).toFloat  -- squares
 
 -- Exercise 45: Replace maximum value with 0
 def exercise45 (n : Nat) (v : Float^[n]) : Float^[n] :=
-  let maxVal := v.reduce max
-  v.rmap (fun x => if x == maxVal then 0.0 else x)
+  let maxVal := v.rmax
+  v.map (fun x => if x == maxVal then 0.0 else x)
 
 -- Exercise 58: Subtract row means from matrix
 def exercise58 (m n : Nat) (A : Float^[m, n]) : Float^[m, n] :=
@@ -89,15 +90,12 @@ def exercise58 (m n : Nat) (A : Float^[m, n]) : Float^[m, n] :=
 def matrixDet (n : Nat) (A : Float^[n, n]) : Float := A.det
 
 -- Exercise 83: Find most frequent value (integer version)
-def mostFrequent (n : Nat) (v : Float^[n]) : Float :=
+def mostFrequent (n : Nat) [NeZero n] (v : Float^[n]) : Float :=
   -- Simple O(n²) implementation
   let counts : Float^[n] := ⊞ (i : Idx n) =>
     IndexType.sum (fun (j : Idx n) => if v[i] == v[j] then 1.0 else 0.0)
-  -- Find index of max count
-  let maxIdx := v.foldl (fun (bestIdx : Nat) (_x : Float) =>
-    let currIdx := bestIdx  -- simplified
-    currIdx) 0
-  v[⟨maxIdx.toUSize, sorry_proof⟩]
+  let maxIdx : Idx n := counts.argmax
+  v[maxIdx]
 
 -- Neural network style operations (common in numpy ML)
 
@@ -131,8 +129,8 @@ def dotProd (n : Nat) (x y : Float^[n]) : Float :=
 -- Cross product (3D only)
 def cross (x y : Float^[3]) : Float^[3] :=
   ⊞ (i : Idx 3) =>
-    let i1 := (i.1.toNat + 1) % 3
-    let i2 := (i.1.toNat + 2) % 3
+    let i1 := ((i : Nat) + 1) % 3
+    let i2 := ((i : Nat) + 2) % 3
     x[⟨i1.toUSize, sorry_proof⟩] * y[⟨i2.toUSize, sorry_proof⟩] -
     x[⟨i2.toUSize, sorry_proof⟩] * y[⟨i1.toUSize, sorry_proof⟩]
 
@@ -163,8 +161,12 @@ def main : IO Unit := do
   IO.println s!"  {exercise6}"
 
   IO.println "\nExercise 7: Vector from 10 to 49"
-  let first5 : Float^[5] := ⊞ (i : Idx 5) => (i.1 + 10).toFloat
+  let first5 : Float^[5] := DataArrayN.arange 5 (start := 10)
   IO.println s!"  First 5: {first5}"
+
+  IO.println "\nExercise 10: Indices of non-zero elements from [1,2,0,0,4,0]"
+  let idxsNat : Array Nat := exercise10.map (fun (i : Idx 6) => (i : Nat))
+  IO.println s!"  {idxsNat}"
 
   IO.println "\nExercise 9: 3x3 matrix with 0-8"
   IO.println s!"  {exercise9}"
@@ -177,26 +179,27 @@ def main : IO Unit := do
 
   IO.println "\nExercise 37: 5x5 matrix with row values 0-4"
   let rowVals := exercise37
-  let row0 : Float^[5] := ⊞ (j : Idx 5) => rowVals[⟨0, sorry_proof⟩, j]
+  let row0 : Float^[5] := ⊞ (j : Idx 5) => rowVals[0, j]
   IO.println s!"  Row 0: {row0}"
 
   IO.println "\nNeural network operations:"
 
-  let testVec : Float^[5] := ⊞ (i : Idx 5) => (i.1 + 1).toFloat
+  let testVec : Float^[5] := DataArrayN.arange 5 (start := 1)
   IO.println s!"  Input: {testVec}"
   IO.println s!"  Softmax: {softmax' 5 testVec}"
 
-  let reluInput : Float^[5] := ⊞ (i : Idx 5) => (i.1.toFloat - 2.0)
+  let reluInput : Float^[5] := DataArrayN.arange 5 (start := -2)
   IO.println s!"  ReLU of {reluInput}: {reluActivation 5 reluInput}"
 
   IO.println "\nLinear algebra:"
   let v1 : Float^[3] := ⊞ (i : Idx 3) => if i.1 == 0 then 1.0 else 0.0
   let v2 : Float^[3] := ⊞ (i : Idx 3) => if i.1 == 1 then 1.0 else 0.0
   IO.println s!"  Cross product [1,0,0] x [0,1,0]: {cross v1 v2}"
-  let dotV : Float^[3] := ⊞ (i : Idx 3) => (i.1 + 1).toFloat
+  let dotV : Float^[3] := DataArrayN.arange 3 (start := 1)
   IO.println s!"  Dot product [1,2,3] . [1,2,3]: {dotProd 3 dotV dotV}"
 
-  let testMat : Float^[2, 2] := ⊞ (i : Idx 2) (j : Idx 2) => ((i.1 * 2 + j.1) + 1).toFloat
+  let testMat : Float^[2, 2] :=
+    ⊞ (i : Idx 2) (j : Idx 2) => (((i : Nat) * 2 + (j : Nat) + 1) : Nat).toFloat
   IO.println s!"  Matrix [[1,2],[3,4]]:"
   IO.println s!"  Trace: {traceMatrix 2 testMat}"
   IO.println s!"  Det: {matrixDet 2 testMat}"

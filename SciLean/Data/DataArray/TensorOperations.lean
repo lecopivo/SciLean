@@ -191,6 +191,14 @@ Uses BLAS gemm for Float, naive loops otherwise.
 def contractMiddleAddR (a : R) (x : R^[I,J]) (y : R^[J,K]) (b : R) (z : R^[I,K]) : R^[I,K] :=
   contractMiddleAddRNaive a x y b z
 
+----------------------------------------------------------------------------------------------------
+-- Numpy-style wrappers ----------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Matrix multiplication (Numpy: `@`). -/
+abbrev matmul (A : R^[I,J]) (B : R^[J,K]) : R^[I,K] :=
+  contractMiddleAddR 1 A B 0 (0 : R^[I,K])
+
 
 
 /--

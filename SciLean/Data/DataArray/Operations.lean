@@ -20,6 +20,124 @@ abbrev mapMono (f : X → X) (xs : X^[I]) : X^[I] :=
 abbrev mapIdxMono (f : I → X → X) (xs : X^[I]) : X^[I] :=
   ArrayOps.mapIdxMono f xs
 
+/-- Element-wise map producing a new array. -/
+@[inline]
+def map {Y : Type*} [PlainDataType Y] (f : X → Y) (xs : X^[I]) : Y^[I] :=
+  ofFn (coll := Y^[I]) fun i => f xs[i]
+
+/-- Element-wise map with indices producing a new array. -/
+@[inline]
+def mapIdx {Y : Type*} [PlainDataType Y] (f : I → X → Y) (xs : X^[I]) : Y^[I] :=
+  ofFn (coll := Y^[I]) fun i => f i xs[i]
+
+/-- Combine two arrays element-wise producing a new array. -/
+@[inline]
+def zipWith {Y Z : Type*} [PlainDataType Y] [PlainDataType Z]
+    (f : X → Y → Z) (xs : X^[I]) (ys : Y^[I]) : Z^[I] :=
+  ofFn (coll := Z^[I]) fun i => f xs[i] ys[i]
+
+/-- Combine two arrays element-wise, mutating `xs` if possible. -/
+abbrev zipWithMono (f : X → X → X) (xs ys : X^[I]) : X^[I] :=
+  ArrayOps.mapIdxMonoAcc (X:=X^[I]) (I:=I) (Y:=X) (Z:=X)
+    (fun _ yi xi => f xi yi) (fun i => ys[i]) xs
+
+
+----------------------------------------------------------------------------------------------------
+-- Numpy-style convenience constructors ------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+/-- Numpy-style `arange`: `start + step*i` for `i = 0..n-1`. -/
+@[inline]
+def arange {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) (start : R := 0) (step : R := 1) : R^[n] :=
+  ofFn (coll := R^[n]) fun (i : Idx n) => start + step * ((i : Nat) : R)
+
+/-- Numpy-style `linspace` with `n` points. For `n ≤ 1` this returns `start` (or the empty array). -/
+@[inline]
+def linspace {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) (start stop : R) : R^[n] :=
+  if n ≤ 1 then
+    ofFn (coll := R^[n]) fun (_i : Idx n) => start
+  else
+    let denom : R := ((n - 1) : R)
+    ofFn (coll := R^[n]) fun (i : Idx n) =>
+      start + (stop - start) * ((i : Nat) : R) / denom
+
+/-- Reverse a vector (Numpy: `flip`). -/
+@[inline]
+def reverse {n : Nat} (x : X^[n]) : X^[n] :=
+  ⊞ (i : Idx n) =>
+    let j : Idx n := ⟨(n - 1 - (i : Nat)).toUSize, sorry_proof⟩
+    x[j]
+
+/-- Identity matrix (Numpy: `eye`). -/
+@[inline]
+def eye {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) : R^[n,n] :=
+  ⊞ (i : Idx n) (j : Idx n) =>
+    if i = j then (1 : R) else 0
+
+/-- Create a diagonal matrix from a vector (Numpy: `diag`). -/
+@[inline]
+def diag {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) (v : R^[n]) : R^[n,n] :=
+  ⊞ (i : Idx n) (j : Idx n) =>
+    if i = j then v[i] else 0
+
+/-- Extract the diagonal of a square matrix (Numpy: `diagonal`). -/
+@[inline]
+def diagonal {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) (A : R^[n,n]) : R^[n] :=
+  ofFn (coll := R^[n]) fun (i : Idx n) => A[i,i]
+
+/-- Trace of a square matrix (Numpy: `trace`). -/
+@[inline]
+def trace {R : Type*} [RealScalar R] [PlainDataType R]
+    (n : Nat) (A : R^[n,n]) : R :=
+  ∑ᴵ (i : Idx n), A[i,i]
+
+/-- Numpy-style `nonzero` for 1D arrays: return indices where `x[i] ≠ 0`. -/
+@[inline]
+def nonzeroIdx {R : Type*} [PlainDataType R] [Zero R] [DecidableEq R]
+    (x : R^[I]) : Array I := Id.run do
+  let mut idxs : Array I := #[]
+  for i in fullRange I do
+    if x[i] ≠ 0 then
+      idxs := idxs.push i
+  return idxs
+
+/-- 2D border pattern: `border` on the boundary and `inside` in the interior. -/
+@[inline]
+def border2 {R : Type*} [RealScalar R] [PlainDataType R]
+    (m n : Nat) (border inside : R) : R^[m,n] :=
+  ⊞ (i : Idx m) (j : Idx n) =>
+    let ii : Nat := i
+    let jj : Nat := j
+    let isBorder :=
+      (ii == 0) || (ii == m - 1) || (jj == 0) || (jj == n - 1)
+    if isBorder then border else inside
+
+/-- Add a 1-cell padding border around a matrix. -/
+@[inline]
+def pad2 {R : Type*} [RealScalar R] [PlainDataType R]
+    (m n : Nat) (A : R^[m,n]) (pad : R := 0) : R^[m+2,n+2] :=
+  ⊞ (i : Idx (m+2)) (j : Idx (n+2)) =>
+    let ii : Nat := i
+    let jj : Nat := j
+    let isPad :=
+      (ii == 0) || (ii == m + 1) || (jj == 0) || (jj == n + 1)
+    if isPad then
+      pad
+    else
+      A[⟨(ii - 1).toUSize, sorry_proof⟩, ⟨(jj - 1).toUSize, sorry_proof⟩]
+
+/-- Checkerboard pattern of `a`/`b` (Numpy exercises 19/21). -/
+@[inline]
+def checkerboard {R : Type*} [RealScalar R] [PlainDataType R]
+    (m n : Nat) (a : R := 0) (b : R := 1) : R^[m,n] :=
+  ⊞ (i : Idx m) (j : Idx n) =>
+    if ((i : Nat) + (j : Nat)) % 2 = 0 then a else b
+
 /-- Fold elements of `xs : X^[I]` using `op : α → X → α`.
 
 It is just and abbreviation for a call to `IndexType.foldl` which runs a fold over the index
