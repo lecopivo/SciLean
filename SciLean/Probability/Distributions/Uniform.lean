@@ -26,7 +26,7 @@ theorem uniform.pdf [MeasureSpace X] (A : Set X) [UniformRand A] :
     =
     fun _ => (Scalar.ofENNReal (R:=R) (volume A))⁻¹ := by
   unfold Rand.pdf uniform
-  simp [UniformRand.is_uniform]
+  simp
   sorry_proof
 
 

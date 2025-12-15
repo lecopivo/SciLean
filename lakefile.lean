@@ -279,6 +279,8 @@ lean_exe Numpy100 where
   moreLinkArgs := #["-L" ++ leanblasLibPath.toString, "-lleanblasc"]
 
 lean_exe RandBenchmark where
+  buildType := .release
+  moreLinkArgs := #["-O3", "-UNDEBUG"]
   root := `examples.RandBenchmark
 
 lean_exe OverheadTest where

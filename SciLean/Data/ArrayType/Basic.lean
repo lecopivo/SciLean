@@ -98,17 +98,50 @@ theorem get_modify_neq (xs : Cont) (f : Elem → Elem) (i j : Idx) (h : i ≠ j)
 
 
 instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem]
-    {n} [IndexType Idx n] [Fold Idx] :
-    ToString (Cont) := ⟨λ x => Id.run do
-  let mut fst := true
+    {n} [IndexType Idx n] :
+    ToString (Cont) := ⟨fun x => Id.run do
+  let maxFull : Nat := 20
+  let headCount : Nat := 3
+  let tailCount : Nat := 3
+
+  let mut first := true
   let mut s := "⊞["
-  for i in fullRange Idx do
-    if fst then
-      s := s ++ toString (get x i)
-      fst := false
+
+  if n ≤ maxFull then
+    for j in [0:n] do
+      let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := get x (IndexType.fromIdx (I := Idx) lin)
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+  else
+    for j in [0:headCount] do
+      let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := get x (IndexType.fromIdx (I := Idx) lin)
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+
+    if first then
+      s := s ++ "..."
+      first := false
     else
-      s := s ++ ", " ++ toString (get x i)
-  s ++ "]"⟩
+      s := s ++ ", ..."
+
+    for j in [n - tailCount:n] do
+      let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := get x (IndexType.fromIdx (I := Idx) lin)
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+
+  return s ++ "]"⟩
 
 -- /-- Converts array to ArrayType -/
 -- def _root_.Array.toArrayType {Elem} (Cont : Type u) (Idx : Type v)
@@ -158,7 +191,9 @@ section Operations
   scoped instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
     λ f g => Id.run do
       let mut eq : Bool := true
-      for x in fullRange Idx do
+      for j in [0:n] do
+        let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+        let x : Idx := IndexType.fromIdx (I := Idx) lin
         if get f x ≠ get g x then
           eq := false
           break
@@ -167,7 +202,9 @@ section Operations
   scoped instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
       Decidable (f < g) := Id.run do
     let mut lt : Bool := true
-    for x in fullRange Idx do
+    for j in [0:n] do
+      let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let x : Idx := IndexType.fromIdx (I := Idx) lin
       if ¬(get f x < get g x) then
         lt := false
         break
@@ -176,7 +213,9 @@ section Operations
   scoped instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
       Decidable (f ≤ g) := Id.run do
     let mut le : Bool := true
-    for x in fullRange Idx do
+    for j in [0:n] do
+      let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let x : Idx := IndexType.fromIdx (I := Idx) lin
       if ¬(get f x ≤ get g x) then
         le := false
         break

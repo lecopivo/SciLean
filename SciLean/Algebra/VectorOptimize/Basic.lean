@@ -141,7 +141,7 @@ theorem tmulAdd_smul_y (a b : R) (y : Y) (x : X) (A : YX) :
 @[simp, simp_core, vector_optimize]
 theorem tmulAdd_smul_x (a b : R) (y : Y) (x : X) (A : YX) :
     tmulAdd a y (b•x) A = tmulAdd (a*b) y x A := by
-  simp [axpby_spec,tmulAdd_spec]
+  simp [tmulAdd_spec]
   sorry_proof
 
 

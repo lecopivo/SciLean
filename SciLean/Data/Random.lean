@@ -78,6 +78,7 @@ instance {I : Type} {nI : Nat} [IndexType I nI]
     Random Id (R^[I]) where
   random := do
     let mut data : DataArray R := DataArray.mkZero nI
-    for i in fullRange (Idx nI) do
-      data := data.set ⟨i.1, sorry_proof⟩ (← rand R)
+    for j in [0:nI] do
+      let i : Idx data.size := ⟨j.toUSize, sorry_proof⟩
+      data := data.set i (← rand R)
     return ⟨data, sorry_proof⟩

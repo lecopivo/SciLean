@@ -101,8 +101,9 @@ def DataArray.mkZero (n : Nat) : DataArray α := Id.run do
 def DataArray.replicate (n : Nat) (v : α) : DataArray α := Id.run do
   -- TODO: make unsafe version that does not zero initialize
   let mut data : DataArray α := .mkZero n
-  for i in fullRange (Idx data.size) do
-    data := data.set ⟨i,sorry_proof⟩ v
+  for j in [0:data.size] do
+    let i : _root_.SciLean.Idx data.size := ⟨j.toUSize, sorry_proof⟩
+    data := data.set i v
   return data
 
 
@@ -112,7 +113,8 @@ def _root_.SciLean.DataArray.pushArray (x y : DataArray α) (k : Nat := 1) : Dat
   let ydata := y.1
   let offset := data.size.toUSize
   let width := ydata.size.toUSize
-  for i in fullRange (Idx k) do
+  for j in [0:k] do
+    let i : USize := j.toUSize
     let idx := offset + i*width
     data := ydata.copySlice 0 data idx.toNat width.toNat
   return ⟨data, sorry_proof⟩
@@ -140,7 +142,8 @@ def DataArray.swap (arr : DataArray α) (i j : Idx arr.size) : DataArray α :=
 def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   let mut arr := arr
   let n := arr.size
-  for i in fullRange (Idx (n/2)) do
+  for j in [0:n/2] do
+    let i : USize := j.toUSize
     let i' : Idx arr.size := ⟨i, sorry_proof⟩
     let j' : Idx arr.size := ⟨n.toUSize - i - 1, sorry_proof⟩
     arr := arr.swap i' j'
@@ -156,28 +159,61 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
 --   d'
 
 @[inline]
-def DataArray.intro {ι n} [IndexType ι n] [Fold ι]
-    (f : ι → α) : DataArray α := aux toIdx
-where
-  @[specialize]
-  aux (toIdx : ι → Idx n) : DataArray α := Id.run do
-    let mut d' : DataArray α := .mkZero n
-    for i in fullRange ι do
-      d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
-    d'
+def DataArray.intro {ι n} [IndexType ι n]
+    (f : ι → α) : DataArray α := Id.run do
+  let mut data : DataArray α := .mkZero n
+  for j in [0:n] do
+    let lin : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+    let i : ι := IndexType.fromIdx lin
+    let linData : _root_.SciLean.Idx data.size := ⟨j.toUSize, sorry_proof⟩
+    data := data.set linData (f i)
+  return data
 
 
-instance [ToString α] : ToString (DataArray α) := ⟨λ x => Id.run do
-  let mut fst := true
+instance [ToString α] : ToString (DataArray α) := ⟨fun x => Id.run do
+  let maxFull : Nat := 20
+  let headCount : Nat := 3
+  let tailCount : Nat := 3
+
+  let mut first := true
   let mut s := "⊞["
-  for i in fullRange (Idx x.size) do
-    -- let i : Idx (x.size) := ⟨i, sorry_proof⟩
-    if fst then
-      s := s ++ toString (x.get i)
-      fst := false
+
+  let n := x.size
+  if n ≤ maxFull then
+    for j in [0:n] do
+      let i : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := x.get i
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+  else
+    for j in [0:headCount] do
+      let i : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := x.get i
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+
+    if first then
+      s := s ++ "..."
+      first := false
     else
-      s := s ++ ", " ++ toString (x.get i)
-  s ++ "]"⟩
+      s := s ++ ", ..."
+
+    for j in [n - tailCount:n] do
+      let i : _root_.SciLean.Idx n := ⟨j.toUSize, sorry_proof⟩
+      let a := x.get i
+      if first then
+        s := s ++ toString a
+        first := false
+      else
+        s := s ++ ", " ++ toString a
+
+  return s ++ "]"⟩
 
 
 structure DataArrayN (α : Type*) [pd : PlainDataType α] (ι : Type*) {n : outParam ℕ} [Size' ι n] : Type where
@@ -223,10 +259,10 @@ instance : LawfulSetElem (α^[ι]) ι where
   getElem_setElem_eq  := sorry_proof
   getElem_setElem_neq := sorry_proof
 
-instance [Fold ι] : OfFn (α^[ι]) ι α where
+instance {ι n} [IndexType ι n] : OfFn (α^[ι]) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
 
-instance [Fold ι] : LawfulOfFn (α^[ι]) ι where
+instance {ι n} [IndexType ι n] : LawfulOfFn (α^[ι]) ι where
   getElem_ofFn := sorry_proof
 
 instance {α} [PlainDataType α] {ι n} [IndexType ι n] : DefaultCollection (α^[ι]) ι α where
@@ -248,7 +284,7 @@ def DataArrayN.toListIdx [Fold ι] (xs : DataArrayN α ι) : List (ι × α) := 
 instance : Membership α (DataArrayN α ι) where
   mem xs x := ∃ i, xs.get i = x
 
-instance [Fold ι] : ArrayType (DataArrayN α ι) ι α where
+instance {ι n} [IndexType ι n] : ArrayType (DataArrayN α ι) ι α where
   ofFn f := ⟨DataArray.intro f, sorry_proof⟩
   get xs i := xs.get i
   set xs i x := xs.set i x

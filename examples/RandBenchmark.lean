@@ -28,7 +28,11 @@ def FloatArray.random01 (n : Nat) : IO FloatArray := do
   return xs
 
 def benchSize (n : Nat) : IO Unit := do
-  let config : Benchmark.Config := { warmupIterations := 2, timedIterations := 8 }
+  let config : Benchmark.Config :=
+    if n ≤ 100_000 then
+      { warmupIterations := 2, timedIterations := 8 }
+    else
+      { warmupIterations := 1, timedIterations := 3 }
   let acc ← IO.mkRef (0 : Nat)
 
   IO.setRandSeed 0
@@ -56,9 +60,7 @@ def main : IO Unit := do
   IO.println "║              SciLean Random Benchmark                      ║"
   IO.println "╚════════════════════════════════════════════════════════════╝"
 
-  -- NOTE: Some loop implementations in this repo are still recursive and can hit
-  -- stack limits for very large `n`. Keep the default sizes modest.
-  for n in [10_000, 100_000] do
+  for n in [10_000, 100_000, 250_000, 1_000_000] do
     benchSize n
 
 end RandBenchmark

@@ -14,10 +14,16 @@ This iterates over the linear index type `Idx nI` so it does not require any
 `FoldM I` instance for the index type `I`.
 -/
 @[inline]
-def rand (r : SciLean.Rand X) : SciLean.Rand (X^[I]) := do
-  let mut data : DataArray X := DataArray.mkZero nI
-  for i in fullRange (Idx nI) do
-    data := data.set ⟨i.1, sorry_proof⟩ (← r)
-  return ⟨data, sorry_proof⟩
+def rand (r : SciLean.Rand X) : SciLean.Rand (X^[I]) :=
+  { spec := default
+    rand := fun g => Id.run do
+      let mut data : DataArray X := DataArray.mkZero nI
+      let mut g := g
+      for j in [0:nI] do
+        let (x, g') := r.rand g
+        g := g'
+        let i : Idx data.size := ⟨j.toUSize, sorry_proof⟩
+        data := data.set i x
+      return (⟨data, sorry_proof⟩, g) }
 
 end SciLean.DataArrayN

@@ -154,7 +154,7 @@ theorem closedBall₂.arg_xr.frontierSpeed_rule :
   conv => fun_trans [fgradient]
   set_option trace.Meta.Tactic.fun_trans true in
   conv => fun_trans
-  simp[smul_sub]
+  simp
 
 @[fun_trans]
 theorem ball₂.arg_xr.frontierSpeed_rule :
@@ -171,7 +171,7 @@ theorem ball₂.arg_xr.frontierSpeed_rule :
   unfold ball₂
   funext w dw x
   conv => fun_trans [fgradient]
-  simp[smul_sub]
+  simp
 
 
 

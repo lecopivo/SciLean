@@ -60,7 +60,7 @@ theorem log.arg_x.HasFwdFDerivAt_rule
 omit [CompleteSpace U] in
 @[data_synth]
 theorem log.arg_x.HasRevFDeriv_rule
-    (x : U → R) {x'} (hx : HasRevFDeriv R x x') (hu : ∀ u, x u ≠ 0) :
+    (x : U → R) {x'} (_hx : HasRevFDeriv R x x') (_hu : ∀ u, x u ≠ 0) :
     HasRevFDeriv R (fun u => log (x u))
       (fun u =>
         let' (x,dx) := x' u
@@ -71,7 +71,7 @@ theorem log.arg_x.HasRevFDeriv_rule
 omit [CompleteSpace U] in
 @[data_synth]
 theorem log.arg_x.HasRevFDerivUpdate_rule
-    (x : U → R) {x'} (hx : HasRevFDerivUpdate R x x') (hu : ∀ u, x u ≠ 0) :
+    (x : U → R) {x'} (_hx : HasRevFDerivUpdate R x x') (_hu : ∀ u, x u ≠ 0) :
     HasRevFDerivUpdate R (fun u => log (x u))
       (fun u =>
         let' (x,dx) := x' u
