@@ -626,6 +626,7 @@ import SciLean.Probability.IsAffineRandMap
 import SciLean.Probability.PullMean
 import SciLean.Probability.PushPullExpectation
 import SciLean.Probability.Rand
+import SciLean.Probability.RandT
 import SciLean.Probability.RandWithTrace
 import SciLean.Probability.SimpAttr
 import SciLean.Probability.Tactic
