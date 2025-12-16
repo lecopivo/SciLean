@@ -134,15 +134,16 @@ lean_lib SciLean.FFI.Metal where
 
 
 @[test_driver]
-lean_lib Test {
+lean_lib SciLeanTest {
   -- Many tests currently rely on `#eval`/FFI and/or very large reductions.
   -- On macOS we disable module precompilation (to avoid `Mathlib:shared`),
   -- which makes those tests incompatible with the interpreter.
   --
   -- So on macOS we run a lightweight "smoke" test module. On other platforms
   -- we keep building the full test suite.
-  roots := if System.Platform.isOSX then #[`Test.Smoke] else #[]
-  globs := if System.Platform.isOSX then #[] else #[Glob.submodules `Test]
+  srcDir := "test"
+  roots := if System.Platform.isOSX then #[`Smoke] else #[]
+  globs := if System.Platform.isOSX then #[] else #[Glob.submodules `SciLeanTest]
 }
 
 
@@ -253,6 +254,10 @@ lean_exe MetalBenchmark where
 lean_exe GEMMBenchmark where
   root := `examples.GEMMBenchmark
 
+lean_exe KernelGEMMBenchmark where
+  buildType := .release
+  root := `examples.KernelGEMMBenchmark
+
 lean_exe SimpleMNIST where
   root := `examples.SimpleMNIST
 
@@ -334,3 +339,10 @@ lean_exe IntegrationTest where
 lean_exe KernelBenchmark where
   buildType := .release
   root := `examples.KernelBenchmark
+
+lean_exe GemmGen where
+  root := `codegen.GemmGen
+
+lean_exe GpuFusedKernelTest where
+  root := `test.gpu_fused_kernels
+  moreLinkArgs := metalLinkArgs

@@ -43,18 +43,6 @@ static id<MTLComputeCommandEncoder> get_encoder_for_op() {
     return [cb computeCommandEncoder];
 }
 
-static void finish_op(id<MTLComputeCommandEncoder> encoder) {
-    if (is_batch_mode()) {
-        // Don't end encoding or commit - will be done in batch_execute
-        return;
-    }
-    // Non-batched: end encoding and wait for completion
-    [encoder endEncoding];
-    id<MTLCommandBuffer> cb = encoder.commandBuffer;
-    [cb commit];
-    [cb waitUntilCompleted];
-}
-
 static size_t get_buffer_bucket(size_t size) {
     for (size_t i = 0; i < NUM_BUFFER_BUCKETS; i++) {
         if (size <= BUFFER_BUCKET_SIZES[i]) return i;
@@ -557,7 +545,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_add_f32(
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"add_f32");
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"add");
         if (!pipeline) {
             return lean_io_result_mk_error(lean_mk_string("Failed to get add pipeline"));
         }
@@ -615,7 +603,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_mul_f32(
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"mul_f32");
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"mul");
         if (!pipeline) {
             return lean_io_result_mk_error(lean_mk_string("Failed to get mul pipeline"));
         }
@@ -671,7 +659,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_relu_f32(
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"relu_f32");
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"relu");
         if (!pipeline) {
             return lean_io_result_mk_error(lean_mk_string("Failed to get relu pipeline"));
         }
@@ -990,7 +978,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_bias_relu_f32(
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_relu_f32");
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_relu");
         if (!pipeline) {
             return lean_io_result_mk_error(lean_mk_string("Failed to get bias_relu pipeline"));
         }
