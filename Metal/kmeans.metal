@@ -713,6 +713,136 @@ kernel void gemm_m4_max(
     }
 }
 
+// ============================================================
+// FUSED GEMM + BIAS + RELU
+// ============================================================
+// C = max(0, A @ B + bias)
+// bias is broadcast along rows (length N)
+// Uses tiled algorithm for cache efficiency
+
+kernel void gemm_bias_relu(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* C [[buffer(3)]],
+    constant uint& M [[buffer(4)]],
+    constant uint& K [[buffer(5)]],
+    constant uint& N [[buffer(6)]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint2 tgid [[threadgroup_position_in_grid]]
+) {
+    threadgroup float As[TILE_SIZE][TILE_SIZE];
+    threadgroup float Bs[TILE_SIZE][TILE_SIZE];
+
+    uint row = tgid.y * TILE_SIZE + tid.y;
+    uint col = tgid.x * TILE_SIZE + tid.x;
+
+    float sum = 0.0f;
+    uint numTiles = (K + TILE_SIZE - 1) / TILE_SIZE;
+
+    for (uint t = 0; t < numTiles; t++) {
+        uint aCol = t * TILE_SIZE + tid.x;
+        uint bRow = t * TILE_SIZE + tid.y;
+
+        As[tid.y][tid.x] = (row < M && aCol < K) ? A[row * K + aCol] : 0.0f;
+        Bs[tid.y][tid.x] = (bRow < K && col < N) ? B[bRow * N + col] : 0.0f;
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        for (uint i = 0; i < TILE_SIZE; i++) {
+            sum += As[tid.y][i] * Bs[i][tid.x];
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Fused bias + ReLU at store
+    if (row < M && col < N) {
+        float val = sum + bias[col];  // bias broadcasted per column
+        C[row * N + col] = max(0.0f, val);
+    }
+}
+
+// Simdgroup-accelerated GEMM + bias + ReLU for larger matrices
+kernel void gemm_bias_relu_simd(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device const float* bias [[buffer(2)]],
+    device float* C [[buffer(3)]],
+    constant uint& M [[buffer(4)]],
+    constant uint& K [[buffer(5)]],
+    constant uint& N [[buffer(6)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint simd_lane [[thread_index_in_simdgroup]],
+    uint simd_id [[simdgroup_index_in_threadgroup]]
+) {
+    // Same layout as gemm_simd
+    uint tg_row = tgid.y * SIMD_TILE_M;
+    uint tg_col = tgid.x * SIMD_TILE_N;
+
+    uint simd_row = tg_row + (simd_id / 2) * 16;
+    uint simd_col = tg_col + (simd_id % 2) * 16;
+
+    simdgroup_float8x8 acc00 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc01 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc10 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc11 = simdgroup_float8x8(0);
+
+    for (uint k = 0; k < K; k += 8) {
+        simdgroup_float8x8 a0, a1;
+        simdgroup_float8x8 b0, b1;
+
+        if (simd_row < M && k < K) {
+            simdgroup_load(a0, A + simd_row * K + k, K);
+        }
+        if (simd_row + 8 < M && k < K) {
+            simdgroup_load(a1, A + (simd_row + 8) * K + k, K);
+        }
+        if (k < K && simd_col < N) {
+            simdgroup_load(b0, B + k * N + simd_col, N);
+        }
+        if (k < K && simd_col + 8 < N) {
+            simdgroup_load(b1, B + k * N + simd_col + 8, N);
+        }
+
+        simdgroup_multiply_accumulate(acc00, a0, b0, acc00);
+        simdgroup_multiply_accumulate(acc01, a0, b1, acc01);
+        simdgroup_multiply_accumulate(acc10, a1, b0, acc10);
+        simdgroup_multiply_accumulate(acc11, a1, b1, acc11);
+    }
+
+    // Store to shared memory, apply bias+relu, then write to global
+    // Note: simdgroup_store followed by element-wise is simpler for now
+    threadgroup float temp[32][32];
+
+    if (simd_row < M && simd_col < N) {
+        simdgroup_store(acc00, &temp[0][0], 32);
+    }
+    if (simd_row < M && simd_col + 8 < N) {
+        simdgroup_store(acc01, &temp[0][8], 32);
+    }
+    if (simd_row + 8 < M && simd_col < N) {
+        simdgroup_store(acc10, &temp[8][0], 32);
+    }
+    if (simd_row + 8 < M && simd_col + 8 < N) {
+        simdgroup_store(acc11, &temp[8][8], 32);
+    }
+
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Apply bias + ReLU and write to global (one thread per element)
+    uint local_row = simd_lane / 16;
+    uint local_col = simd_lane % 16;
+    for (uint dr = 0; dr < 16; dr += 2) {
+        uint out_row = simd_row + dr + local_row;
+        uint out_col = simd_col + local_col;
+        if (out_row < M && out_col < N) {
+            float val = temp[dr + local_row][local_col] + bias[out_col];
+            C[out_row * N + out_col] = max(0.0f, val);
+        }
+    }
+}
+
 // Element-wise operations
 kernel void add(
     device const float* a [[buffer(0)]],

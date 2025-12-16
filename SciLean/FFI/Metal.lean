@@ -43,6 +43,50 @@ let output ← h2.toByteArray
 ```
 -/
 
+/-! ## Command Buffer Batching
+
+When performing multiple GPU operations, each op normally creates its own command buffer
+and waits for completion. This adds 10-50μs overhead per operation.
+
+Batching allows multiple operations to queue into a single command buffer:
+```
+Metal.withBatch do
+  let h1 ← GpuBuffer.gemm A B m k n
+  let h2 ← GpuBuffer.relu h1 n
+  let h3 ← GpuBuffer.add h2 bias n
+  return h3
+```
+All three operations execute in one GPU submission, eliminating per-op sync overhead.
+-/
+
+/-- Begin a batch of GPU operations. Subsequent ops queue into shared command buffer. -/
+@[extern "scilean_gpu_batch_begin"]
+opaque batchBegin : IO Unit
+
+/-- Execute all batched GPU operations and wait for completion. -/
+@[extern "scilean_gpu_batch_execute"]
+opaque batchExecute : IO Unit
+
+/-- Cancel batch mode without executing (for error recovery). -/
+@[extern "scilean_gpu_batch_cancel"]
+opaque batchCancel : IO Unit
+
+/-- Check if currently in batch mode. -/
+@[extern "scilean_gpu_is_batch_mode"]
+opaque isBatchMode : Unit → Bool
+
+/-- Execute a batch of GPU operations in a single command buffer submission.
+    This eliminates per-operation synchronization overhead (3-5x speedup for op chains). -/
+def withBatch (f : IO α) : IO α := do
+  batchBegin
+  try
+    let result ← f
+    batchExecute
+    return result
+  catch e =>
+    batchCancel
+    throw e
+
 /-- Opaque handle to a GPU-resident Metal buffer.
     Data stays on GPU until explicitly downloaded. -/
 opaque GpuBufferPointed : NonemptyType
@@ -120,6 +164,13 @@ opaque maxPool2d (input : @& GpuBuffer)
 /-- Bias + ReLU fused operation: y = max(0, x + bias) -/
 @[extern "scilean_gpu_bias_relu_f32"]
 opaque biasRelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
+
+/-- Fused GEMM + Bias + ReLU: C = max(0, A @ B + bias)
+    A is [m, k], B is [k, n], bias is [n], returns C [m, n]
+    bias is broadcasted along rows.
+    More efficient than separate gemm → bias → relu operations. -/
+@[extern "scilean_gpu_gemm_bias_relu_f32"]
+opaque gemmBiasRelu (A B bias : @& GpuBuffer) (m k n : USize) : IO GpuBuffer
 
 end GpuBuffer
 

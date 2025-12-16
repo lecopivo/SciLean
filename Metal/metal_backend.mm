@@ -17,6 +17,44 @@ static const size_t NUM_BUFFER_BUCKETS = sizeof(BUFFER_BUCKET_SIZES) / sizeof(BU
 static const size_t MAX_POOLED_BUFFERS_PER_BUCKET = 4;
 static NSMutableArray<id<MTLBuffer>>* bufferPool[NUM_BUFFER_BUCKETS] = {nil};
 
+// ============================================================================
+// Command Buffer Batching
+// ============================================================================
+// When batching is enabled, operations queue into a shared command buffer
+// instead of creating individual buffers. Call batch_begin() to start,
+// batch_execute() to submit all queued operations at once.
+// This eliminates per-op synchronization overhead (10-50μs per op).
+
+static bool g_batch_mode = false;
+static id<MTLCommandBuffer> g_batch_command_buffer = nil;
+static id<MTLComputeCommandEncoder> g_batch_encoder = nil;
+static NSMutableArray<id<MTLBuffer>>* g_batch_outputs = nil;  // Track outputs for lifetime
+
+static bool is_batch_mode() {
+    return g_batch_mode && g_batch_encoder != nil;
+}
+
+static id<MTLComputeCommandEncoder> get_encoder_for_op() {
+    if (is_batch_mode()) {
+        return g_batch_encoder;
+    }
+    // Non-batched: create new command buffer and encoder
+    id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
+    return [cb computeCommandEncoder];
+}
+
+static void finish_op(id<MTLComputeCommandEncoder> encoder) {
+    if (is_batch_mode()) {
+        // Don't end encoding or commit - will be done in batch_execute
+        return;
+    }
+    // Non-batched: end encoding and wait for completion
+    [encoder endEncoding];
+    id<MTLCommandBuffer> cb = encoder.commandBuffer;
+    [cb commit];
+    [cb waitUntilCompleted];
+}
+
 static size_t get_buffer_bucket(size_t size) {
     for (size_t i = 0; i < NUM_BUFFER_BUCKETS; i++) {
         if (size <= BUFFER_BUCKET_SIZES[i]) return i;
@@ -217,6 +255,74 @@ static lean_obj_res buffer_to_float_array(id<MTLBuffer> buffer, size_t count) {
 extern "C" {
 
 // ============================================================================
+// Batch API FFI Functions
+// ============================================================================
+
+// Begin a batch of GPU operations
+// All subsequent GPU ops will queue into a shared command buffer
+LEAN_EXPORT lean_obj_res scilean_gpu_batch_begin(lean_obj_arg /* world */) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    if (g_batch_mode) {
+        // Already in batch mode - this is a nested call, just return success
+        return lean_io_result_mk_ok(lean_box(0));
+    }
+
+    @autoreleasepool {
+        g_batch_command_buffer = [commandQueue commandBuffer];
+        g_batch_encoder = [g_batch_command_buffer computeCommandEncoder];
+        g_batch_outputs = [NSMutableArray array];
+        g_batch_mode = true;
+    }
+
+    return lean_io_result_mk_ok(lean_box(0));
+}
+
+// Execute all batched GPU operations and wait for completion
+LEAN_EXPORT lean_obj_res scilean_gpu_batch_execute(lean_obj_arg /* world */) {
+    if (!g_batch_mode || !g_batch_encoder) {
+        return lean_io_result_mk_error(lean_mk_string("Not in batch mode"));
+    }
+
+    @autoreleasepool {
+        [g_batch_encoder endEncoding];
+        [g_batch_command_buffer commit];
+        [g_batch_command_buffer waitUntilCompleted];
+
+        // Clear batch state
+        g_batch_encoder = nil;
+        g_batch_command_buffer = nil;
+        g_batch_outputs = nil;
+        g_batch_mode = false;
+    }
+
+    return lean_io_result_mk_ok(lean_box(0));
+}
+
+// Cancel batch mode without executing (useful for error handling)
+LEAN_EXPORT lean_obj_res scilean_gpu_batch_cancel(lean_obj_arg /* world */) {
+    @autoreleasepool {
+        if (g_batch_encoder) {
+            [g_batch_encoder endEncoding];
+        }
+        // Don't commit - just discard
+        g_batch_encoder = nil;
+        g_batch_command_buffer = nil;
+        g_batch_outputs = nil;
+        g_batch_mode = false;
+    }
+
+    return lean_io_result_mk_ok(lean_box(0));
+}
+
+// Check if currently in batch mode
+LEAN_EXPORT uint8_t scilean_gpu_is_batch_mode() {
+    return g_batch_mode ? 1 : 0;
+}
+
+// ============================================================================
 // GpuBuffer FFI Functions
 // ============================================================================
 
@@ -290,6 +396,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_free(lean_obj_arg buf, lean_obj_arg /* worl
 // ============================================================================
 
 // GEMM on GPU buffers: C = A * B
+// Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
     b_lean_obj_arg A_buf,
     b_lean_obj_arg B_buf,
@@ -322,8 +429,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
         uint32_t k32 = (uint32_t)k;
         uint32_t n32 = (uint32_t)n;
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode, otherwise create new command buffer
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:A offset:0 atIndex:0];
@@ -337,10 +446,92 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
         MTLSize tgSize = MTLSizeMake(32, 4, 1);
 
         [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        // Only commit if not in batch mode
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            // Track output buffer for lifetime in batch mode
+            [g_batch_outputs addObject:C];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(C, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
+// Fused GEMM + Bias + ReLU: C = max(0, A @ B + bias)
+// Supports batching: when in batch mode, queues to shared command buffer
+LEAN_EXPORT lean_obj_res scilean_gpu_gemm_bias_relu_f32(
+    b_lean_obj_arg A_buf,
+    b_lean_obj_arg B_buf,
+    b_lean_obj_arg bias_buf,
+    size_t m, size_t k, size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> A = get_mtl_buffer(A_buf);
+    id<MTLBuffer> B = get_mtl_buffer(B_buf);
+    id<MTLBuffer> bias = get_mtl_buffer(bias_buf);
+    if (!A || !B || !bias) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        // Use simd version for larger matrices, tiled for smaller
+        bool use_simd = (m >= 32 && n >= 32);
+        id<MTLComputePipelineState> pipeline = get_pipeline(use_simd ? @"gemm_bias_relu_simd" : @"gemm_bias_relu");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get gemm_bias_relu pipeline"));
+        }
+
+        size_t output_size = m * n * sizeof(float);
+        id<MTLBuffer> C = get_pooled_buffer(output_size);
+        if (!C) {
+            C = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:A offset:0 atIndex:0];
+        [encoder setBuffer:B offset:0 atIndex:1];
+        [encoder setBuffer:bias offset:0 atIndex:2];
+        [encoder setBuffer:C offset:0 atIndex:3];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:4];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:5];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:6];
+
+        MTLSize gridSize, tgSize;
+        if (use_simd) {
+            gridSize = MTLSizeMake((n + 31) / 32, (m + 31) / 32, 1);
+            tgSize = MTLSizeMake(32, 4, 1);
+            [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+        } else {
+            gridSize = MTLSizeMake((n + 31) / 32 * 32, (m + 31) / 32 * 32, 1);
+            tgSize = MTLSizeMake(32, 32, 1);
+            [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        }
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:C];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(C, output_size);
         return lean_io_result_mk_ok(result);
@@ -348,6 +539,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
 }
 
 // Element-wise add on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_add_f32(
     b_lean_obj_arg A_buf,
     b_lean_obj_arg B_buf,
@@ -376,8 +568,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_add_f32(
             C = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
         }
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:A offset:0 atIndex:0];
@@ -388,10 +582,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_add_f32(
         NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:C];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(C, output_size);
         return lean_io_result_mk_ok(result);
@@ -399,6 +597,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_add_f32(
 }
 
 // Element-wise multiply on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_mul_f32(
     b_lean_obj_arg A_buf,
     b_lean_obj_arg B_buf,
@@ -427,8 +626,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_mul_f32(
             C = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
         }
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:A offset:0 atIndex:0];
@@ -439,10 +640,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_mul_f32(
         NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:C];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(C, output_size);
         return lean_io_result_mk_ok(result);
@@ -450,6 +655,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_mul_f32(
 }
 
 // ReLU on GPU buffer
+// Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_relu_f32(
     b_lean_obj_arg X_buf,
     size_t n,
@@ -476,8 +682,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_relu_f32(
             Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
         }
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:X offset:0 atIndex:0];
@@ -487,10 +695,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_relu_f32(
         NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(Y, output_size);
         return lean_io_result_mk_ok(result);
@@ -498,6 +710,7 @@ LEAN_EXPORT lean_obj_res scilean_gpu_relu_f32(
 }
 
 // Softmax on GPU buffer
+// Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_softmax_f32(
     b_lean_obj_arg X_buf,
     size_t num_rows, size_t row_size,
@@ -527,8 +740,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_softmax_f32(
 
         uint32_t row_size32 = (uint32_t)row_size;
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:X offset:0 atIndex:0];
@@ -539,10 +754,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_softmax_f32(
 
         [encoder dispatchThreadgroups:MTLSizeMake(num_rows, 1, 1)
                 threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(Y, output_size);
         return lean_io_result_mk_ok(result);
@@ -600,8 +819,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_conv2d_f32(
             output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
         }
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:input offset:0 atIndex:0];
@@ -654,10 +875,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_conv2d_f32(
         MTLSize tgSize = MTLSizeMake(w, w, 1);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(output, output_size);
         return lean_io_result_mk_ok(result);
@@ -710,8 +935,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_maxpool2d_f32(
         uint32_t sh32 = (uint32_t)stride_h;
         uint32_t sw32 = (uint32_t)stride_w;
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:input offset:0 atIndex:0];
@@ -730,10 +957,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_maxpool2d_f32(
         MTLSize tgSize = MTLSizeMake(w, w, 1);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(output, output_size);
         return lean_io_result_mk_ok(result);
@@ -773,8 +1004,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_bias_relu_f32(
         uint32_t n32 = (uint32_t)n;
         uint32_t stride32 = (uint32_t)stride;
 
-        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
 
         [encoder setComputePipelineState:pipeline];
         [encoder setBuffer:X offset:0 atIndex:0];
@@ -787,10 +1020,14 @@ LEAN_EXPORT lean_obj_res scilean_gpu_bias_relu_f32(
         NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
 
         [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
-        [encoder endEncoding];
 
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
 
         lean_obj_res result = wrap_gpu_buffer(Y, output_size);
         return lean_io_result_mk_ok(result);
