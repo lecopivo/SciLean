@@ -1366,6 +1366,22 @@ kernel void bias_gelu(
     }
 }
 
+// Add bias only (no activation) - for output layer before softmax
+// Broadcasts bias across batch dimension: output[i] = input[i] + bias[i % stride]
+kernel void bias_add(
+    device const float* input [[buffer(0)]],
+    device const float* bias [[buffer(1)]],
+    device float* output [[buffer(2)]],
+    constant uint& n [[buffer(3)]],
+    constant uint& stride [[buffer(4)]],
+    uint gid [[thread_position_in_grid]]
+) {
+    if (gid < n) {
+        uint bias_idx = gid % stride;
+        output[gid] = input[gid] + bias[bias_idx];
+    }
+}
+
 // Fused layer norm: y = (x - mean) / sqrt(var + eps) * gamma + beta
 // This is a simplified version for vectors (no batch dimension)
 kernel void layer_norm(

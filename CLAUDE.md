@@ -65,3 +65,19 @@ SciLean uses dependent types (`Float^[784]`, `Float^[128, 784]`) wrapping comput
 - Make heavy use of metaprogramming for tactics and automation
 - Clear distinction between forward and reverse mode differentiation in naming
 - Add existing imports as comments when disabling them
+
+## TODO (for future sessions)
+- Reenable doc.verso
+
+## Lean 4 Tips
+- **Float infinity**: Lean 4 stdlib doesn't have `Float.inf`. Define as:
+  ```lean
+  def Float.inf : Float := 1.0 / 0.0
+  def Float.negInf : Float := -1.0 / 0.0
+  ```
+  These are proper IEEE 754 infinity values for min/max tracking.
+
+  ---
+
+  use lean-lsp-mcp hover on nested src code after writing it to ENSURE its in
+  the right namespace. like `Float.inf` may need to be `_root_.Float.inf`.

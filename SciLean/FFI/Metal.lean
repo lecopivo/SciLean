@@ -10,6 +10,9 @@ matrix (gemv, gemm variants), fill, kmeans.
 Performance on M4: gemmSimd ~10 TFLOP/s, gemmTiled ~6 TFLOP/s at 2048x2048.
 -/
 
+import SciLean.FFI.Float32Array
+import SciLean.Util.Float
+
 namespace SciLean.Metal
 
 /-! ## Core -/
@@ -22,26 +25,7 @@ opaque isAvailable : Unit → Bool
 def withGPU [Inhabited α] (gpuFn cpuFn : Unit → α) : α :=
   if isAvailable () then gpuFn () else cpuFn ()
 
-/-! ## GPU-Resident Buffers
-
-GPU-resident buffers stay on the GPU between operations, eliminating the overhead
-of copying data to/from CPU memory on every operation. This is critical for
-performance in ML workloads where data flows through many operations.
-
-Usage pattern:
-```
--- Upload once
-let weights ← GpuBuffer.fromByteArray weightData
-let input ← GpuBuffer.fromByteArray inputData
-
--- Chain operations on GPU (no copies!)
-let h1 ← GpuBuffer.gemm weights input m k n
-let h2 ← GpuBuffer.relu h1
-
--- Download only final result
-let output ← h2.toByteArray
-```
--/
+/-! ## GPU-Resident Buffers -/
 
 /-! ## Command Buffer Batching
 
@@ -99,11 +83,11 @@ namespace GpuBuffer
 @[extern "scilean_gpu_alloc_f32"]
 opaque alloc (numFloats : USize) : IO GpuBuffer
 
-/-- Upload ByteArray (Float32 data) to GPU -/
+/-- Upload ByteArray (Float32 data) to GPU (low-level, prefer `CpuBuffer.upload` for type safety) -/
 @[extern "scilean_gpu_upload_f32"]
 opaque fromByteArray (data : @& ByteArray) : IO GpuBuffer
 
-/-- Download GPU buffer to ByteArray -/
+/-- Download GPU buffer to ByteArray (low-level, prefer `GpuBuffer.download` for type safety) -/
 @[extern "scilean_gpu_download_f32"]
 opaque toByteArray (buf : @& GpuBuffer) : IO ByteArray
 
@@ -184,6 +168,13 @@ opaque layerNorm (x gamma beta : @& GpuBuffer) (n hiddenSize : USize) : IO GpuBu
     Supports batching. -/
 @[extern "scilean_gpu_bias_gelu_f32"]
 opaque biasGelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
+
+/-- Bias + add (no activation): y = x + bias (broadcast)
+    For output layer before softmax where we don't want activation.
+    n = total elements, stride = bias size (broadcast across batch).
+    Supports batching. -/
+@[extern "scilean_gpu_bias_add_f32"]
+opaque biasAdd (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
 
 /-- Average pooling 2D
     Supports batching. -/
@@ -285,6 +276,81 @@ opaque sum (x : @& GpuBuffer) (n : USize) : IO Float
 opaque colSum (x : @& GpuBuffer) (rows cols : USize) : IO GpuBuffer
 
 end GpuBuffer
+
+/-! ## Type-Safe CPU/GPU Buffer System
+
+Data transfer between CPU and GPU is a major performance bottleneck. This type system
+makes transfers **explicit** at the type level - no implicit coercions allowed!
+
+- `CpuBuffer` - CPU-resident data (wrapper around ByteArray)
+- `GpuBuffer` - GPU-resident data (opaque Metal buffer handle)
+
+To transfer data, you MUST use explicit functions:
+- `CpuBuffer.upload : CpuBuffer → IO GpuBuffer` (CPU → GPU)
+- `GpuBuffer.download : GpuBuffer → IO CpuBuffer` (GPU → CPU)
+
+This prevents accidental data transfers that kill performance. GPU operations only
+accept `GpuBuffer`, CPU operations only accept `CpuBuffer`.
+
+Usage pattern:
+```lean
+-- Load data on CPU
+let cpuWeights : CpuBuffer := ⟨weightData⟩
+let cpuInput : CpuBuffer := ⟨inputData⟩
+
+-- Explicit upload to GPU
+let gpuWeights ← cpuWeights.upload
+let gpuInput ← cpuInput.upload
+
+-- Chain operations on GPU (no copies! type system enforces this)
+let h1 ← GpuBuffer.gemm gpuWeights gpuInput m k n
+let h2 ← GpuBuffer.relu h1
+
+-- Explicit download when needed
+let cpuOutput ← h2.download
+let outputBytes := cpuOutput.data  -- access underlying ByteArray
+```
+-/
+
+/-- CPU-resident buffer. Wrapper around ByteArray that prevents implicit conversion to GpuBuffer.
+    Use `.upload` to explicitly move data to GPU. -/
+structure CpuBuffer where
+  /-- The underlying raw byte data (Float32 format) -/
+  data : ByteArray
+  deriving Inhabited
+
+namespace CpuBuffer
+
+/-- Size in bytes -/
+@[inline] def sizeBytes (buf : CpuBuffer) : Nat := buf.data.size
+
+/-- Size in Float32 elements -/
+@[inline] def numFloats (buf : CpuBuffer) : Nat := buf.data.size / 4
+
+/-- Create a zero-initialized CPU buffer with n Float32 elements -/
+def zeros (n : Nat) : CpuBuffer :=
+  ⟨ByteArray.replicateFloat32 n 0.0⟩
+
+/-- Upload CPU buffer to GPU. This is an EXPLICIT transfer operation. -/
+def upload (buf : CpuBuffer) : IO GpuBuffer :=
+  GpuBuffer.fromByteArray buf.data
+
+end CpuBuffer
+
+namespace GpuBuffer
+
+/-- Download GPU buffer to CPU. This is an EXPLICIT transfer operation.
+    Returns a type-safe CpuBuffer wrapper. -/
+def download (buf : GpuBuffer) : IO CpuBuffer := do
+  let data ← toByteArray buf
+  return ⟨data⟩
+
+end GpuBuffer
+
+-- IMPORTANT: No `Coe CpuBuffer GpuBuffer` instance!
+-- IMPORTANT: No `Coe CpuBuffer ByteArray` instance!
+-- IMPORTANT: No `Coe ByteArray CpuBuffer` instance!
+-- All transfers must be explicit.
 
 /-! ## Matrix Operations -/
 

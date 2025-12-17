@@ -1192,6 +1192,70 @@ LEAN_EXPORT lean_obj_res scilean_gpu_bias_gelu_f32(
     }
 }
 
+// Bias add (no activation) on GPU buffers
+// Broadcasts bias across batch dimension: output[i] = input[i] + bias[i % stride]
+// Used for output layer before softmax where we don't want activation
+LEAN_EXPORT lean_obj_res scilean_gpu_bias_add_f32(
+    b_lean_obj_arg X_buf,
+    b_lean_obj_arg bias_buf,
+    size_t n,
+    size_t stride,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> X = get_mtl_buffer(X_buf);
+    id<MTLBuffer> bias = get_mtl_buffer(bias_buf);
+    if (!X || !bias) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_add");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get bias_add pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t n32 = (uint32_t)n;
+        uint32_t stride32 = (uint32_t)stride;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:X offset:0 atIndex:0];
+        [encoder setBuffer:bias offset:0 atIndex:1];
+        [encoder setBuffer:Y offset:0 atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+        [encoder setBytes:&stride32 length:sizeof(stride32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
 // Average pooling 2D on GPU buffers
 // Supports batching: when in batch mode, queues to shared command buffer
 LEAN_EXPORT lean_obj_res scilean_gpu_avgpool2d_f32(

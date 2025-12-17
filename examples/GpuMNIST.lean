@@ -10,6 +10,9 @@ Uses SciLean's Metal backend for all operations:
 - Forward: gemm → biasGelu → gemm → softmax
 - Backward: softmaxBackward → gemmTN/gemmNT → geluBackward → gemmTN/gemmNT
 - Update: axpy (SGD)
+
+Type Safety: Uses CpuBuffer/GpuBuffer to enforce explicit data transfers.
+All GPU<->CPU transfers must use `.upload` or `.download` - no implicit coercions!
 -/
 
 import SciLean.FFI.Metal
@@ -17,25 +20,30 @@ import SciLean.FFI.Float32Array
 
 open SciLean.Metal
 
-/-! ## ByteArray Helpers -/
+/-! ## CpuBuffer Helpers -/
 
-/-- Read a Float32 from ByteArray at byte index -/
-def readFloat32 (arr : ByteArray) (byteIdx : Nat) : Float :=
-  (arr.ugetFloat32 byteIdx.toUSize).toFloat
+namespace SciLean.Metal.CpuBuffer
 
-/-- Write a Float32 to ByteArray at byte index -/
-def writeFloat32 (arr : ByteArray) (byteIdx : Nat) (val : Float) : ByteArray :=
-  arr.usetFloat32 byteIdx.toUSize val.toFloat32
+/-- Read a Float32 from CpuBuffer at element index -/
+def readFloat32 (buf : CpuBuffer) (elemIdx : Nat) : Float :=
+  (buf.data.ugetFloat32 (elemIdx * 4).toUSize).toFloat
 
-/-! ## Data Loading (same as SimpleMNIST) -/
+/-- Write a Float32 to CpuBuffer at element index -/
+def writeFloat32 (buf : CpuBuffer) (elemIdx : Nat) (val : Float) : CpuBuffer :=
+  ⟨buf.data.usetFloat32 (elemIdx * 4).toUSize val.toFloat32⟩
+
+end SciLean.Metal.CpuBuffer
+
+/-! ## Data Loading (returns CpuBuffer for type safety) -/
 
 def checkFileExists (path : System.FilePath) : IO Unit := do
   if ¬(← path.pathExists) then
      throw (IO.userError s!"MNIST data file '{path}' not found. Please download from https://git-disl.github.io/GTDLBench/datasets/mnist_datasets/")
 
-def loadImagesRaw (path : System.FilePath) (maxImages : Nat) : IO ByteArray := do
+/-- Load MNIST images to CPU buffer (explicit CPU-resident data) -/
+def loadImagesCpu (path : System.FilePath) (maxImages : Nat) : IO CpuBuffer := do
   checkFileExists path
-  if maxImages = 0 then return ByteArray.empty
+  if maxImages = 0 then return CpuBuffer.zeros 0
 
   let start ← IO.monoMsNow
   IO.print s!"Loading images from {path}... "
@@ -47,7 +55,7 @@ def loadImagesRaw (path : System.FilePath) (maxImages : Nat) : IO ByteArray := d
   if data.size < maxImages * 784 then
     throw <| IO.userError s!"File {path} contains insufficient data"
 
-  -- Convert to Float32 ByteArray (normalized to [0,1])
+  -- Convert to Float32 CpuBuffer (normalized to [0,1])
   let mut result := ByteArray.replicateFloat32 (maxImages * 784) 0.0
   for i in [0:maxImages * 784] do
     let byteVal := data.get! i
@@ -55,11 +63,12 @@ def loadImagesRaw (path : System.FilePath) (maxImages : Nat) : IO ByteArray := d
     result := result.usetFloat32 (i * 4).toUSize floatVal
 
   IO.println s!"done ({(← IO.monoMsNow) - start}ms)"
-  return result
+  return CpuBuffer.mk result
 
-def loadLabelsRaw (path : System.FilePath) (maxLabels : Nat) : IO ByteArray := do
+/-- Load MNIST labels to CPU buffer (explicit CPU-resident data) -/
+def loadLabelsCpu (path : System.FilePath) (maxLabels : Nat) : IO CpuBuffer := do
   checkFileExists path
-  if maxLabels = 0 then return ByteArray.empty
+  if maxLabels = 0 then return CpuBuffer.zeros 0
 
   let start ← IO.monoMsNow
   IO.print s!"Loading labels from {path}... "
@@ -71,7 +80,7 @@ def loadLabelsRaw (path : System.FilePath) (maxLabels : Nat) : IO ByteArray := d
   if data.size < maxLabels then
     throw <| IO.userError s!"File {path} contains insufficient labels"
 
-  -- Convert to one-hot Float32 ByteArray
+  -- Convert to one-hot Float32 CpuBuffer
   let mut result := ByteArray.replicateFloat32 (maxLabels * 10) 0.0
   for i in [0:maxLabels] do
     let labelIdx := data.get! i
@@ -80,21 +89,23 @@ def loadLabelsRaw (path : System.FilePath) (maxLabels : Nat) : IO ByteArray := d
       result := result.usetFloat32 ((i * 10 + j) * 4).toUSize val
 
   IO.println s!"done ({(← IO.monoMsNow) - start}ms)"
-  return result
+  return CpuBuffer.mk result
 
-/-! ## Weight Initialization -/
+/-! ## Weight Initialization (returns CpuBuffer) -/
 
-def initWeightsRaw (rows cols : Nat) (scale : Float) : IO ByteArray := do
+/-- Initialize weights on CPU with random values -/
+def initWeightsCpu (rows cols : Nat) (scale : Float) : IO CpuBuffer := do
   let size := rows * cols
   let mut result := ByteArray.replicateFloat32 size 0.0
   for i in [0:size] do
     let r := (← IO.rand 0 10000).toFloat / 10000.0
     let val : Float32 := (r * scale - scale / 2.0).toFloat32
     result := result.usetFloat32 (i * 4).toUSize val
-  return result
+  return CpuBuffer.mk result
 
-def initZerosRaw (size : Nat) : ByteArray :=
-  ByteArray.replicateFloat32 size 0.0
+/-- Initialize zero buffer on CPU -/
+def initZerosCpu (size : Nat) : CpuBuffer :=
+  CpuBuffer.zeros size
 
 /-! ## GPU Weight Structure -/
 
@@ -132,7 +143,7 @@ def forwardBatchInternal (weights : GpuWeights) (x : GpuBuffer)
   let o_pre ← GpuBuffer.gemmNT h weights.w2 batchSize 128 10
 
   -- Add bias to output
-  let o ← GpuBuffer.add o_pre weights.b2 (batchSize * 10)
+  let o ← GpuBuffer.biasAdd o_pre weights.b2 (batchSize * 10) 10
 
   -- Softmax
   let y ← GpuBuffer.softmax o batchSize 10
@@ -200,12 +211,100 @@ def sgdUpdate (weights : GpuWeights) (grads : GpuGradients)
     (lr : Float) : IO GpuWeights :=
   withBatch (sgdUpdateInternal weights grads lr)
 
+/-! ## Debug Helpers -/
+
+/-- Print buffer statistics for debugging (explicitly downloads from GPU) -/
+def debugBuffer (name : String) (gpuBuf : GpuBuffer) (n : Nat) : IO Unit := do
+  -- EXPLICIT download from GPU to CPU
+  let cpuBuf ← gpuBuf.download
+  let mut sum : Float := 0
+  let mut minVal : Float := Float.inf
+  let mut maxVal : Float := Float.negInf
+  let mut hasNaN := false
+  let mut hasInf := false
+  let mut numZeros : Nat := 0
+  for i in [0:n] do
+    let val := cpuBuf.readFloat32 i
+    if val.isNaN then hasNaN := true
+    if val.isInf then hasInf := true
+    if val == 0.0 then numZeros := numZeros + 1
+    sum := sum + val
+    if val < minVal then minVal := val
+    if val > maxVal then maxVal := val
+  let mean := sum / n.toFloat
+  IO.println s!"  {name}: mean={mean}, min={minVal}, max={maxVal}, zeros={numZeros}/{n}, hasNaN={hasNaN}, hasInf={hasInf}"
+
+/-- Diagnostic forward pass that prints intermediate values -/
+def forwardBatchDiag (weights : GpuWeights) (x : GpuBuffer)
+    (batchSize : USize) : IO (GpuBuffer × GpuBuffer × GpuBuffer × GpuBuffer) := do
+  IO.println s!"  --- Forward pass diagnostics (batch={batchSize}) ---"
+
+  debugBuffer "input x" x (batchSize.toNat * 784)
+
+  -- First layer: h_pre = x @ W1^T
+  let h_pre ← GpuBuffer.gemmNT x weights.w1 batchSize 784 128
+  debugBuffer "h_pre (after gemmNT)" h_pre (batchSize.toNat * 128)
+
+  -- Fused bias + gelu
+  let h ← GpuBuffer.biasGelu h_pre weights.b1 (batchSize * 128) 128
+  debugBuffer "h (after biasGelu)" h (batchSize.toNat * 128)
+
+  -- Second layer: o_pre = h @ W2^T
+  let o_pre ← GpuBuffer.gemmNT h weights.w2 batchSize 128 10
+  debugBuffer "o_pre (after gemmNT)" o_pre (batchSize.toNat * 10)
+
+  -- Add bias
+  let o ← GpuBuffer.biasAdd o_pre weights.b2 (batchSize * 10) 10
+  debugBuffer "o (before softmax)" o (batchSize.toNat * 10)
+
+  -- Softmax
+  let y ← GpuBuffer.softmax o batchSize 10
+  debugBuffer "y (softmax out)" y (batchSize.toNat * 10)
+
+  return (y, h_pre, h, o)
+
+/-- Diagnostic backward pass that prints intermediate values -/
+def backwardBatchDiag (weights : GpuWeights) (x y target h_pre h : GpuBuffer)
+    (batchSize : USize) : IO GpuGradients := do
+  IO.println s!"  --- Backward pass diagnostics (batch={batchSize}) ---"
+
+  -- dL/do = y - target (softmax + cross-entropy combined gradient)
+  let d_o ← GpuBuffer.sub y target (batchSize * 10)
+  debugBuffer "d_o (y-target)" d_o (batchSize.toNat * 10)
+
+  -- dL/dW2 = h^T @ d_o
+  let dw2 ← GpuBuffer.gemmTN d_o h 10 batchSize 128
+  debugBuffer "dw2" dw2 (10 * 128)
+
+  -- dL/db2 = sum(d_o, axis=0)
+  let db2 ← GpuBuffer.colSum d_o batchSize 10
+  debugBuffer "db2" db2 10
+
+  -- dL/dh = d_o @ W2
+  let d_h ← GpuBuffer.gemm d_o weights.w2 batchSize 10 128
+  debugBuffer "d_h" d_h (batchSize.toNat * 128)
+
+  -- dL/dh_pre = d_h * gelu'(h_pre)
+  let d_h_pre ← GpuBuffer.geluBackward h_pre d_h (batchSize * 128)
+  debugBuffer "d_h_pre" d_h_pre (batchSize.toNat * 128)
+
+  -- dL/dW1 = x^T @ d_h_pre
+  let dw1 ← GpuBuffer.gemmTN d_h_pre x 128 batchSize 784
+  debugBuffer "dw1" dw1 (128 * 784)
+
+  -- dL/db1 = sum(d_h_pre, axis=0)
+  let db1 ← GpuBuffer.colSum d_h_pre batchSize 128
+  debugBuffer "db1" db1 128
+
+  return { dw1 := dw1, db1 := db1, dw2 := dw2, db2 := db2 }
+
 /-! ## Loss and Accuracy -/
 
-/-- Compute cross-entropy loss (download to CPU for now) -/
-def computeLoss (pred target : GpuBuffer) (batchSize : USize) : IO Float := do
-  let predData ← pred.toByteArray
-  let targetData ← target.toByteArray
+/-- Compute cross-entropy loss (EXPLICIT download to CPU) -/
+def computeLoss (gpuPred gpuTarget : GpuBuffer) (batchSize : USize) : IO Float := do
+  -- EXPLICIT download from GPU to CPU
+  let pred ← gpuPred.download
+  let target ← gpuTarget.download
 
   let eps : Float := 1e-7
   let n := batchSize.toNat
@@ -213,17 +312,18 @@ def computeLoss (pred target : GpuBuffer) (batchSize : USize) : IO Float := do
   let mut loss : Float := 0
   for i in [0:n] do
     for j in [0:10] do
-      let idx := (i * 10 + j) * 4
-      let p := readFloat32 predData idx
-      let t := readFloat32 targetData idx
+      let idx := i * 10 + j
+      let p := pred.readFloat32 idx
+      let t := target.readFloat32 idx
       loss := loss - t * Float.log (p + eps)
 
   return loss / n.toFloat
 
-/-- Compute accuracy (download to CPU) -/
-def computeAccuracy (pred target : GpuBuffer) (batchSize : USize) : IO Float := do
-  let predData ← pred.toByteArray
-  let targetData ← target.toByteArray
+/-- Compute accuracy (EXPLICIT download to CPU) -/
+def computeAccuracy (gpuPred gpuTarget : GpuBuffer) (batchSize : USize) : IO Float := do
+  -- EXPLICIT download from GPU to CPU
+  let pred ← gpuPred.download
+  let target ← gpuTarget.download
 
   let n := batchSize.toNat
 
@@ -235,9 +335,9 @@ def computeAccuracy (pred target : GpuBuffer) (batchSize : USize) : IO Float := 
     let mut targIdx : Nat := 0
 
     for j in [0:10] do
-      let idx := (i * 10 + j) * 4
-      let p := readFloat32 predData idx
-      let t := readFloat32 targetData idx
+      let idx := i * 10 + j
+      let p := pred.readFloat32 idx
+      let t := target.readFloat32 idx
 
       if p > predMax then
         predMax := p
@@ -250,6 +350,41 @@ def computeAccuracy (pred target : GpuBuffer) (batchSize : USize) : IO Float := 
       correct := correct + 1
 
   return correct.toFloat / n.toFloat
+
+/-! ## Diagnostic Functions -/
+
+/-- Run diagnostic test comparing different batch sizes -/
+def diagBatchSizes (cpuImages cpuLabels : CpuBuffer)
+    (cpuW1 cpuB1 cpuW2 cpuB2 : CpuBuffer) : IO Unit := do
+  IO.println "\n=== Batch Size Diagnostic Test ==="
+
+  for testBatch in [1000, 2000, 3000, 4000] do
+    IO.println s!"\n--- Testing batch size {testBatch} ---"
+
+    -- EXPLICIT upload from CPU to GPU
+    let images ← cpuImages.upload
+    let labels ← cpuLabels.upload
+    let w1 ← cpuW1.upload
+    let b1 ← cpuB1.upload
+    let w2 ← cpuW2.upload
+    let b2 ← cpuB2.upload
+    let weights : GpuWeights := { w1, b1, w2, b2 }
+
+    -- Forward pass with diagnostics
+    let (pred, h_pre, h, _) ← forwardBatchDiag weights images testBatch.toUSize
+
+    -- Diagnostic backward pass
+    let grads ← backwardBatchDiag weights images pred labels h_pre h testBatch.toUSize
+
+    -- Check weight update
+    let lr := 0.0005
+    let weights' ← sgdUpdate weights grads lr
+    debugBuffer "w1 after update" weights'.w1 (128 * 784)
+
+    -- Check accuracy before and after
+    let (pred2, _, _, _) ← forwardBatch weights' images testBatch.toUSize
+    let acc ← computeAccuracy pred2 labels testBatch.toUSize
+    IO.println s!"  Accuracy after 1 step: {acc * 100}%"
 
 /-! ## Training Loop -/
 
@@ -290,6 +425,7 @@ def trainEpoch (weights : GpuWeights) (images labels : GpuBuffer)
 def main : IO Unit := do
   IO.println "GPU-Accelerated MNIST Training (Metal)"
   IO.println "========================================"
+  IO.println "Using type-safe CpuBuffer/GpuBuffer API (no implicit coercions!)"
 
   -- Check Metal availability
   if !isAvailable () then
@@ -304,41 +440,41 @@ def main : IO Unit := do
   -- With batchSize=1000, lr=0.0005 gives effective step size of 0.5
   let lr := 0.0005
 
-  -- Load training data
-  let imageData ← loadImagesRaw "data/train-images-idx3-ubyte" numTrain
-  let labelData ← loadLabelsRaw "data/train-labels-idx1-ubyte" numTrain
+  -- Load training data to CPU (explicit CPU-resident data)
+  let cpuImages ← loadImagesCpu "data/train-images-idx3-ubyte" numTrain
+  let cpuLabels ← loadLabelsCpu "data/train-labels-idx1-ubyte" numTrain
 
-  IO.println s!"Loaded {numTrain} training samples"
+  IO.println s!"Loaded {numTrain} training samples to CPU"
 
-  -- Initialize weights (He initialization)
+  -- Initialize weights on CPU (He initialization)
   let scale1 := Float.sqrt (2.0 / 784.0)
   let scale2 := Float.sqrt (2.0 / 128.0)
 
-  IO.print "Initializing weights... "
-  let w1Data ← initWeightsRaw 128 784 scale1
-  let b1Data := initZerosRaw 128
-  let w2Data ← initWeightsRaw 10 128 scale2
-  let b2Data := initZerosRaw 10
+  IO.print "Initializing weights on CPU... "
+  let cpuW1 ← initWeightsCpu 128 784 scale1
+  let cpuB1 := initZerosCpu 128
+  let cpuW2 ← initWeightsCpu 10 128 scale2
+  let cpuB2 := initZerosCpu 10
   IO.println "done"
 
-  -- Upload to GPU
-  IO.print "Uploading to GPU... "
-  let images ← GpuBuffer.fromByteArray imageData
-  let labels ← GpuBuffer.fromByteArray labelData
-  let w1 ← GpuBuffer.fromByteArray w1Data
-  let b1 ← GpuBuffer.fromByteArray b1Data
-  let w2 ← GpuBuffer.fromByteArray w2Data
-  let b2 ← GpuBuffer.fromByteArray b2Data
+  -- EXPLICIT upload to GPU (type system enforces this!)
+  IO.print "Uploading to GPU (explicit transfer)... "
+  let images ← cpuImages.upload
+  let labels ← cpuLabels.upload
+  let w1 ← cpuW1.upload
+  let b1 ← cpuB1.upload
+  let w2 ← cpuW2.upload
+  let b2 ← cpuB2.upload
   IO.println "done"
 
   let initialWeights : GpuWeights := { w1 := w1, b1 := b1, w2 := w2, b2 := b2 }
 
-  -- Initial accuracy
+  -- Initial accuracy (downloads from GPU internally)
   let (initPred, _, _, _) ← forwardBatch initialWeights images batchSize.toUSize
   let initAcc ← computeAccuracy initPred labels batchSize.toUSize
   IO.println s!"Initial accuracy: {initAcc * 100}%"
 
-  -- Training loop
+  -- Training loop (all GPU operations, no transfers until accuracy computation)
   IO.println "\nTraining..."
   let mut weights := initialWeights
 
@@ -350,7 +486,7 @@ def main : IO Unit := do
 
     let elapsed := (← IO.monoMsNow) - start
 
-    -- Compute accuracy
+    -- Compute accuracy (downloads from GPU for evaluation)
     let (pred2, _, _, _) ← forwardBatch weights images batchSize.toUSize
     let acc ← computeAccuracy pred2 labels batchSize.toUSize
 
