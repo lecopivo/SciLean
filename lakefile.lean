@@ -343,6 +343,9 @@ lean_exe KernelBenchmark where
 lean_exe GemmGen where
   root := `codegen.GemmGen
 
+lean_exe MetalShaderGen where
+  root := `codegen.MetalShaderGen
+
 lean_exe GpuFusedKernelTest where
   root := `test.gpu_fused_kernels
   moreLinkArgs := metalLinkArgs
