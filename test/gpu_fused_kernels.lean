@@ -316,6 +316,58 @@ def testFlashAttention : IO Unit := do
   else
     IO.println "  ✗ flash_attention test FAILED"
 
+/-- Test batchnorm2d operation -/
+def testBatchNorm2d : IO Unit := do
+  IO.println "\n=== Testing batchnorm2d ==="
+
+  -- Input: 1 batch × 2 channels × 2×2 spatial (NCHW format)
+  -- Channel 0: [[1, 2], [3, 4]]
+  -- Channel 1: [[5, 6], [7, 8]]
+  let input := floatsToByteArray [
+    1, 2, 3, 4,  -- channel 0
+    5, 6, 7, 8   -- channel 1
+  ]
+
+  -- Running stats per channel
+  let gamma := floatsToByteArray [1.0, 1.0]  -- scale = 1
+  let beta := floatsToByteArray [0.0, 0.0]   -- shift = 0
+  let mean := floatsToByteArray [2.5, 6.5]   -- mean of each channel
+  let var := floatsToByteArray [1.25, 1.25]  -- variance of each channel
+
+  let inputGpu ← Metal.GpuBuffer.fromByteArray input
+  let gammaGpu ← Metal.GpuBuffer.fromByteArray gamma
+  let betaGpu ← Metal.GpuBuffer.fromByteArray beta
+  let meanGpu ← Metal.GpuBuffer.fromByteArray mean
+  let varGpu ← Metal.GpuBuffer.fromByteArray var
+
+  -- batchnorm: (x - mean) / sqrt(var + eps) * gamma + beta
+  let result ← Metal.GpuBuffer.batchNorm2d inputGpu gammaGpu betaGpu meanGpu varGpu
+      1 2 2 2 1e-5 0
+
+  let output ← result.toByteArray
+
+  IO.println s!"batchnorm2d result: [{getFloat output 0}, {getFloat output 1}, {getFloat output 2}, {getFloat output 3}, {getFloat output 4}, {getFloat output 5}, {getFloat output 6}, {getFloat output 7}]"
+
+  -- For channel 0: values [1,2,3,4], mean=2.5, var=1.25
+  -- normalized = (x - 2.5) / sqrt(1.25) ≈ (x - 2.5) / 1.118
+  -- [1-2.5, 2-2.5, 3-2.5, 4-2.5] / 1.118 ≈ [-1.34, -0.45, 0.45, 1.34]
+
+  let mut passed := true
+  -- Check that output is normalized (mean ≈ 0 for each channel)
+  let mean0 := (getFloat output 0 + getFloat output 1 + getFloat output 2 + getFloat output 3) / 4
+  let mean1 := (getFloat output 4 + getFloat output 5 + getFloat output 6 + getFloat output 7) / 4
+  if mean0.abs > 0.1 then
+    IO.println s!"  FAIL: channel 0 mean should be ~0, got {mean0}"
+    passed := false
+  if mean1.abs > 0.1 then
+    IO.println s!"  FAIL: channel 1 mean should be ~0, got {mean1}"
+    passed := false
+
+  if passed then
+    IO.println "  ✓ batchnorm2d test PASSED"
+  else
+    IO.println "  ✗ batchnorm2d test FAILED"
+
 def main : IO Unit := do
   if Metal.isAvailable () then
     IO.println "Metal GPU available, running tests...\n"
@@ -326,6 +378,7 @@ def main : IO Unit := do
     testBiasGelu
     testAvgpool2d
     testFlashAttention
+    testBatchNorm2d
     IO.println "\n=== All tests completed ==="
   else
     IO.println "Metal GPU not available, skipping tests"

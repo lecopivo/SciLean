@@ -204,6 +204,18 @@ opaque flashAttention (Q K V : @& GpuBuffer) (seqLen headDim : USize) : IO GpuBu
 @[extern "scilean_gpu_flash_attention_causal_f32"]
 opaque flashAttentionCausal (Q K V : @& GpuBuffer) (seqLen headDim : USize) : IO GpuBuffer
 
+/-- Batch normalization 2D (inference mode)
+    Input: [batch, channels, height, width] in NCHW format
+    gamma (scale), beta (bias), mean, var: [channels] each
+    eps: small constant for numerical stability (typically 1e-5)
+    applyRelu: if 1, applies ReLU after normalization (fused op)
+    Returns normalized output on GPU.
+    Supports batching. -/
+@[extern "scilean_gpu_batchnorm2d_f32"]
+opaque batchNorm2d (input gamma beta mean var : @& GpuBuffer)
+    (batchSize channels height width : USize)
+    (eps : Float) (applyRelu : USize) : IO GpuBuffer
+
 end GpuBuffer
 
 /-! ## Matrix Operations -/

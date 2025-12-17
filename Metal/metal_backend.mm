@@ -1397,6 +1397,95 @@ LEAN_EXPORT lean_obj_res scilean_gpu_flash_attention_causal_f32(
     }
 }
 
+// GpuBuffer batchnorm2d (inference mode)
+// Supports batching: when in batch mode, queues to shared command buffer
+// apply_relu: if 1, applies ReLU after normalization (fused)
+LEAN_EXPORT lean_obj_res scilean_gpu_batchnorm2d_f32(
+    b_lean_obj_arg input_buf,
+    b_lean_obj_arg gamma_buf,
+    b_lean_obj_arg beta_buf,
+    b_lean_obj_arg mean_buf,
+    b_lean_obj_arg var_buf,
+    size_t batch_size,
+    size_t channels,
+    size_t height,
+    size_t width,
+    double eps,
+    size_t apply_relu,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> input = get_mtl_buffer(input_buf);
+    id<MTLBuffer> gamma = get_mtl_buffer(gamma_buf);
+    id<MTLBuffer> beta = get_mtl_buffer(beta_buf);
+    id<MTLBuffer> mean = get_mtl_buffer(mean_buf);
+    id<MTLBuffer> var = get_mtl_buffer(var_buf);
+    if (!input || !gamma || !beta || !mean || !var) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"batchnorm2d_inference");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get batchnorm2d_inference pipeline"));
+        }
+
+        size_t spatial_size = batch_size * channels * height * width;
+        size_t output_size = spatial_size * sizeof(float);
+
+        id<MTLBuffer> output = get_pooled_buffer(output_size);
+        if (!output) {
+            output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t c32 = (uint32_t)channels;
+        uint32_t h32 = (uint32_t)height;
+        uint32_t w32 = (uint32_t)width;
+        float eps_f = (float)eps;
+        uint32_t relu32 = (uint32_t)apply_relu;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:input offset:0 atIndex:0];
+        [encoder setBuffer:gamma offset:0 atIndex:1];
+        [encoder setBuffer:beta offset:0 atIndex:2];
+        [encoder setBuffer:mean offset:0 atIndex:3];
+        [encoder setBuffer:var offset:0 atIndex:4];
+        [encoder setBuffer:output offset:0 atIndex:5];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:6];
+        [encoder setBytes:&c32 length:sizeof(c32) atIndex:7];
+        [encoder setBytes:&h32 length:sizeof(h32) atIndex:8];
+        [encoder setBytes:&w32 length:sizeof(w32) atIndex:9];
+        [encoder setBytes:&eps_f length:sizeof(eps_f) atIndex:10];
+        [encoder setBytes:&relu32 length:sizeof(relu32) atIndex:11];
+
+        // 3D grid: width × height × (batch_size * channels)
+        MTLSize gridSize = MTLSizeMake(width, height, batch_size * channels);
+        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize threadgroupSize = MTLSizeMake(tgw, tgw, 1);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(output, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
 // ============================================================================
 // Original FFI Functions (ByteArray-based)
 // ============================================================================
