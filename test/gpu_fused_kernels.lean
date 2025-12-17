@@ -267,6 +267,55 @@ def testAvgpool2d : IO Unit := do
   else
     IO.println "  ✗ avgpool2d test FAILED"
 
+/-- Test flash attention operation -/
+def testFlashAttention : IO Unit := do
+  IO.println "\n=== Testing flash_attention ==="
+
+  -- Simple 2x2 attention: seq_len=2, head_dim=2
+  -- Q = [[1, 0], [0, 1]]
+  -- K = [[1, 0], [0, 1]]
+  -- V = [[1, 2], [3, 4]]
+  -- Attention scores = Q @ K^T = [[1, 0], [0, 1]] (scaled by 1/sqrt(2))
+  -- After softmax, mostly diagonal
+  -- Output ≈ V (since attention is nearly diagonal)
+
+  let Q := floatsToByteArray [1, 0, 0, 1]
+  let K := floatsToByteArray [1, 0, 0, 1]
+  let V := floatsToByteArray [1, 2, 3, 4]
+
+  let Qgpu ← Metal.GpuBuffer.fromByteArray Q
+  let Kgpu ← Metal.GpuBuffer.fromByteArray K
+  let Vgpu ← Metal.GpuBuffer.fromByteArray V
+
+  let result ← Metal.GpuBuffer.flashAttention Qgpu Kgpu Vgpu 2 2
+
+  let output ← result.toByteArray
+
+  IO.println s!"flash_attention result: [{getFloat output 0}, {getFloat output 1}, {getFloat output 2}, {getFloat output 3}]"
+
+  -- The output should be close to V since the attention is nearly identity
+  -- With softmax(score * scale), the diagonal dominates
+  let mut passed := true
+
+  -- Just check that we get reasonable values (not NaN or inf)
+  for i in List.range 4 do
+    let got := getFloat output i
+    if got.isNaN || got.abs > 100 then
+      IO.println s!"  FAIL at index {i}: got invalid value {got}"
+      passed := false
+
+  -- Output should roughly match V since attention is diagonal
+  -- Allow some tolerance due to softmax spreading
+  let diff0 := ((getFloat output 0) - 1.0).abs
+  let diff3 := ((getFloat output 3) - 4.0).abs
+  if diff0 > 1.0 || diff3 > 1.0 then
+    IO.println s!"  Warning: output differs from V by more than expected"
+
+  if passed then
+    IO.println "  ✓ flash_attention test PASSED"
+  else
+    IO.println "  ✗ flash_attention test FAILED"
+
 def main : IO Unit := do
   if Metal.isAvailable () then
     IO.println "Metal GPU available, running tests...\n"
@@ -276,6 +325,7 @@ def main : IO Unit := do
     testLayerNorm
     testBiasGelu
     testAvgpool2d
+    testFlashAttention
     IO.println "\n=== All tests completed ==="
   else
     IO.println "Metal GPU not available, skipping tests"

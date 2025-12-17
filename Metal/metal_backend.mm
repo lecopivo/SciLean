@@ -1253,6 +1253,150 @@ LEAN_EXPORT lean_obj_res scilean_gpu_avgpool2d_f32(
     }
 }
 
+// Flash Attention on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
+// output = softmax(Q @ K^T / sqrt(head_dim)) @ V
+LEAN_EXPORT lean_obj_res scilean_gpu_flash_attention_f32(
+    b_lean_obj_arg Q_buf,
+    b_lean_obj_arg K_buf,
+    b_lean_obj_arg V_buf,
+    size_t seq_len,
+    size_t head_dim,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> Q = get_mtl_buffer(Q_buf);
+    id<MTLBuffer> K = get_mtl_buffer(K_buf);
+    id<MTLBuffer> V = get_mtl_buffer(V_buf);
+    if (!Q || !K || !V) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"flash_attention");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get flash_attention pipeline"));
+        }
+
+        size_t output_elements = seq_len * head_dim;
+        size_t output_size = output_elements * sizeof(float);
+
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t seq32 = (uint32_t)seq_len;
+        uint32_t head32 = (uint32_t)head_dim;
+        float scale = 1.0f / sqrtf((float)head_dim);
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:Q offset:0 atIndex:0];
+        [encoder setBuffer:K offset:0 atIndex:1];
+        [encoder setBuffer:V offset:0 atIndex:2];
+        [encoder setBuffer:Y offset:0 atIndex:3];
+        [encoder setBytes:&seq32 length:sizeof(seq32) atIndex:4];
+        [encoder setBytes:&head32 length:sizeof(head32) atIndex:5];
+        [encoder setBytes:&scale length:sizeof(scale) atIndex:6];
+
+        // One thread per query position
+        MTLSize gridSize = MTLSizeMake(seq_len, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, seq_len);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
+// Flash Attention with causal mask on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
+// Applies causal masking: position i can only attend to positions <= i
+LEAN_EXPORT lean_obj_res scilean_gpu_flash_attention_causal_f32(
+    b_lean_obj_arg Q_buf,
+    b_lean_obj_arg K_buf,
+    b_lean_obj_arg V_buf,
+    size_t seq_len,
+    size_t head_dim,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> Q = get_mtl_buffer(Q_buf);
+    id<MTLBuffer> K = get_mtl_buffer(K_buf);
+    id<MTLBuffer> V = get_mtl_buffer(V_buf);
+    if (!Q || !K || !V) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"flash_attention_causal");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get flash_attention_causal pipeline"));
+        }
+
+        size_t output_elements = seq_len * head_dim;
+        size_t output_size = output_elements * sizeof(float);
+
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t seq32 = (uint32_t)seq_len;
+        uint32_t head32 = (uint32_t)head_dim;
+        float scale = 1.0f / sqrtf((float)head_dim);
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:Q offset:0 atIndex:0];
+        [encoder setBuffer:K offset:0 atIndex:1];
+        [encoder setBuffer:V offset:0 atIndex:2];
+        [encoder setBuffer:Y offset:0 atIndex:3];
+        [encoder setBytes:&seq32 length:sizeof(seq32) atIndex:4];
+        [encoder setBytes:&head32 length:sizeof(head32) atIndex:5];
+        [encoder setBytes:&scale length:sizeof(scale) atIndex:6];
+
+        // One thread per query position
+        MTLSize gridSize = MTLSizeMake(seq_len, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, seq_len);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
 // ============================================================================
 // Original FFI Functions (ByteArray-based)
 // ============================================================================

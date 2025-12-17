@@ -191,6 +191,19 @@ opaque biasGelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
 opaque avgpool2d (x : @& GpuBuffer) (batchSize channels inHeight inWidth : USize)
     (poolH poolW : USize) (strideH strideW : USize) : IO GpuBuffer
 
+/-- Flash Attention: output = softmax(Q @ K^T / sqrt(head_dim)) @ V
+    Q, K, V are [seq_len, head_dim] matrices.
+    Supports batching. -/
+@[extern "scilean_gpu_flash_attention_f32"]
+opaque flashAttention (Q K V : @& GpuBuffer) (seqLen headDim : USize) : IO GpuBuffer
+
+/-- Flash Attention with causal mask
+    Position i can only attend to positions <= i (for autoregressive models).
+    Q, K, V are [seq_len, head_dim] matrices.
+    Supports batching. -/
+@[extern "scilean_gpu_flash_attention_causal_f32"]
+opaque flashAttentionCausal (Q K V : @& GpuBuffer) (seqLen headDim : USize) : IO GpuBuffer
+
 end GpuBuffer
 
 /-! ## Matrix Operations -/
