@@ -2798,9 +2798,31 @@ kernel void sub_out(
     output[i] = x[i] - y[i];
 }
 
-// GEMM with first matrix transposed: C = A^T @ B
+// GEMM with first matrix transposed: C = A^T @ B (naive fallback)
 // A is stored as [k, m] (row-major), we compute A^T[m, k] @ B[k, n] = C[m, n]
-// A^T[i, l] = A[l, i] = A[l * m + i]
+kernel void gemm_tn_naive(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& m [[buffer(3)]],
+    constant uint& k [[buffer(4)]],
+    constant uint& n [[buffer(5)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    uint i = gid.y;
+    uint j = gid.x;
+    if (i >= m || j >= n) return;
+
+    float sum = 0.0f;
+    for (uint l = 0; l < k; l++) {
+        sum += A[l * m + i] * B[l * n + j];
+    }
+    C[i * n + j] = sum;
+}
+
+// Optimized GEMM TN with tiling: C = A^T @ B
+// Uses threadgroup memory for coalesced access
+#define TN_TILE 32
 kernel void gemm_tn(
     device const float* A [[buffer(0)]],
     device const float* B [[buffer(1)]],
@@ -2808,25 +2830,51 @@ kernel void gemm_tn(
     constant uint& m [[buffer(3)]],
     constant uint& k [[buffer(4)]],
     constant uint& n [[buffer(5)]],
-    uint2 gid [[thread_position_in_grid]]
+    threadgroup float* tg_mem [[threadgroup(0)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint linear_tid [[thread_index_in_threadgroup]]
 ) {
-    uint i = gid.y;  // row of C
-    uint j = gid.x;  // col of C
+    // Tiles: As[TN_TILE][TN_TILE], Bs[TN_TILE][TN_TILE]
+    threadgroup float* As = tg_mem;
+    threadgroup float* Bs = tg_mem + TN_TILE * TN_TILE;
 
-    if (i >= m || j >= n) return;
+    uint tg_row = tgid.y * TN_TILE;
+    uint tg_col = tgid.x * TN_TILE;
+    uint row = tg_row + tid.y;
+    uint col = tg_col + tid.x;
 
     float sum = 0.0f;
-    for (uint l = 0; l < k; l++) {
-        // A^T[i, l] = A[l, i] = A[l * m + i]
-        sum += A[l * m + i] * B[l * n + j];
+
+    for (uint kk = 0; kk < k; kk += TN_TILE) {
+        // Load A^T tile: As[i][l] = A^T[tg_row+i, kk+l] = A[kk+l, tg_row+i]
+        uint a_row = kk + tid.y;
+        uint a_col = tg_row + tid.x;
+        As[tid.y * TN_TILE + tid.x] = (a_row < k && a_col < m) ? A[a_row * m + a_col] : 0.0f;
+
+        // Load B tile: Bs[l][j] = B[kk+l, tg_col+j]
+        uint b_row = kk + tid.y;
+        uint b_col = tg_col + tid.x;
+        Bs[tid.y * TN_TILE + tid.x] = (b_row < k && b_col < n) ? B[b_row * n + b_col] : 0.0f;
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Compute partial dot product
+        for (uint l = 0; l < TN_TILE && (kk + l) < k; l++) {
+            sum += As[l * TN_TILE + tid.y] * Bs[l * TN_TILE + tid.x];
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
     }
-    C[i * n + j] = sum;
+
+    if (row < m && col < n) {
+        C[row * n + col] = sum;
+    }
 }
 
-// GEMM with second matrix transposed: C = A @ B^T
+// GEMM with second matrix transposed: C = A @ B^T (naive fallback)
 // A is [m, k], B is stored as [n, k] (row-major), we compute A @ B^T[k, n] = C[m, n]
-// B^T[l, j] = B[j, l] = B[j * k + l]
-kernel void gemm_nt(
+kernel void gemm_nt_naive(
     device const float* A [[buffer(0)]],
     device const float* B [[buffer(1)]],
     device float* C [[buffer(2)]],
@@ -2835,15 +2883,64 @@ kernel void gemm_nt(
     constant uint& n [[buffer(5)]],
     uint2 gid [[thread_position_in_grid]]
 ) {
-    uint i = gid.y;  // row of C
-    uint j = gid.x;  // col of C
-
+    uint i = gid.y;
+    uint j = gid.x;
     if (i >= m || j >= n) return;
 
     float sum = 0.0f;
     for (uint l = 0; l < k; l++) {
-        // B^T[l, j] = B[j, l] = B[j * k + l]
         sum += A[i * k + l] * B[j * k + l];
     }
     C[i * n + j] = sum;
+}
+
+// Optimized GEMM NT with tiling: C = A @ B^T
+#define NT_TILE 32
+kernel void gemm_nt(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& m [[buffer(3)]],
+    constant uint& k [[buffer(4)]],
+    constant uint& n [[buffer(5)]],
+    threadgroup float* tg_mem [[threadgroup(0)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint2 tid [[thread_position_in_threadgroup]],
+    uint linear_tid [[thread_index_in_threadgroup]]
+) {
+    // Tiles: As[NT_TILE][NT_TILE], Bs[NT_TILE][NT_TILE]
+    threadgroup float* As = tg_mem;
+    threadgroup float* Bs = tg_mem + NT_TILE * NT_TILE;
+
+    uint tg_row = tgid.y * NT_TILE;
+    uint tg_col = tgid.x * NT_TILE;
+    uint row = tg_row + tid.y;
+    uint col = tg_col + tid.x;
+
+    float sum = 0.0f;
+
+    for (uint kk = 0; kk < k; kk += NT_TILE) {
+        // Load A tile: As[i][l] = A[tg_row+i, kk+l]
+        uint a_row = tg_row + tid.y;
+        uint a_col = kk + tid.x;
+        As[tid.y * NT_TILE + tid.x] = (a_row < m && a_col < k) ? A[a_row * k + a_col] : 0.0f;
+
+        // Load B^T tile: Bs[l][j] = B^T[kk+l, tg_col+j] = B[tg_col+j, kk+l]
+        uint b_row = tg_col + tid.y;  // This is the column we want from B^T
+        uint b_col = kk + tid.x;       // This is the row from B^T
+        Bs[tid.x * NT_TILE + tid.y] = (b_row < n && b_col < k) ? B[b_row * k + b_col] : 0.0f;
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Compute partial dot product
+        for (uint l = 0; l < NT_TILE && (kk + l) < k; l++) {
+            sum += As[tid.y * NT_TILE + l] * Bs[l * NT_TILE + tid.x];
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (row < m && col < n) {
+        C[row * n + col] = sum;
+    }
 }

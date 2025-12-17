@@ -4963,11 +4963,13 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_tn_f32(
         [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
         [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
 
-        MTLSize gridSize = MTLSizeMake(n, m, 1);
-        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
-        MTLSize tgSize = MTLSizeMake(tgw, tgw, 1);
+        // Tiled kernel: 32x32 tiles, threadgroup memory for As and Bs
+        size_t tg_mem_size = 2048 * sizeof(float);  // As[32][32] + Bs[32][32]
+        [encoder setThreadgroupMemoryLength:tg_mem_size atIndex:0];
 
-        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        MTLSize gridSize = MTLSizeMake((n + 31) / 32, (m + 31) / 32, 1);
+        MTLSize tgSize = MTLSizeMake(32, 32, 1);
+        [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
 
         if (!batched) {
             [encoder endEncoding];
@@ -5029,11 +5031,13 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_nt_f32(
         [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
         [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
 
-        MTLSize gridSize = MTLSizeMake(n, m, 1);
-        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
-        MTLSize tgSize = MTLSizeMake(tgw, tgw, 1);
+        // Tiled kernel: 32x32 tiles, threadgroup memory for As and Bs
+        size_t tg_mem_size = 2048 * sizeof(float);  // As[32][32] + Bs[32][32]
+        [encoder setThreadgroupMemoryLength:tg_mem_size atIndex:0];
 
-        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+        MTLSize gridSize = MTLSizeMake((n + 31) / 32, (m + 31) / 32, 1);
+        MTLSize tgSize = MTLSizeMake(32, 32, 1);
+        [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
 
         if (!batched) {
             [encoder endEncoding];
