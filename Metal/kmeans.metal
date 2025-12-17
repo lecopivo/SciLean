@@ -211,13 +211,136 @@ kernel void gemm_simd(
 }
 
 // ============================================================
-// Optimized Simdgroup GEMM with Shared Memory Prefetch
+// Safe Simdgroup GEMM - handles arbitrary M, K, N dimensions
 // ============================================================
-// Improvements over gemm_simd:
-// 1. Shared memory tiles reduce global memory bandwidth
-// 2. Double buffering overlaps loads with compute
-// 3. Larger output tiles (64×64) for better occupancy
-// 4. Vectorized loads (float4) for 4x bandwidth
+// Uses threadgroup memory to stage tiles with proper zero-padding
+// for out-of-bounds elements. Slower than gemm_simd but correct
+// for all input sizes.
+
+kernel void gemm_simd_safe(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& M [[buffer(3)]],
+    constant uint& K [[buffer(4)]],
+    constant uint& N [[buffer(5)]],
+    threadgroup float* tg_mem [[threadgroup(0)]],
+    uint2 tgid [[threadgroup_position_in_grid]],
+    uint simd_lane [[thread_index_in_simdgroup]],
+    uint simd_id [[simdgroup_index_in_threadgroup]],
+    uint tid [[thread_index_in_threadgroup]]
+) {
+    // Threadgroup memory layout: A_tile[32][8] followed by B_tile[8][32]
+    // Total: 32*8 + 8*32 = 512 floats = 2KB
+    threadgroup float* A_tile = tg_mem;           // [32][8] for this k-iteration
+    threadgroup float* B_tile = tg_mem + 32 * 8;  // [8][32] for this k-iteration
+
+    // Base row/col for this threadgroup's output tile
+    uint tg_row = tgid.y * SIMD_TILE_M;
+    uint tg_col = tgid.x * SIMD_TILE_N;
+
+    // Each simdgroup handles a 16×16 subtile (2×2 arrangement of 8×8 blocks)
+    uint simd_row = tg_row + (simd_id / 2) * 16;
+    uint simd_col = tg_col + (simd_id % 2) * 16;
+
+    // Accumulators for 2×2 grid of 8×8 output blocks
+    simdgroup_float8x8 acc00 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc01 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc10 = simdgroup_float8x8(0);
+    simdgroup_float8x8 acc11 = simdgroup_float8x8(0);
+
+    // 128 threads total (4 simdgroups × 32 threads)
+    // Each thread loads multiple elements to fill tiles
+
+    // Iterate over K dimension in 8-element chunks
+    for (uint k = 0; k < K; k += 8) {
+        // Collaborative tile loading with bounds checking
+        // Load A_tile[32][8] - each thread loads 2 elements
+        for (uint i = tid; i < 32 * 8; i += 128) {
+            uint row = i / 8;
+            uint col = i % 8;
+            uint global_row = tg_row + row;
+            uint global_col = k + col;
+            if (global_row < M && global_col < K) {
+                A_tile[row * 8 + col] = A[global_row * K + global_col];
+            } else {
+                A_tile[row * 8 + col] = 0.0f;
+            }
+        }
+
+        // Load B_tile[8][32] - each thread loads 2 elements
+        for (uint i = tid; i < 8 * 32; i += 128) {
+            uint row = i / 32;
+            uint col = i % 32;
+            uint global_row = k + row;
+            uint global_col = tg_col + col;
+            if (global_row < K && global_col < N) {
+                B_tile[row * 32 + col] = B[global_row * N + global_col];
+            } else {
+                B_tile[row * 32 + col] = 0.0f;
+            }
+        }
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+
+        // Load from threadgroup memory (now safe, with zeros for OOB)
+        simdgroup_float8x8 a0, a1, b0, b1;
+
+        // A tiles: rows [simd_row - tg_row, simd_row - tg_row + 16), cols [0, 8)
+        uint a_local_row = simd_row - tg_row;
+        simdgroup_load(a0, A_tile + a_local_row * 8, 8);
+        simdgroup_load(a1, A_tile + (a_local_row + 8) * 8, 8);
+
+        // B tiles: rows [0, 8), cols [simd_col - tg_col, simd_col - tg_col + 16)
+        uint b_local_col = simd_col - tg_col;
+        simdgroup_load(b0, B_tile + b_local_col, 32);
+        simdgroup_load(b1, B_tile + b_local_col + 8, 32);
+
+        // Multiply-accumulate
+        simdgroup_multiply_accumulate(acc00, a0, b0, acc00);
+        simdgroup_multiply_accumulate(acc01, a0, b1, acc01);
+        simdgroup_multiply_accumulate(acc10, a1, b0, acc10);
+        simdgroup_multiply_accumulate(acc11, a1, b1, acc11);
+
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    // Store results - use threadgroup memory for boundary handling
+    // Reuse tg_mem as output staging area (we're done with A_tile/B_tile)
+    threadgroup float* out_tile = tg_mem;  // [32][32] fits in 512 floats
+
+    // Store all accumulators to threadgroup memory (local coords within tile)
+    uint local_row = simd_row - tg_row;
+    uint local_col = simd_col - tg_col;
+
+    simdgroup_store(acc00, out_tile + local_row * 32 + local_col, 32);
+    simdgroup_store(acc01, out_tile + local_row * 32 + local_col + 8, 32);
+    simdgroup_store(acc10, out_tile + (local_row + 8) * 32 + local_col, 32);
+    simdgroup_store(acc11, out_tile + (local_row + 8) * 32 + local_col + 8, 32);
+
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Copy from threadgroup memory to global with bounds checking
+    // Each thread copies multiple elements
+    for (uint i = tid; i < 32 * 32; i += 128) {
+        uint row = i / 32;
+        uint col = i % 32;
+        uint global_row = tg_row + row;
+        uint global_col = tg_col + col;
+        if (global_row < M && global_col < N) {
+            C[global_row * N + global_col] = out_tile[row * 32 + col];
+        }
+    }
+}
+
+// ============================================================
+// Optimized Simdgroup GEMM with Double Buffering + Safe Stores
+// ============================================================
+// Features:
+// 1. Double buffered tile loading (overlaps compute with memory)
+// 2. 64×64 output tiles for better occupancy
+// 3. Safe boundary stores via threadgroup staging
+// 4. Handles arbitrary M, K, N dimensions
 
 #define OPT_TILE_M 64
 #define OPT_TILE_N 64
@@ -230,28 +353,29 @@ kernel void gemm_simd_opt(
     constant uint& M [[buffer(3)]],
     constant uint& K [[buffer(4)]],
     constant uint& N [[buffer(5)]],
+    threadgroup float* tg_mem [[threadgroup(0)]],
     uint2 tgid [[threadgroup_position_in_grid]],
-    uint2 tid [[thread_position_in_threadgroup]],
-    uint simd_lane [[thread_index_in_simdgroup]],
+    uint tid [[thread_index_in_threadgroup]],
     uint simd_id [[simdgroup_index_in_threadgroup]]
 ) {
-    // Shared memory for A and B tiles (double buffered)
-    threadgroup float As[2][OPT_TILE_M][OPT_TILE_K];
-    threadgroup float Bs[2][OPT_TILE_K][OPT_TILE_N];
+    // Threadgroup memory layout:
+    // As[2][64][32] = 4096 floats for double-buffered A tiles
+    // Bs[2][32][64] = 4096 floats for double-buffered B tiles
+    // out_tile[64][64] = 4096 floats for output staging (reuses As after compute)
+    threadgroup float* As = tg_mem;                    // [2][64][32]
+    threadgroup float* Bs = tg_mem + 2 * 64 * 32;      // [2][32][64]
 
-    // Threadgroup computes OPT_TILE_M × OPT_TILE_N output
+    // Threadgroup computes 64×64 output
     uint tg_row = tgid.y * OPT_TILE_M;
     uint tg_col = tgid.x * OPT_TILE_N;
 
-    // 256 threads = 8 simdgroups, each handles 16×32 output (2×4 grid of 8×8)
-    // Layout: 2 rows × 4 cols of simdgroups
+    // 256 threads = 8 simdgroups
+    // Each simdgroup handles 32×16 output (4×2 grid of 8×8 blocks)
+    // Layout: 2 rows × 4 cols of simdgroups covering 64×64
     uint simd_row_offset = (simd_id / 4) * 32;  // 0 or 32
     uint simd_col_offset = (simd_id % 4) * 16;  // 0, 16, 32, 48
 
-    uint simd_row = tg_row + simd_row_offset;
-    uint simd_col = tg_col + simd_col_offset;
-
-    // 4×2 grid of 8×8 accumulators per simdgroup = 32×16 output
+    // 4×2 grid of 8×8 accumulators per simdgroup
     simdgroup_float8x8 acc[4][2];
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 2; j++) {
@@ -259,60 +383,66 @@ kernel void gemm_simd_opt(
         }
     }
 
-    // Thread indices for collaborative loading
-    uint linear_tid = tid.y * 16 + tid.x;  // 0..255
+    // Helper macros for indexing
+    #define AS(buf, r, c) As[(buf) * 64 * 32 + (r) * 32 + (c)]
+    #define BS(buf, r, c) Bs[(buf) * 32 * 64 + (r) * 64 + (c)]
 
-    // Load first tile
+    // Load first tile (256 threads, 64×32 = 2048 elements → 8 per thread)
     int buf = 0;
-    uint k = 0;
 
-    // Prefetch first A tile: each thread loads 1 element (need 64×32 = 2048, have 256 threads → 8 loads each)
-    for (uint i = linear_tid; i < OPT_TILE_M * OPT_TILE_K; i += 256) {
+    for (uint i = tid; i < OPT_TILE_M * OPT_TILE_K; i += 256) {
         uint ar = i / OPT_TILE_K;
         uint ac = i % OPT_TILE_K;
-        As[buf][ar][ac] = (tg_row + ar < M && k + ac < K) ? A[(tg_row + ar) * K + k + ac] : 0.0f;
+        uint gr = tg_row + ar;
+        uint gc = ac;
+        AS(buf, ar, ac) = (gr < M && gc < K) ? A[gr * K + gc] : 0.0f;
     }
 
-    // Prefetch first B tile
-    for (uint i = linear_tid; i < OPT_TILE_K * OPT_TILE_N; i += 256) {
+    for (uint i = tid; i < OPT_TILE_K * OPT_TILE_N; i += 256) {
         uint br = i / OPT_TILE_N;
         uint bc = i % OPT_TILE_N;
-        Bs[buf][br][bc] = (k + br < K && tg_col + bc < N) ? B[(k + br) * N + tg_col + bc] : 0.0f;
+        uint gr = br;
+        uint gc = tg_col + bc;
+        BS(buf, br, bc) = (gr < K && gc < N) ? B[gr * N + gc] : 0.0f;
     }
 
     threadgroup_barrier(mem_flags::mem_threadgroup);
 
     // Main loop with double buffering
-    for (k = 0; k < K; k += OPT_TILE_K) {
+    for (uint k = 0; k < K; k += OPT_TILE_K) {
         uint next_k = k + OPT_TILE_K;
         int next_buf = 1 - buf;
 
         // Prefetch next tiles while computing current
         if (next_k < K) {
-            for (uint i = linear_tid; i < OPT_TILE_M * OPT_TILE_K; i += 256) {
+            for (uint i = tid; i < OPT_TILE_M * OPT_TILE_K; i += 256) {
                 uint ar = i / OPT_TILE_K;
                 uint ac = i % OPT_TILE_K;
-                As[next_buf][ar][ac] = (tg_row + ar < M && next_k + ac < K) ? A[(tg_row + ar) * K + next_k + ac] : 0.0f;
+                uint gr = tg_row + ar;
+                uint gc = next_k + ac;
+                AS(next_buf, ar, ac) = (gr < M && gc < K) ? A[gr * K + gc] : 0.0f;
             }
-            for (uint i = linear_tid; i < OPT_TILE_K * OPT_TILE_N; i += 256) {
+            for (uint i = tid; i < OPT_TILE_K * OPT_TILE_N; i += 256) {
                 uint br = i / OPT_TILE_N;
                 uint bc = i % OPT_TILE_N;
-                Bs[next_buf][br][bc] = (next_k + br < K && tg_col + bc < N) ? B[(next_k + br) * N + tg_col + bc] : 0.0f;
+                uint gr = next_k + br;
+                uint gc = tg_col + bc;
+                BS(next_buf, br, bc) = (gr < K && gc < N) ? B[gr * N + gc] : 0.0f;
             }
         }
 
         // Compute: iterate over K tile in 8-element chunks
-        for (uint kk = 0; kk < OPT_TILE_K; kk += 8) {
-            // Load A subtiles from shared memory (4 × 8×8 blocks)
-            simdgroup_float8x8 a[4];
+        for (uint kk = 0; kk < OPT_TILE_K && (k + kk) < K; kk += 8) {
+            simdgroup_float8x8 a[4], b[2];
+
+            // Load A subtiles (4 × 8×8)
             for (int ai = 0; ai < 4; ai++) {
-                simdgroup_load(a[ai], &As[buf][simd_row_offset + ai * 8][kk], OPT_TILE_K);
+                simdgroup_load(a[ai], &AS(buf, simd_row_offset + ai * 8, kk), OPT_TILE_K);
             }
 
-            // Load B subtiles from shared memory (2 × 8×8 blocks)
-            simdgroup_float8x8 b[2];
+            // Load B subtiles (2 × 8×8)
             for (int bi = 0; bi < 2; bi++) {
-                simdgroup_load(b[bi], &Bs[buf][kk][simd_col_offset + bi * 8], OPT_TILE_N);
+                simdgroup_load(b[bi], &BS(buf, kk, simd_col_offset + bi * 8), OPT_TILE_N);
             }
 
             // Multiply-accumulate
@@ -327,14 +457,32 @@ kernel void gemm_simd_opt(
         buf = next_buf;
     }
 
-    // Store results
+    #undef AS
+    #undef BS
+
+    // Store results via threadgroup memory for safe boundary handling
+    // Reuse As memory as output staging (64×64 = 4096 floats, fits in As space)
+    threadgroup float* out_tile = tg_mem;
+
+    // Store accumulators to threadgroup memory
     for (int ai = 0; ai < 4; ai++) {
         for (int bi = 0; bi < 2; bi++) {
-            uint out_row = simd_row + ai * 8;
-            uint out_col = simd_col + bi * 8;
-            if (out_row < M && out_col < N) {
-                simdgroup_store(acc[ai][bi], C + out_row * N + out_col, N);
-            }
+            uint local_row = simd_row_offset + ai * 8;
+            uint local_col = simd_col_offset + bi * 8;
+            simdgroup_store(acc[ai][bi], out_tile + local_row * 64 + local_col, 64);
+        }
+    }
+
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Copy from threadgroup to global with bounds checking
+    for (uint i = tid; i < OPT_TILE_M * OPT_TILE_N; i += 256) {
+        uint row = i / OPT_TILE_N;
+        uint col = i % OPT_TILE_N;
+        uint global_row = tg_row + row;
+        uint global_col = tg_col + col;
+        if (global_row < M && global_col < N) {
+            C[global_row * N + global_col] = out_tile[row * 64 + col];
         }
     }
 }
@@ -2607,4 +2755,95 @@ kernel void batchnorm2d_backward(
 
     // grad_input (for inference, simpler form)
     grad_input[idx] = dy * g * rsqrt(var + eps);
+}
+
+// ============================================================
+// Additional Kernels for Training (GpuBuffer versions)
+// ============================================================
+
+// AXPY for GpuBuffer: output = alpha * x + y (creates new output)
+kernel void axpy_out(
+    device const float* x [[buffer(0)]],
+    device const float* y [[buffer(1)]],
+    device float* output [[buffer(2)]],
+    constant float& alpha [[buffer(3)]],
+    constant uint& n [[buffer(4)]],
+    uint i [[thread_position_in_grid]]
+) {
+    if (i >= n) return;
+    output[i] = alpha * x[i] + y[i];
+}
+
+// Scale for GpuBuffer: output = alpha * x (creates new output)
+kernel void scale_out(
+    device const float* x [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant float& alpha [[buffer(2)]],
+    constant uint& n [[buffer(3)]],
+    uint i [[thread_position_in_grid]]
+) {
+    if (i >= n) return;
+    output[i] = alpha * x[i];
+}
+
+// Sub for GpuBuffer: output = x - y (creates new output)
+kernel void sub_out(
+    device const float* x [[buffer(0)]],
+    device const float* y [[buffer(1)]],
+    device float* output [[buffer(2)]],
+    constant uint& n [[buffer(3)]],
+    uint i [[thread_position_in_grid]]
+) {
+    if (i >= n) return;
+    output[i] = x[i] - y[i];
+}
+
+// GEMM with first matrix transposed: C = A^T @ B
+// A is stored as [k, m] (row-major), we compute A^T[m, k] @ B[k, n] = C[m, n]
+// A^T[i, l] = A[l, i] = A[l * m + i]
+kernel void gemm_tn(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& m [[buffer(3)]],
+    constant uint& k [[buffer(4)]],
+    constant uint& n [[buffer(5)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    uint i = gid.y;  // row of C
+    uint j = gid.x;  // col of C
+
+    if (i >= m || j >= n) return;
+
+    float sum = 0.0f;
+    for (uint l = 0; l < k; l++) {
+        // A^T[i, l] = A[l, i] = A[l * m + i]
+        sum += A[l * m + i] * B[l * n + j];
+    }
+    C[i * n + j] = sum;
+}
+
+// GEMM with second matrix transposed: C = A @ B^T
+// A is [m, k], B is stored as [n, k] (row-major), we compute A @ B^T[k, n] = C[m, n]
+// B^T[l, j] = B[j, l] = B[j * k + l]
+kernel void gemm_nt(
+    device const float* A [[buffer(0)]],
+    device const float* B [[buffer(1)]],
+    device float* C [[buffer(2)]],
+    constant uint& m [[buffer(3)]],
+    constant uint& k [[buffer(4)]],
+    constant uint& n [[buffer(5)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    uint i = gid.y;  // row of C
+    uint j = gid.x;  // col of C
+
+    if (i >= m || j >= n) return;
+
+    float sum = 0.0f;
+    for (uint l = 0; l < k; l++) {
+        // B^T[l, j] = B[j, l] = B[j * k + l]
+        sum += A[i * k + l] * B[j * k + l];
+    }
+    C[i * n + j] = sum;
 }

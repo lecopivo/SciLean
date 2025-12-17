@@ -402,9 +402,16 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
     }
 
     @autoreleasepool {
-        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_simd");
-        if (!pipeline) {
-            return lean_io_result_mk_error(lean_mk_string("Failed to get GEMM pipeline"));
+        // Use optimized double-buffered kernel for better performance
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_simd_opt");
+        bool use_opt = (pipeline != nil);
+
+        if (!use_opt) {
+            // Fall back to safe kernel
+            pipeline = get_pipeline(@"gemm_simd_safe");
+            if (!pipeline) {
+                return lean_io_result_mk_error(lean_mk_string("Failed to get GEMM pipeline"));
+            }
         }
 
         size_t output_size = m * n * sizeof(float);
@@ -430,10 +437,24 @@ LEAN_EXPORT lean_obj_res scilean_gpu_gemm_f32(
         [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
         [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
 
-        MTLSize gridSize = MTLSizeMake((n + 31) / 32, (m + 31) / 32, 1);
-        MTLSize tgSize = MTLSizeMake(32, 4, 1);
+        if (use_opt) {
+            // Optimized kernel: 64x64 output tiles, 256 threads (8 simdgroups)
+            // Threadgroup memory: As[2][64][32] + Bs[2][32][64] = 8192 floats = 32KB
+            size_t tg_mem_size = 8192 * sizeof(float);
+            [encoder setThreadgroupMemoryLength:tg_mem_size atIndex:0];
 
-        [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+            MTLSize gridSize = MTLSizeMake((n + 63) / 64, (m + 63) / 64, 1);
+            MTLSize tgSize = MTLSizeMake(256, 1, 1);  // 8 simdgroups × 32 threads
+            [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+        } else {
+            // Safe kernel: 32x32 output tiles, 128 threads (4 simdgroups)
+            size_t tg_mem_size = 1024 * sizeof(float);
+            [encoder setThreadgroupMemoryLength:tg_mem_size atIndex:0];
+
+            MTLSize gridSize = MTLSizeMake((n + 31) / 32, (m + 31) / 32, 1);
+            MTLSize tgSize = MTLSizeMake(128, 1, 1);
+            [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+        }
 
         // Only commit if not in batch mode
         if (!batched) {
@@ -737,6 +758,10 @@ LEAN_EXPORT lean_obj_res scilean_gpu_softmax_f32(
         [encoder setBuffer:X offset:0 atIndex:0];
         [encoder setBuffer:Y offset:0 atIndex:1];
         [encoder setBytes:&row_size32 length:sizeof(row_size32) atIndex:2];
+
+        // Allocate threadgroup memory for the shared array (one float per element in row)
+        NSUInteger threadgroupMemorySize = row_size * sizeof(float);
+        [encoder setThreadgroupMemoryLength:threadgroupMemorySize atIndex:0];
 
         NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, row_size);
 
@@ -4709,6 +4734,383 @@ LEAN_EXPORT lean_obj_res scilean_metal_batchnorm2d_f32(
         [commandBuffer waitUntilCompleted];
 
         return buffer_to_byte_array_f32(outputBuf, spatial_size);
+    }
+}
+
+// ============================================================================
+// Additional GPU Operations for Training
+// ============================================================================
+
+// AXPY on GpuBuffer: y = a*x + y (in-place update, returns new buffer)
+LEAN_EXPORT lean_obj_res scilean_gpu_axpy_f32(
+    size_t n,
+    double alpha,
+    b_lean_obj_arg x_buf,
+    b_lean_obj_arg y_buf,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> x = get_mtl_buffer(x_buf);
+    id<MTLBuffer> y = get_mtl_buffer(y_buf);
+    if (!x || !y) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"axpy_out");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get axpy_out pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> output = get_pooled_buffer(output_size);
+        if (!output) {
+            output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        float alpha_f = (float)alpha;
+        uint32_t n32 = (uint32_t)n;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:x offset:0 atIndex:0];
+        [encoder setBuffer:y offset:0 atIndex:1];
+        [encoder setBuffer:output offset:0 atIndex:2];
+        [encoder setBytes:&alpha_f length:sizeof(alpha_f) atIndex:3];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(output, output_size));
+    }
+}
+
+// Scale on GpuBuffer: y = a*x
+LEAN_EXPORT lean_obj_res scilean_gpu_scale_f32(
+    size_t n,
+    double alpha,
+    b_lean_obj_arg x_buf,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> x = get_mtl_buffer(x_buf);
+    if (!x) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"scale_out");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get scale_out pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> output = get_pooled_buffer(output_size);
+        if (!output) {
+            output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        float alpha_f = (float)alpha;
+        uint32_t n32 = (uint32_t)n;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:x offset:0 atIndex:0];
+        [encoder setBuffer:output offset:0 atIndex:1];
+        [encoder setBytes:&alpha_f length:sizeof(alpha_f) atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(output, output_size));
+    }
+}
+
+// Sub on GpuBuffer: z = x - y
+LEAN_EXPORT lean_obj_res scilean_gpu_sub_f32(
+    b_lean_obj_arg x_buf,
+    b_lean_obj_arg y_buf,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> x = get_mtl_buffer(x_buf);
+    id<MTLBuffer> y = get_mtl_buffer(y_buf);
+    if (!x || !y) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"sub_out");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get sub_out pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> output = get_pooled_buffer(output_size);
+        if (!output) {
+            output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t n32 = (uint32_t)n;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:x offset:0 atIndex:0];
+        [encoder setBuffer:y offset:0 atIndex:1];
+        [encoder setBuffer:output offset:0 atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(output, output_size));
+    }
+}
+
+// GEMM with first matrix transposed: C = A^T @ B
+// A is [k, m], treated as A^T [m, k], B is [k, n], result C is [m, n]
+LEAN_EXPORT lean_obj_res scilean_gpu_gemm_tn_f32(
+    b_lean_obj_arg A_buf,
+    b_lean_obj_arg B_buf,
+    size_t m,
+    size_t k,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> A = get_mtl_buffer(A_buf);
+    id<MTLBuffer> B = get_mtl_buffer(B_buf);
+    if (!A || !B) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_tn");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get gemm_tn pipeline"));
+        }
+
+        size_t output_size = m * n * sizeof(float);
+        id<MTLBuffer> C = get_pooled_buffer(output_size);
+        if (!C) {
+            C = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:A offset:0 atIndex:0];
+        [encoder setBuffer:B offset:0 atIndex:1];
+        [encoder setBuffer:C offset:0 atIndex:2];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:3];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
+
+        MTLSize gridSize = MTLSizeMake(n, m, 1);
+        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(tgw, tgw, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:C];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(C, output_size));
+    }
+}
+
+// GEMM with second matrix transposed: C = A @ B^T
+// A is [m, k], B is [n, k], treated as B^T [k, n], result C is [m, n]
+LEAN_EXPORT lean_obj_res scilean_gpu_gemm_nt_f32(
+    b_lean_obj_arg A_buf,
+    b_lean_obj_arg B_buf,
+    size_t m,
+    size_t k,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> A = get_mtl_buffer(A_buf);
+    id<MTLBuffer> B = get_mtl_buffer(B_buf);
+    if (!A || !B) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gemm_nt");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get gemm_nt pipeline"));
+        }
+
+        size_t output_size = m * n * sizeof(float);
+        id<MTLBuffer> C = get_pooled_buffer(output_size);
+        if (!C) {
+            C = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t m32 = (uint32_t)m;
+        uint32_t k32 = (uint32_t)k;
+        uint32_t n32 = (uint32_t)n;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:A offset:0 atIndex:0];
+        [encoder setBuffer:B offset:0 atIndex:1];
+        [encoder setBuffer:C offset:0 atIndex:2];
+        [encoder setBytes:&m32 length:sizeof(m32) atIndex:3];
+        [encoder setBytes:&k32 length:sizeof(k32) atIndex:4];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:5];
+
+        MTLSize gridSize = MTLSizeMake(n, m, 1);
+        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, 16);
+        MTLSize tgSize = MTLSizeMake(tgw, tgw, 1);
+
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:tgSize];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:C];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(C, output_size));
+    }
+}
+
+// Sum reduction on GpuBuffer
+LEAN_EXPORT lean_obj_res scilean_gpu_sum_f32(
+    b_lean_obj_arg x_buf,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> x = get_mtl_buffer(x_buf);
+    if (!x) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        // For simplicity, do CPU sum for now
+        float* data = (float*)[x contents];
+        float sum = 0.0f;
+        for (size_t i = 0; i < n; i++) {
+            sum += data[i];
+        }
+        return lean_io_result_mk_ok(lean_box_float(sum));
+    }
+}
+
+// Column-wise sum: for each column j, compute sum of elements in that column
+// Input is [rows, cols], output is [cols]
+// This is what we need for gradient accumulation: sum over batch dimension
+LEAN_EXPORT lean_obj_res scilean_gpu_row_sum_f32(
+    b_lean_obj_arg x_buf,
+    size_t rows,
+    size_t cols,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> x = get_mtl_buffer(x_buf);
+    if (!x) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        // Output has 'cols' elements (sum over rows for each column)
+        size_t output_size = cols * sizeof(float);
+        id<MTLBuffer> output = get_pooled_buffer(output_size);
+        if (!output) {
+            output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        // Sum over rows (batch dimension) for each column
+        float* data = (float*)[x contents];
+        float* out = (float*)[output contents];
+        for (size_t c = 0; c < cols; c++) {
+            float sum = 0.0f;
+            for (size_t r = 0; r < rows; r++) {
+                sum += data[r * cols + c];
+            }
+            out[c] = sum;
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(output, output_size));
     }
 }
 
