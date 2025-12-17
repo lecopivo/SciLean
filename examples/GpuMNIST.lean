@@ -254,7 +254,8 @@ def computeAccuracy (pred target : GpuBuffer) (batchSize : USize) : IO Float := 
 /-! ## Training Loop -/
 
 /-- Combined training step: forward + backward + update in a single command buffer.
-    This eliminates per-operation dispatch overhead for maximum throughput. -/
+    This eliminates per-operation dispatch overhead for maximum throughput.
+    NOTE: Batch sizes >3000 have numerical stability issues - use mini-batching. -/
 def trainStep (weights : GpuWeights) (images labels : GpuBuffer)
     (batchSize : USize) (lr : Float) : IO GpuWeights :=
   withBatch do
@@ -296,8 +297,8 @@ def main : IO Unit := do
   IO.println "Metal GPU: available"
 
   -- Configuration
-  let numTrain := 1000  -- Number of training samples
-  let batchSize := numTrain  -- Process all as one batch for simplicity
+  let numTrain := 10000  -- Number of training samples
+  let batchSize := 1000  -- Use mini-batching for better numerical stability
   let epochs := 50
   -- Gradients are summed over batch (not averaged), so effective lr = lr * batchSize
   -- With batchSize=1000, lr=0.0005 gives effective step size of 0.5

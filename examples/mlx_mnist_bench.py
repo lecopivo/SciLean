@@ -58,7 +58,7 @@ def main():
     print("=" * 40)
 
     # Configuration (matching GpuMNIST.lean)
-    num_train = 1000
+    num_train = 1000  # Using batch of 1000 (same as Lean)
     epochs = 50
     lr = 0.0005 * num_train  # Effective lr (MLX averages gradients)
 

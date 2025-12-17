@@ -1691,6 +1691,62 @@ kernel void reduce_min(
     }
 }
 
+// Column sum (sum over rows for each column)
+// Input: [rows, cols], Output: [cols]
+// Each thread handles one column
+kernel void col_sum_simple(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& rows [[buffer(2)]],
+    constant uint& cols [[buffer(3)]],
+    uint gid [[thread_position_in_grid]]
+) {
+    if (gid >= cols) return;
+
+    float sum = 0.0f;
+    for (uint r = 0; r < rows; r++) {
+        sum += input[r * cols + gid];
+    }
+    output[gid] = sum;
+}
+
+// Optimized column sum with threadgroup reduction for large row counts
+// Each threadgroup handles one column, reducing over rows
+#define COLSUM_THREADS 256
+kernel void col_sum_large(
+    device const float* input [[buffer(0)]],
+    device float* output [[buffer(1)]],
+    constant uint& rows [[buffer(2)]],
+    constant uint& cols [[buffer(3)]],
+    threadgroup float* shared [[threadgroup(0)]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint blockIdx [[threadgroup_position_in_grid]]
+) {
+    uint col = blockIdx;
+    if (col >= cols) return;
+
+    // Grid-stride loop over rows
+    float sum = 0.0f;
+    for (uint r = tid; r < rows; r += COLSUM_THREADS) {
+        sum += input[r * cols + col];
+    }
+
+    shared[tid] = sum;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+
+    // Binary tree reduction
+    for (uint s = COLSUM_THREADS / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared[tid] += shared[tid + s];
+        }
+        threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+
+    if (tid == 0) {
+        output[col] = shared[0];
+    }
+}
+
 // --- Broadcasting Binary Ops ---
 // For tensors with different shapes, we need stride-based indexing
 

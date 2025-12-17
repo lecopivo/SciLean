@@ -5103,15 +5103,46 @@ LEAN_EXPORT lean_obj_res scilean_gpu_row_sum_f32(
             output = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
         }
 
-        // Sum over rows (batch dimension) for each column
-        float* data = (float*)[x contents];
-        float* out = (float*)[output contents];
-        for (size_t c = 0; c < cols; c++) {
-            float sum = 0.0f;
-            for (size_t r = 0; r < rows; r++) {
-                sum += data[r * cols + c];
-            }
-            out[c] = sum;
+        // Use simple kernel for small row counts, large kernel for big batches
+        bool use_large = (rows > 256);
+        id<MTLComputePipelineState> pipeline = get_pipeline(use_large ? @"col_sum_large" : @"col_sum_simple");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get col_sum pipeline"));
+        }
+
+        uint32_t rows32 = (uint32_t)rows;
+        uint32_t cols32 = (uint32_t)cols;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:x offset:0 atIndex:0];
+        [encoder setBuffer:output offset:0 atIndex:1];
+        [encoder setBytes:&rows32 length:sizeof(rows32) atIndex:2];
+        [encoder setBytes:&cols32 length:sizeof(cols32) atIndex:3];
+
+        if (use_large) {
+            // Large kernel: one threadgroup per column, 256 threads per threadgroup
+            size_t tg_mem_size = 256 * sizeof(float);
+            [encoder setThreadgroupMemoryLength:tg_mem_size atIndex:0];
+            MTLSize gridSize = MTLSizeMake(cols, 1, 1);
+            MTLSize tgSize = MTLSizeMake(256, 1, 1);
+            [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+        } else {
+            // Simple kernel: one thread per column
+            MTLSize gridSize = MTLSizeMake((cols + 255) / 256, 1, 1);
+            MTLSize tgSize = MTLSizeMake(cols < 256 ? cols : 256, 1, 1);
+            [encoder dispatchThreadgroups:gridSize threadsPerThreadgroup:tgSize];
+        }
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:output];
         }
 
         return lean_io_result_mk_ok(wrap_gpu_buffer(output, output_size));
