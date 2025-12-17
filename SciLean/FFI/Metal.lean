@@ -243,6 +243,47 @@ opaque geluBackward (input gradOutput : @& GpuBuffer) (n : USize) : IO GpuBuffer
 opaque softmaxBackward (softmaxOutput gradOutput : @& GpuBuffer)
     (numRows rowSize : USize) : IO GpuBuffer
 
+/-! ### Additional Training Operations -/
+
+/-- AXPY: result = alpha * x + y (for SGD updates)
+    Supports batching. -/
+@[extern "scilean_gpu_axpy_f32"]
+opaque axpy (n : USize) (alpha : Float) (x y : @& GpuBuffer) : IO GpuBuffer
+
+/-- Scale: result = alpha * x (scalar multiplication)
+    Supports batching. -/
+@[extern "scilean_gpu_scale_f32"]
+opaque scale (n : USize) (alpha : Float) (x : @& GpuBuffer) : IO GpuBuffer
+
+/-- Subtraction: result = x - y
+    Supports batching. -/
+@[extern "scilean_gpu_sub_f32"]
+opaque sub (x y : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- GEMM with first matrix transposed: C = A^T @ B
+    A is stored as [k, m], computes A^T[m, k] @ B[k, n] = C[m, n]
+    Supports batching. -/
+@[extern "scilean_gpu_gemm_tn_f32"]
+opaque gemmTN (A B : @& GpuBuffer) (m k n : USize) : IO GpuBuffer
+
+/-- GEMM with second matrix transposed: C = A @ B^T
+    A is [m, k], B is stored as [n, k], computes A @ B^T[k, n] = C[m, n]
+    Supports batching. -/
+@[extern "scilean_gpu_gemm_nt_f32"]
+opaque gemmNT (A B : @& GpuBuffer) (m k n : USize) : IO GpuBuffer
+
+/-- Sum all elements in buffer
+    Supports batching. -/
+@[extern "scilean_gpu_sum_f32"]
+opaque sum (x : @& GpuBuffer) (n : USize) : IO Float
+
+/-- Column-wise sum: for matrix [rows, cols], sum over rows for each column.
+    Returns buffer of size [cols] (one sum per column).
+    Used for gradient accumulation: sum gradients over batch dimension.
+    Supports batching. -/
+@[extern "scilean_gpu_row_sum_f32"]
+opaque colSum (x : @& GpuBuffer) (rows cols : USize) : IO GpuBuffer
+
 end GpuBuffer
 
 /-! ## Matrix Operations -/

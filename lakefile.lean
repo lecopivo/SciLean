@@ -354,3 +354,7 @@ lean_exe GpuBatchingBenchmark where
   buildType := .release
   root := `examples.GpuBatchingBenchmark
   moreLinkArgs := metalLinkArgs
+
+lean_exe GpuMNIST where
+  root := `examples.GpuMNIST
+  moreLinkArgs := metalLinkArgs
