@@ -390,7 +390,7 @@ def diagBatchSizes (cpuImages cpuLabels : CpuBuffer)
 
 /-- Combined training step: forward + backward + update in a single command buffer.
     This eliminates per-operation dispatch overhead for maximum throughput.
-    NOTE: Batch sizes >3000 have numerical stability issues - use mini-batching. -/
+    lr should already be scaled for batch size (lr_effective = lr / batchSize for averaging). -/
 def trainStep (weights : GpuWeights) (images labels : GpuBuffer)
     (batchSize : USize) (lr : Float) : IO GpuWeights :=
   withBatch do
@@ -403,20 +403,24 @@ def trainStep (weights : GpuWeights) (images labels : GpuBuffer)
     -- SGD update
     sgdUpdateInternal weights grads lr
 
-def trainEpoch (weights : GpuWeights) (images labels : GpuBuffer)
-    (numSamples batchSize : Nat) (lr : Float) : IO GpuWeights := do
+/-- Train one epoch with mini-batching: iterates through all samples in mini-batches.
+    Uses GPU buffer slicing to extract each mini-batch. -/
+def trainEpochMiniBatch (weights : GpuWeights) (images labels : GpuBuffer)
+    (numSamples miniBatchSize : Nat) (lr : Float) : IO GpuWeights := do
   let mut w := weights
-  let numBatches := numSamples / batchSize
+  let numBatches := numSamples / miniBatchSize
 
-  for batch in [0:numBatches] do
-    -- Get batch slice (for simplicity, we process all data as one batch for now)
-    -- In a real implementation, you'd slice the buffers
+  for batchIdx in [0:numBatches] do
+    -- Calculate slice offsets (in float32 elements)
+    let imageOffset := batchIdx * miniBatchSize * 784
+    let labelOffset := batchIdx * miniBatchSize * 10
 
-    -- Combined training step (forward + backward + update in one command buffer)
-    w ← trainStep w images labels batchSize.toUSize lr
+    -- Slice out this mini-batch (GPU-to-GPU copy)
+    let batchImages ← GpuBuffer.slice images imageOffset.toUSize (miniBatchSize * 784).toUSize
+    let batchLabels ← GpuBuffer.slice labels labelOffset.toUSize (miniBatchSize * 10).toUSize
 
-    if batch % 10 = 0 then
-      IO.print "."
+    -- Training step on this mini-batch
+    w ← trainStep w batchImages batchLabels miniBatchSize.toUSize lr
 
   return w
 
@@ -433,12 +437,14 @@ def main : IO Unit := do
   IO.println "Metal GPU: available"
 
   -- Configuration
-  let numTrain := 10000  -- Number of training samples
-  let batchSize := 1000  -- Use mini-batching for better numerical stability
-  let epochs := 50
-  -- Gradients are summed over batch (not averaged), so effective lr = lr * batchSize
-  -- With batchSize=1000, lr=0.0005 gives effective step size of 0.5
-  let lr := 0.0005
+  let numTrain := 60000  -- Full MNIST training set
+  let miniBatchSize := 256  -- Mini-batch size for training
+  let evalBatchSize := 1000  -- Batch size for evaluation
+  let epochs := 10
+  -- Learning rate: gradients are summed over mini-batch, so we scale lr inversely
+  -- lr_effective = baseLr / miniBatchSize gives averaged gradients
+  let baseLr := 0.5
+  let lr := baseLr / miniBatchSize.toFloat
 
   -- Load training data to CPU (explicit CPU-resident data)
   let cpuImages ← loadImagesCpu "data/train-images-idx3-ubyte" numTrain
@@ -469,32 +475,37 @@ def main : IO Unit := do
 
   let initialWeights : GpuWeights := { w1 := w1, b1 := b1, w2 := w2, b2 := b2 }
 
+  -- For evaluation, use first evalBatchSize samples
+  let evalImages ← GpuBuffer.slice images 0 (evalBatchSize * 784).toUSize
+  let evalLabels ← GpuBuffer.slice labels 0 (evalBatchSize * 10).toUSize
+
   -- Initial accuracy (downloads from GPU internally)
-  let (initPred, _, _, _) ← forwardBatch initialWeights images batchSize.toUSize
-  let initAcc ← computeAccuracy initPred labels batchSize.toUSize
+  let (initPred, _, _, _) ← forwardBatch initialWeights evalImages evalBatchSize.toUSize
+  let initAcc ← computeAccuracy initPred evalLabels evalBatchSize.toUSize
   IO.println s!"Initial accuracy: {initAcc * 100}%"
 
-  -- Training loop (all GPU operations, no transfers until accuracy computation)
-  IO.println "\nTraining..."
+  -- Training loop with mini-batching
+  IO.println s!"\nTraining ({numTrain} samples, mini-batch={miniBatchSize})..."
   let mut weights := initialWeights
 
   for epoch in [0:epochs] do
     let start ← IO.monoMsNow
 
-    -- Combined training step (forward + backward + update in single command buffer)
-    weights ← trainStep weights images labels batchSize.toUSize lr
+    -- Train one epoch: iterate through all mini-batches
+    weights ← trainEpochMiniBatch weights images labels numTrain miniBatchSize lr
 
     let elapsed := (← IO.monoMsNow) - start
 
-    -- Compute accuracy (downloads from GPU for evaluation)
-    let (pred2, _, _, _) ← forwardBatch weights images batchSize.toUSize
-    let acc ← computeAccuracy pred2 labels batchSize.toUSize
+    -- Compute accuracy on evaluation set
+    let (pred, _, _, _) ← forwardBatch weights evalImages evalBatchSize.toUSize
+    let acc ← computeAccuracy pred evalLabels evalBatchSize.toUSize
 
-    IO.println s!"Epoch {epoch + 1}: accuracy = {acc * 100}%, time = {elapsed}ms"
+    let numBatches := numTrain / miniBatchSize
+    IO.println s!"Epoch {epoch + 1}: accuracy = {acc * 100}%, time = {elapsed}ms ({numBatches} batches)"
 
   -- Final results
-  let (finalPred, _, _, _) ← forwardBatch weights images batchSize.toUSize
-  let finalAcc ← computeAccuracy finalPred labels batchSize.toUSize
+  let (finalPred, _, _, _) ← forwardBatch weights evalImages evalBatchSize.toUSize
+  let finalAcc ← computeAccuracy finalPred evalLabels evalBatchSize.toUSize
   IO.println s!"\nFinal accuracy: {finalAcc * 100}%"
 
   IO.println "\nDone!"

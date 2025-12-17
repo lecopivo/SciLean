@@ -99,6 +99,12 @@ opaque sizeBytes (buf : @& GpuBuffer) : USize
 @[extern "scilean_gpu_free"]
 opaque free (buf : GpuBuffer) : IO Unit
 
+/-- Slice a GPU buffer: returns new buffer with elements [offset, offset + count).
+    This is a GPU-to-GPU copy (not a view) for safe memory management.
+    Offset and count are in number of Float32 elements. -/
+@[extern "scilean_gpu_slice_f32"]
+opaque slice (src : @& GpuBuffer) (offsetFloats countFloats : USize) : IO GpuBuffer
+
 /-! ### GPU-to-GPU Operations (no CPU copies!) -/
 
 /-- Matrix multiply on GPU: C = A * B

@@ -379,6 +379,45 @@ LEAN_EXPORT lean_obj_res scilean_gpu_free(lean_obj_arg buf, lean_obj_arg /* worl
     return lean_io_result_mk_ok(lean_box(0));
 }
 
+// Slice a GPU buffer: returns a new buffer containing elements [offset, offset + count)
+// This is a GPU-to-GPU copy, not a view (safer memory management)
+LEAN_EXPORT lean_obj_res scilean_gpu_slice_f32(
+    b_lean_obj_arg src_buf,
+    size_t offset_floats,
+    size_t count_floats,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    GpuBufferData* src_data = unwrap_gpu_buffer(src_buf);
+    if (!src_data || !src_data->buffer) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid source GpuBuffer"));
+    }
+
+    size_t offset_bytes = offset_floats * sizeof(float);
+    size_t size_bytes = count_floats * sizeof(float);
+
+    // Bounds check
+    if (offset_bytes + size_bytes > src_data->size_bytes) {
+        return lean_io_result_mk_error(lean_mk_string("Slice out of bounds"));
+    }
+
+    // Allocate destination buffer
+    id<MTLBuffer> dst_buffer = get_pooled_buffer(size_bytes);
+    if (!dst_buffer) {
+        dst_buffer = [device newBufferWithLength:size_bytes options:MTLResourceStorageModeShared];
+    }
+
+    // Copy the slice (shared storage allows CPU access)
+    const char* src_ptr = (const char*)src_data->buffer.contents + offset_bytes;
+    memcpy(dst_buffer.contents, src_ptr, size_bytes);
+
+    lean_obj_res gpu_buf = wrap_gpu_buffer(dst_buffer, size_bytes);
+    return lean_io_result_mk_ok(gpu_buf);
+}
+
 // ============================================================================
 // GPU-to-GPU Operations (No CPU Copies!)
 // ============================================================================
