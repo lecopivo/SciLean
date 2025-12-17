@@ -145,12 +145,137 @@ def testBiasRelu : IO Unit := do
   else
     IO.println "  ✗ bias_relu test FAILED"
 
+/-- Test layer_norm operation -/
+def testLayerNorm : IO Unit := do
+  IO.println "\n=== Testing layer_norm ==="
+
+  -- Input: 4 elements (1 sample normalized across all elements)
+  -- The current kernel normalizes the entire input as one group
+  let input := floatsToByteArray [1, 2, 3, 4]
+  let gamma := floatsToByteArray [1, 1, 1, 1]  -- scale = 1
+  let beta := floatsToByteArray [0, 0, 0, 0]   -- shift = 0
+
+  let inputGpu ← Metal.GpuBuffer.fromByteArray input
+  let gammaGpu ← Metal.GpuBuffer.fromByteArray gamma
+  let betaGpu ← Metal.GpuBuffer.fromByteArray beta
+
+  -- hiddenSize = n means normalize entire input as one group
+  let result ← Metal.GpuBuffer.layerNorm inputGpu gammaGpu betaGpu 4 4
+
+  let output ← result.toByteArray
+
+  IO.println s!"layer_norm result: [{getFloat output 0}, {getFloat output 1}, {getFloat output 2}, {getFloat output 3}]"
+
+  -- For layer norm with gamma=1, beta=0:
+  -- [1,2,3,4] has mean=2.5, var=1.25
+  -- normalized = (x - mean) / sqrt(var + eps)
+  -- [1,2,3,4] -> [-1.34, -0.45, 0.45, 1.34] approximately
+
+  let mut passed := true
+  -- Check that output is normalized (mean ≈ 0)
+  let mean := (getFloat output 0 + getFloat output 1 + getFloat output 2 + getFloat output 3) / 4
+  if mean.abs > 0.1 then
+    IO.println s!"  FAIL: mean should be ~0, got {mean}"
+    passed := false
+  -- Check that middle values are approximately 0 and ±0.45
+  if ((getFloat output 1) + 0.45).abs > 0.2 then
+    IO.println s!"  FAIL at index 1: expected ~-0.45, got {getFloat output 1}"
+    passed := false
+
+  if passed then
+    IO.println "  ✓ layer_norm test PASSED"
+  else
+    IO.println "  ✗ layer_norm test FAILED"
+
+/-- Test bias_gelu operation -/
+def testBiasGelu : IO Unit := do
+  IO.println "\n=== Testing bias_gelu ==="
+
+  -- Input: 6 elements, stride 3 (2 samples × 3 features)
+  let input := floatsToByteArray [0, 0, 0, 1, 1, 1]
+  let bias := floatsToByteArray [0, 1, -1]  -- bias per feature
+
+  let inputGpu ← Metal.GpuBuffer.fromByteArray input
+  let biasGpu ← Metal.GpuBuffer.fromByteArray bias
+
+  let result ← Metal.GpuBuffer.biasGelu inputGpu biasGpu 6 3
+
+  let output ← result.toByteArray
+
+  IO.println s!"bias_gelu result: [{getFloat output 0}, {getFloat output 1}, {getFloat output 2}, {getFloat output 3}, {getFloat output 4}, {getFloat output 5}]"
+
+  -- gelu(x) ≈ x * 0.5 * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+  -- gelu(0) ≈ 0
+  -- gelu(1) ≈ 0.841
+  -- gelu(-1) ≈ -0.159
+  -- gelu(2) ≈ 1.955
+
+  let mut passed := true
+  -- Check gelu(0) ≈ 0
+  if (getFloat output 0).abs > 0.1 then
+    IO.println s!"  FAIL at index 0: expected ~0, got {getFloat output 0}"
+    passed := false
+  -- Check gelu(1) ≈ 0.84
+  if ((getFloat output 1) - 0.84).abs > 0.1 then
+    IO.println s!"  FAIL at index 1: expected ~0.84, got {getFloat output 1}"
+    passed := false
+
+  if passed then
+    IO.println "  ✓ bias_gelu test PASSED"
+  else
+    IO.println "  ✗ bias_gelu test FAILED"
+
+/-- Test avgpool2d operation -/
+def testAvgpool2d : IO Unit := do
+  IO.println "\n=== Testing avgpool2d ==="
+
+  -- Input: 1 batch × 1 channel × 4×4 image
+  -- Using 2×2 pool with stride 2, output should be 2×2
+  let input := floatsToByteArray [
+    1, 2, 3, 4,
+    5, 6, 7, 8,
+    9, 10, 11, 12,
+    13, 14, 15, 16
+  ]
+
+  let inputGpu ← Metal.GpuBuffer.fromByteArray input
+
+  let result ← Metal.GpuBuffer.avgpool2d inputGpu 1 1 4 4 2 2 2 2
+
+  let output ← result.toByteArray
+
+  IO.println s!"avgpool2d result: [{getFloat output 0}, {getFloat output 1}, {getFloat output 2}, {getFloat output 3}]"
+
+  -- Expected: avg of 2×2 blocks
+  -- [1,2,5,6] -> mean = 3.5
+  -- [3,4,7,8] -> mean = 5.5
+  -- [9,10,13,14] -> mean = 11.5
+  -- [11,12,15,16] -> mean = 13.5
+  let expected := [3.5, 5.5, 11.5, 13.5]
+
+  let mut passed := true
+  for i in List.range 4 do
+    let got := getFloat output i
+    let exp := expected[i]!
+    let diff := (got - exp).abs
+    if diff > 0.1 then
+      IO.println s!"  FAIL at index {i}: got {got}, expected {exp}"
+      passed := false
+
+  if passed then
+    IO.println "  ✓ avgpool2d test PASSED"
+  else
+    IO.println "  ✗ avgpool2d test FAILED"
+
 def main : IO Unit := do
   if Metal.isAvailable () then
     IO.println "Metal GPU available, running tests...\n"
     testGemmBiasRelu
     testBatching
     testBiasRelu
+    testLayerNorm
+    testBiasGelu
+    testAvgpool2d
     IO.println "\n=== All tests completed ==="
   else
     IO.println "Metal GPU not available, skipping tests"

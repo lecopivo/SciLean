@@ -1022,6 +1022,237 @@ LEAN_EXPORT lean_obj_res scilean_gpu_bias_relu_f32(
     }
 }
 
+// Layer normalization on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
+// y = gamma * (x - mean) / sqrt(var + eps) + beta
+LEAN_EXPORT lean_obj_res scilean_gpu_layer_norm_f32(
+    b_lean_obj_arg X_buf,
+    b_lean_obj_arg gamma_buf,
+    b_lean_obj_arg beta_buf,
+    size_t n,
+    size_t hidden_size,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> X = get_mtl_buffer(X_buf);
+    id<MTLBuffer> gamma = get_mtl_buffer(gamma_buf);
+    id<MTLBuffer> beta = get_mtl_buffer(beta_buf);
+    if (!X || !gamma || !beta) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"layer_norm");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get layer_norm pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        // The layer_norm kernel normalizes across hidden_size elements
+        // n = total elements, hidden_size = normalization dimension
+        // For now, kernel supports single group (hidden_size == n)
+        uint32_t n32 = (uint32_t)hidden_size;  // The kernel param 'n' is the normalization dimension
+        float eps = 1e-5f;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:X offset:0 atIndex:0];
+        [encoder setBuffer:gamma offset:0 atIndex:1];
+        [encoder setBuffer:beta offset:0 atIndex:2];
+        [encoder setBuffer:Y offset:0 atIndex:3];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:4];
+        [encoder setBytes:&eps length:sizeof(eps) atIndex:5];
+
+        // Layer norm uses parallel reduction and requires exactly ONE threadgroup
+        // with shared memory for reduction
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, (NSUInteger)hidden_size);
+        // Round up to power of 2 for reduction to work correctly
+        NSUInteger powerOf2 = 1;
+        while (powerOf2 < tgSize) powerOf2 *= 2;
+        tgSize = MIN(powerOf2, pipeline.maxTotalThreadsPerThreadgroup);
+
+        // Allocate threadgroup memory for reduction
+        [encoder setThreadgroupMemoryLength:tgSize * sizeof(float) atIndex:0];
+
+        // Dispatch exactly one threadgroup
+        [encoder dispatchThreadgroups:MTLSizeMake(1, 1, 1)
+                threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
+// Bias + GELU fused operation on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
+// y = gelu(x + bias) where gelu(x) ≈ 0.5*x*(1+tanh(sqrt(2/pi)*(x+0.044715*x^3)))
+LEAN_EXPORT lean_obj_res scilean_gpu_bias_gelu_f32(
+    b_lean_obj_arg X_buf,
+    b_lean_obj_arg bias_buf,
+    size_t n,
+    size_t stride,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> X = get_mtl_buffer(X_buf);
+    id<MTLBuffer> bias = get_mtl_buffer(bias_buf);
+    if (!X || !bias) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"bias_gelu");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get bias_gelu pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t n32 = (uint32_t)n;
+        uint32_t stride32 = (uint32_t)stride;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:X offset:0 atIndex:0];
+        [encoder setBuffer:bias offset:0 atIndex:1];
+        [encoder setBuffer:Y offset:0 atIndex:2];
+        [encoder setBytes:&n32 length:sizeof(n32) atIndex:3];
+        [encoder setBytes:&stride32 length:sizeof(stride32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
+// Average pooling 2D on GPU buffers
+// Supports batching: when in batch mode, queues to shared command buffer
+LEAN_EXPORT lean_obj_res scilean_gpu_avgpool2d_f32(
+    b_lean_obj_arg X_buf,
+    size_t batch_size,
+    size_t channels,
+    size_t in_height,
+    size_t in_width,
+    size_t pool_h,
+    size_t pool_w,
+    size_t stride_h,
+    size_t stride_w,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> X = get_mtl_buffer(X_buf);
+    if (!X) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"avgpool2d");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get avgpool2d pipeline"));
+        }
+
+        size_t out_height = (in_height - pool_h) / stride_h + 1;
+        size_t out_width = (in_width - pool_w) / stride_w + 1;
+        size_t output_elements = batch_size * channels * out_height * out_width;
+        size_t output_size = output_elements * sizeof(float);
+
+        id<MTLBuffer> Y = get_pooled_buffer(output_size);
+        if (!Y) {
+            Y = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t batch32 = (uint32_t)batch_size;
+        uint32_t channels32 = (uint32_t)channels;
+        uint32_t in_h32 = (uint32_t)in_height;
+        uint32_t in_w32 = (uint32_t)in_width;
+        uint32_t pool_h32 = (uint32_t)pool_h;
+        uint32_t pool_w32 = (uint32_t)pool_w;
+        uint32_t stride_h32 = (uint32_t)stride_h;
+        uint32_t stride_w32 = (uint32_t)stride_w;
+
+        // Use batch encoder if in batch mode
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:X offset:0 atIndex:0];
+        [encoder setBuffer:Y offset:0 atIndex:1];
+        [encoder setBytes:&batch32 length:sizeof(batch32) atIndex:2];
+        [encoder setBytes:&channels32 length:sizeof(channels32) atIndex:3];
+        [encoder setBytes:&in_h32 length:sizeof(in_h32) atIndex:4];
+        [encoder setBytes:&in_w32 length:sizeof(in_w32) atIndex:5];
+        [encoder setBytes:&pool_h32 length:sizeof(pool_h32) atIndex:6];
+        [encoder setBytes:&pool_w32 length:sizeof(pool_w32) atIndex:7];
+        [encoder setBytes:&stride_h32 length:sizeof(stride_h32) atIndex:8];
+        [encoder setBytes:&stride_w32 length:sizeof(stride_w32) atIndex:9];
+
+        MTLSize gridSize = MTLSizeMake(out_width, out_height, batch_size * channels);
+        MTLSize threadgroupSize = MTLSizeMake(
+            MIN(16, out_width),
+            MIN(16, out_height),
+            1
+        );
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:Y];
+        }
+
+        lean_obj_res result = wrap_gpu_buffer(Y, output_size);
+        return lean_io_result_mk_ok(result);
+    }
+}
+
 // ============================================================================
 // Original FFI Functions (ByteArray-based)
 // ============================================================================

@@ -172,6 +172,25 @@ opaque biasRelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
 @[extern "scilean_gpu_gemm_bias_relu_f32"]
 opaque gemmBiasRelu (A B bias : @& GpuBuffer) (m k n : USize) : IO GpuBuffer
 
+/-- Layer normalization: y = gamma * (x - mean) / sqrt(var + eps) + beta
+    x is [n] total elements, hiddenSize is the normalization dimension.
+    Supports batching. -/
+@[extern "scilean_gpu_layer_norm_f32"]
+opaque layerNorm (x gamma beta : @& GpuBuffer) (n hiddenSize : USize) : IO GpuBuffer
+
+/-- Bias + GELU fused operation: y = gelu(x + bias)
+    x is [n] elements, bias has [stride] elements broadcasted.
+    GELU ≈ 0.5*x*(1+tanh(sqrt(2/π)*(x+0.044715*x³)))
+    Supports batching. -/
+@[extern "scilean_gpu_bias_gelu_f32"]
+opaque biasGelu (x bias : @& GpuBuffer) (n stride : USize) : IO GpuBuffer
+
+/-- Average pooling 2D
+    Supports batching. -/
+@[extern "scilean_gpu_avgpool2d_f32"]
+opaque avgpool2d (x : @& GpuBuffer) (batchSize channels inHeight inWidth : USize)
+    (poolH poolW : USize) (strideH strideW : USize) : IO GpuBuffer
+
 end GpuBuffer
 
 /-! ## Matrix Operations -/
