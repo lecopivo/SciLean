@@ -112,10 +112,10 @@ structure GpuGradients where
 
 /-! ## Forward Pass -/
 
-/-- Forward pass: x → h = gelu(W1 @ x + b1) → o = W2 @ h + b2 → softmax(o)
+/-- Forward pass (internal, no batching): x → h = gelu(W1 @ x + b1) → o = W2 @ h + b2 → softmax(o)
     Returns (softmax_output, hidden_pre_activation, hidden_post_activation)
     for use in backward pass -/
-def forwardBatch (weights : GpuWeights) (x : GpuBuffer)
+def forwardBatchInternal (weights : GpuWeights) (x : GpuBuffer)
     (batchSize : USize) : IO (GpuBuffer × GpuBuffer × GpuBuffer × GpuBuffer) := do
   -- x is [batchSize, 784] stored as [batchSize * 784]
   -- W1 is [128, 784], b1 is [128]
@@ -139,11 +139,16 @@ def forwardBatch (weights : GpuWeights) (x : GpuBuffer)
 
   return (y, h_pre, h, o)
 
+/-- Forward pass with command buffer batching -/
+def forwardBatch (weights : GpuWeights) (x : GpuBuffer)
+    (batchSize : USize) : IO (GpuBuffer × GpuBuffer × GpuBuffer × GpuBuffer) :=
+  withBatch (forwardBatchInternal weights x batchSize)
+
 /-! ## Backward Pass -/
 
-/-- Backward pass: computes gradients for all weights
+/-- Backward pass (internal, no batching): computes gradients for all weights
     Returns gradients for w1, b1, w2, b2 -/
-def backwardBatch (weights : GpuWeights) (x y target h_pre h : GpuBuffer)
+def backwardBatchInternal (weights : GpuWeights) (x y target h_pre h : GpuBuffer)
     (batchSize : USize) : IO GpuGradients := do
   -- dL/do = y - target (softmax + cross-entropy combined gradient)
   let d_o ← GpuBuffer.sub y target (batchSize * 10)
@@ -172,10 +177,15 @@ def backwardBatch (weights : GpuWeights) (x y target h_pre h : GpuBuffer)
 
   return { dw1 := dw1, db1 := db1, dw2 := dw2, db2 := db2 }
 
+/-- Backward pass with command buffer batching -/
+def backwardBatch (weights : GpuWeights) (x y target h_pre h : GpuBuffer)
+    (batchSize : USize) : IO GpuGradients :=
+  withBatch (backwardBatchInternal weights x y target h_pre h batchSize)
+
 /-! ## SGD Update -/
 
-/-- SGD update: w = w - lr * grad -/
-def sgdUpdate (weights : GpuWeights) (grads : GpuGradients)
+/-- SGD update (internal, no batching): w = w - lr * grad -/
+def sgdUpdateInternal (weights : GpuWeights) (grads : GpuGradients)
     (lr : Float) : IO GpuWeights := do
   -- w1 = w1 - lr * dw1
   let w1' ← GpuBuffer.axpy (128 * 784) (-lr) grads.dw1 weights.w1
@@ -184,6 +194,11 @@ def sgdUpdate (weights : GpuWeights) (grads : GpuGradients)
   let b2' ← GpuBuffer.axpy 10 (-lr) grads.db2 weights.b2
 
   return { w1 := w1', b1 := b1', w2 := w2', b2 := b2' }
+
+/-- SGD update with command buffer batching -/
+def sgdUpdate (weights : GpuWeights) (grads : GpuGradients)
+    (lr : Float) : IO GpuWeights :=
+  withBatch (sgdUpdateInternal weights grads lr)
 
 /-! ## Loss and Accuracy -/
 
@@ -238,6 +253,20 @@ def computeAccuracy (pred target : GpuBuffer) (batchSize : USize) : IO Float := 
 
 /-! ## Training Loop -/
 
+/-- Combined training step: forward + backward + update in a single command buffer.
+    This eliminates per-operation dispatch overhead for maximum throughput. -/
+def trainStep (weights : GpuWeights) (images labels : GpuBuffer)
+    (batchSize : USize) (lr : Float) : IO GpuWeights :=
+  withBatch do
+    -- Forward pass
+    let (pred, h_pre, h, _) ← forwardBatchInternal weights images batchSize
+
+    -- Backward pass
+    let grads ← backwardBatchInternal weights images pred labels h_pre h batchSize
+
+    -- SGD update
+    sgdUpdateInternal weights grads lr
+
 def trainEpoch (weights : GpuWeights) (images labels : GpuBuffer)
     (numSamples batchSize : Nat) (lr : Float) : IO GpuWeights := do
   let mut w := weights
@@ -247,14 +276,8 @@ def trainEpoch (weights : GpuWeights) (images labels : GpuBuffer)
     -- Get batch slice (for simplicity, we process all data as one batch for now)
     -- In a real implementation, you'd slice the buffers
 
-    -- Forward pass
-    let (pred, h_pre, h, _) ← forwardBatch w images batchSize.toUSize
-
-    -- Backward pass
-    let grads ← backwardBatch w images pred labels h_pre h batchSize.toUSize
-
-    -- SGD update
-    w ← sgdUpdate w grads lr
+    -- Combined training step (forward + backward + update in one command buffer)
+    w ← trainStep w images labels batchSize.toUSize lr
 
     if batch % 10 = 0 then
       IO.print "."
@@ -321,14 +344,8 @@ def main : IO Unit := do
   for epoch in [0:epochs] do
     let start ← IO.monoMsNow
 
-    -- Forward pass
-    let (pred, h_pre, h, _) ← forwardBatch weights images batchSize.toUSize
-
-    -- Backward pass
-    let grads ← backwardBatch weights images pred labels h_pre h batchSize.toUSize
-
-    -- SGD update
-    weights ← sgdUpdate weights grads lr
+    -- Combined training step (forward + backward + update in single command buffer)
+    weights ← trainStep weights images labels batchSize.toUSize lr
 
     let elapsed := (← IO.monoMsNow) - start
 
