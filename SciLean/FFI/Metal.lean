@@ -216,6 +216,33 @@ opaque batchNorm2d (input gamma beta mean var : @& GpuBuffer)
     (batchSize channels height width : USize)
     (eps : Float) (applyRelu : USize) : IO GpuBuffer
 
+/-! ### Backward Pass Operations (for autodiff) -/
+
+/-- ReLU backward: grad_input = grad_output * (input > 0 ? 1 : 0)
+    Supports batching. -/
+@[extern "scilean_gpu_relu_backward_f32"]
+opaque reluBackward (input gradOutput : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- Element-wise multiply backward
+    For c = a * b: grad_a = grad_c * b, grad_b = grad_c * a
+    Returns (grad_a, grad_b) pair.
+    Supports batching. -/
+@[extern "scilean_gpu_mul_backward_f32"]
+opaque mulBackward (a b gradOutput : @& GpuBuffer) (n : USize) : IO (GpuBuffer × GpuBuffer)
+
+/-- GELU backward using approximation derivative
+    Supports batching. -/
+@[extern "scilean_gpu_gelu_backward_f32"]
+opaque geluBackward (input gradOutput : @& GpuBuffer) (n : USize) : IO GpuBuffer
+
+/-- Softmax backward (batched)
+    For y = softmax(x): grad_x = y * (grad_y - sum(grad_y * y))
+    Takes the softmax output (not input) for efficiency.
+    Supports batching. -/
+@[extern "scilean_gpu_softmax_backward_f32"]
+opaque softmaxBackward (softmaxOutput gradOutput : @& GpuBuffer)
+    (numRows rowSize : USize) : IO GpuBuffer
+
 end GpuBuffer
 
 /-! ## Matrix Operations -/

@@ -1487,6 +1487,245 @@ LEAN_EXPORT lean_obj_res scilean_gpu_batchnorm2d_f32(
 }
 
 // ============================================================================
+// Backward Pass Kernels for Autodiff
+// ============================================================================
+
+// ReLU backward: grad_input = grad_output * (input > 0)
+LEAN_EXPORT lean_obj_res scilean_gpu_relu_backward_f32(
+    b_lean_obj_arg input_buf,
+    b_lean_obj_arg grad_output_buf,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> input = get_mtl_buffer(input_buf);
+    id<MTLBuffer> grad_output = get_mtl_buffer(grad_output_buf);
+    if (!input || !grad_output) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"relu_backward");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get relu_backward pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> grad_input = get_pooled_buffer(output_size);
+        if (!grad_input) {
+            grad_input = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:input offset:0 atIndex:0];
+        [encoder setBuffer:grad_output offset:0 atIndex:1];
+        [encoder setBuffer:grad_input offset:0 atIndex:2];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:grad_input];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(grad_input, output_size));
+    }
+}
+
+// Element-wise multiply backward: grad_a = grad_out * b, grad_b = grad_out * a
+// Returns a pair of GpuBuffers (grad_a, grad_b)
+LEAN_EXPORT lean_obj_res scilean_gpu_mul_backward_f32(
+    b_lean_obj_arg a_buf,
+    b_lean_obj_arg b_buf,
+    b_lean_obj_arg grad_output_buf,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> a = get_mtl_buffer(a_buf);
+    id<MTLBuffer> b = get_mtl_buffer(b_buf);
+    id<MTLBuffer> grad_output = get_mtl_buffer(grad_output_buf);
+    if (!a || !b || !grad_output) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"mul_backward");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get mul_backward pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> grad_a = get_pooled_buffer(output_size);
+        id<MTLBuffer> grad_b = get_pooled_buffer(output_size);
+        if (!grad_a) grad_a = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        if (!grad_b) grad_b = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:a offset:0 atIndex:0];
+        [encoder setBuffer:b offset:0 atIndex:1];
+        [encoder setBuffer:grad_output offset:0 atIndex:2];
+        [encoder setBuffer:grad_a offset:0 atIndex:3];
+        [encoder setBuffer:grad_b offset:0 atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:grad_a];
+            [g_batch_outputs addObject:grad_b];
+        }
+
+        // Return pair as Lean Prod
+        lean_obj_res ga = wrap_gpu_buffer(grad_a, output_size);
+        lean_obj_res gb = wrap_gpu_buffer(grad_b, output_size);
+        lean_obj_res pair = lean_alloc_ctor(0, 2, 0);
+        lean_ctor_set(pair, 0, ga);
+        lean_ctor_set(pair, 1, gb);
+        return lean_io_result_mk_ok(pair);
+    }
+}
+
+// GELU backward
+LEAN_EXPORT lean_obj_res scilean_gpu_gelu_backward_f32(
+    b_lean_obj_arg input_buf,
+    b_lean_obj_arg grad_output_buf,
+    size_t n,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> input = get_mtl_buffer(input_buf);
+    id<MTLBuffer> grad_output = get_mtl_buffer(grad_output_buf);
+    if (!input || !grad_output) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"gelu_backward");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get gelu_backward pipeline"));
+        }
+
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> grad_input = get_pooled_buffer(output_size);
+        if (!grad_input) {
+            grad_input = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:input offset:0 atIndex:0];
+        [encoder setBuffer:grad_output offset:0 atIndex:1];
+        [encoder setBuffer:grad_input offset:0 atIndex:2];
+
+        MTLSize gridSize = MTLSizeMake(n, 1, 1);
+        NSUInteger tgSize = MIN(pipeline.maxTotalThreadsPerThreadgroup, n);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgSize, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:grad_input];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(grad_input, output_size));
+    }
+}
+
+// Softmax backward
+LEAN_EXPORT lean_obj_res scilean_gpu_softmax_backward_f32(
+    b_lean_obj_arg softmax_output_buf,
+    b_lean_obj_arg grad_output_buf,
+    size_t num_rows,
+    size_t row_size,
+    lean_obj_arg /* world */
+) {
+    if (!ensure_metal_initialized()) {
+        return lean_io_result_mk_error(lean_mk_string("Metal not available"));
+    }
+
+    id<MTLBuffer> softmax_output = get_mtl_buffer(softmax_output_buf);
+    id<MTLBuffer> grad_output = get_mtl_buffer(grad_output_buf);
+    if (!softmax_output || !grad_output) {
+        return lean_io_result_mk_error(lean_mk_string("Invalid GpuBuffer"));
+    }
+
+    @autoreleasepool {
+        id<MTLComputePipelineState> pipeline = get_pipeline(@"softmax_backward");
+        if (!pipeline) {
+            return lean_io_result_mk_error(lean_mk_string("Failed to get softmax_backward pipeline"));
+        }
+
+        size_t n = num_rows * row_size;
+        size_t output_size = n * sizeof(float);
+        id<MTLBuffer> grad_input = get_pooled_buffer(output_size);
+        if (!grad_input) {
+            grad_input = [device newBufferWithLength:output_size options:MTLResourceStorageModeShared];
+        }
+
+        uint32_t rows32 = (uint32_t)num_rows;
+        uint32_t cols32 = (uint32_t)row_size;
+
+        bool batched = is_batch_mode();
+        id<MTLCommandBuffer> commandBuffer = batched ? g_batch_command_buffer : [commandQueue commandBuffer];
+        id<MTLComputeCommandEncoder> encoder = batched ? g_batch_encoder : [commandBuffer computeCommandEncoder];
+
+        [encoder setComputePipelineState:pipeline];
+        [encoder setBuffer:softmax_output offset:0 atIndex:0];
+        [encoder setBuffer:grad_output offset:0 atIndex:1];
+        [encoder setBuffer:grad_input offset:0 atIndex:2];
+        [encoder setBytes:&rows32 length:sizeof(rows32) atIndex:3];
+        [encoder setBytes:&cols32 length:sizeof(cols32) atIndex:4];
+
+        MTLSize gridSize = MTLSizeMake(row_size, num_rows, 1);
+        NSUInteger tgw = MIN(pipeline.maxTotalThreadsPerThreadgroup, row_size);
+        [encoder dispatchThreads:gridSize threadsPerThreadgroup:MTLSizeMake(tgw, 1, 1)];
+
+        if (!batched) {
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        } else {
+            [g_batch_outputs addObject:grad_input];
+        }
+
+        return lean_io_result_mk_ok(wrap_gpu_buffer(grad_input, output_size));
+    }
+}
+
+// ============================================================================
 // Original FFI Functions (ByteArray-based)
 // ============================================================================
 

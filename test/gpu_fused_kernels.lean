@@ -368,6 +368,99 @@ def testBatchNorm2d : IO Unit := do
   else
     IO.println "  ✗ batchnorm2d test FAILED"
 
+/-- Test backward pass kernels for autodiff -/
+def testBackwardKernels : IO Unit := do
+  IO.println "\n=== Testing backward pass kernels ==="
+
+  -- Test ReLU backward
+  IO.println "  Testing relu_backward..."
+  let input := floatsToByteArray [-2, -1, 0, 1, 2, 3]
+  let gradOut := floatsToByteArray [1, 1, 1, 1, 1, 1]
+
+  let inputGpu ← Metal.GpuBuffer.fromByteArray input
+  let gradOutGpu ← Metal.GpuBuffer.fromByteArray gradOut
+
+  let gradIn ← Metal.GpuBuffer.reluBackward inputGpu gradOutGpu 6
+  let gradInData ← gradIn.toByteArray
+
+  -- Expected: [0, 0, 0, 1, 1, 1] (only positive inputs pass gradient)
+  let expectedRelu := [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+  let mut passed := true
+
+  for i in List.range 6 do
+    let got := getFloat gradInData i
+    let exp := expectedRelu[i]!
+    if (got - exp).abs > 0.01 then
+      IO.println s!"    FAIL relu_backward at {i}: got {got}, expected {exp}"
+      passed := false
+
+  if passed then
+    IO.println "    relu_backward OK"
+
+  -- Test multiply backward
+  IO.println "  Testing mul_backward..."
+  let a := floatsToByteArray [1, 2, 3, 4]
+  let b := floatsToByteArray [5, 6, 7, 8]
+  let dout := floatsToByteArray [1, 1, 1, 1]
+
+  let aGpu ← Metal.GpuBuffer.fromByteArray a
+  let bGpu ← Metal.GpuBuffer.fromByteArray b
+  let doutGpu ← Metal.GpuBuffer.fromByteArray dout
+
+  let (gradA, gradB) ← Metal.GpuBuffer.mulBackward aGpu bGpu doutGpu 4
+  let gradAData ← gradA.toByteArray
+  let gradBData ← gradB.toByteArray
+
+  -- Expected: grad_a = dout * b = [5,6,7,8], grad_b = dout * a = [1,2,3,4]
+  let expectedGradA := [5.0, 6.0, 7.0, 8.0]
+  let expectedGradB := [1.0, 2.0, 3.0, 4.0]
+
+  for i in List.range 4 do
+    let gotA := getFloat gradAData i
+    let expA := expectedGradA[i]!
+    if (gotA - expA).abs > 0.01 then
+      IO.println s!"    FAIL mul_backward grad_a at {i}: got {gotA}, expected {expA}"
+      passed := false
+
+    let gotB := getFloat gradBData i
+    let expB := expectedGradB[i]!
+    if (gotB - expB).abs > 0.01 then
+      IO.println s!"    FAIL mul_backward grad_b at {i}: got {gotB}, expected {expB}"
+      passed := false
+
+  if passed then
+    IO.println "    mul_backward OK"
+
+  -- Test GELU backward
+  IO.println "  Testing gelu_backward..."
+  let geluIn := floatsToByteArray [0, 1, -1, 2]
+  let geluDout := floatsToByteArray [1, 1, 1, 1]
+
+  let geluInGpu ← Metal.GpuBuffer.fromByteArray geluIn
+  let geluDoutGpu ← Metal.GpuBuffer.fromByteArray geluDout
+
+  let geluGradIn ← Metal.GpuBuffer.geluBackward geluInGpu geluDoutGpu 4
+  let geluGradData ← geluGradIn.toByteArray
+
+  -- GELU'(0) ≈ 0.5, GELU'(1) ≈ 1.08, GELU'(-1) ≈ -0.08, GELU'(2) ≈ 1.09
+  -- Just check they're in reasonable range
+  let g0 := getFloat geluGradData 0
+  let g1 := getFloat geluGradData 1
+  if (g0 - 0.5).abs > 0.1 then
+    IO.println s!"    FAIL gelu_backward at 0: got {g0}, expected ~0.5"
+    passed := false
+  if g1 < 0.9 || g1 > 1.2 then
+    IO.println s!"    FAIL gelu_backward at 1: got {g1}, expected ~1.08"
+    passed := false
+
+  if passed then
+    IO.println "    gelu_backward OK"
+
+  if passed then
+    IO.println "  ✓ backward kernels test PASSED"
+  else
+    IO.println "  ✗ backward kernels test FAILED"
+
 def main : IO Unit := do
   if Metal.isAvailable () then
     IO.println "Metal GPU available, running tests...\n"
@@ -379,6 +472,7 @@ def main : IO Unit := do
     testAvgpool2d
     testFlashAttention
     testBatchNorm2d
+    testBackwardKernels
     IO.println "\n=== All tests completed ==="
   else
     IO.println "Metal GPU not available, skipping tests"

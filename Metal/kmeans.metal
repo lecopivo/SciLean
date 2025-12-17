@@ -2454,3 +2454,157 @@ kernel void batchnorm2d_inference(
 
     output[idx] = y;
 }
+
+// ============================================================================
+// BACKWARD PASS KERNELS (for automatic differentiation)
+// ============================================================================
+
+// ReLU backward: grad_input = grad_output * (input > 0 ? 1 : 0)
+kernel void relu_backward(
+    device const float* input [[buffer(0)]],
+    device const float* grad_output [[buffer(1)]],
+    device float* grad_input [[buffer(2)]],
+    uint id [[thread_position_in_grid]]
+) {
+    grad_input[id] = input[id] > 0.0f ? grad_output[id] : 0.0f;
+}
+
+// Element-wise multiply backward
+// For c = a * b: grad_a = grad_c * b, grad_b = grad_c * a
+kernel void mul_backward(
+    device const float* a [[buffer(0)]],
+    device const float* b [[buffer(1)]],
+    device const float* grad_output [[buffer(2)]],
+    device float* grad_a [[buffer(3)]],
+    device float* grad_b [[buffer(4)]],
+    uint id [[thread_position_in_grid]]
+) {
+    grad_a[id] = grad_output[id] * b[id];
+    grad_b[id] = grad_output[id] * a[id];
+}
+
+// Sigmoid backward: grad_input = grad_output * sigmoid(x) * (1 - sigmoid(x))
+// Note: Takes sigmoid output (y) to avoid recomputation
+kernel void sigmoid_backward(
+    device const float* sigmoid_output [[buffer(0)]],
+    device const float* grad_output [[buffer(1)]],
+    device float* grad_input [[buffer(2)]],
+    uint id [[thread_position_in_grid]]
+) {
+    float y = sigmoid_output[id];
+    grad_input[id] = grad_output[id] * y * (1.0f - y);
+}
+
+// Tanh backward: grad_input = grad_output * (1 - tanh(x)^2)
+// Note: Takes tanh output (y) to avoid recomputation
+kernel void tanh_backward(
+    device const float* tanh_output [[buffer(0)]],
+    device const float* grad_output [[buffer(1)]],
+    device float* grad_input [[buffer(2)]],
+    uint id [[thread_position_in_grid]]
+) {
+    float y = tanh_output[id];
+    grad_input[id] = grad_output[id] * (1.0f - y * y);
+}
+
+// GELU backward using approximation derivative
+// gelu(x) ≈ 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
+kernel void gelu_backward(
+    device const float* input [[buffer(0)]],
+    device const float* grad_output [[buffer(1)]],
+    device float* grad_input [[buffer(2)]],
+    uint id [[thread_position_in_grid]]
+) {
+    float x = input[id];
+    float sqrt_2_pi = 0.7978845608f;
+    float c = 0.044715f;
+
+    float x3 = x * x * x;
+    float inner = sqrt_2_pi * (x + c * x3);
+    float tanh_inner = tanh(inner);
+
+    // Derivative: 0.5 * (1 + tanh_inner) + 0.5 * x * (1 - tanh_inner²) * sqrt_2_pi * (1 + 3*c*x²)
+    float dtanh = 1.0f - tanh_inner * tanh_inner;
+    float dinner = sqrt_2_pi * (1.0f + 3.0f * c * x * x);
+
+    float dgelu = 0.5f * (1.0f + tanh_inner) + 0.5f * x * dtanh * dinner;
+    grad_input[id] = grad_output[id] * dgelu;
+}
+
+// Softmax backward (batched, per-row)
+// For y = softmax(x): grad_x = y * (grad_y - sum(grad_y * y))
+// Each thread handles one element, atomics for row sums
+kernel void softmax_backward(
+    device const float* softmax_output [[buffer(0)]],
+    device const float* grad_output [[buffer(1)]],
+    device float* grad_input [[buffer(2)]],
+    constant uint& num_rows [[buffer(3)]],
+    constant uint& row_size [[buffer(4)]],
+    uint2 gid [[thread_position_in_grid]]
+) {
+    uint row = gid.y;
+    uint col = gid.x;
+
+    if (row >= num_rows || col >= row_size) return;
+
+    uint base = row * row_size;
+
+    // Compute dot product: sum(grad_y * y) for this row
+    float dot = 0.0f;
+    for (uint j = 0; j < row_size; j++) {
+        dot += grad_output[base + j] * softmax_output[base + j];
+    }
+
+    // grad_x[i] = y[i] * (grad_y[i] - dot)
+    uint idx = base + col;
+    grad_input[idx] = softmax_output[idx] * (grad_output[idx] - dot);
+}
+
+// Bias backward: grad_bias = sum(grad_output) over batch/spatial dims
+// For bias of shape [stride], sums over elements with same (idx % stride)
+kernel void bias_backward(
+    device const float* grad_output [[buffer(0)]],
+    device atomic_float* grad_bias [[buffer(1)]],
+    constant uint& n [[buffer(2)]],
+    constant uint& stride [[buffer(3)]],
+    uint id [[thread_position_in_grid]]
+) {
+    if (id >= n) return;
+    uint bias_idx = id % stride;
+    atomic_fetch_add_explicit(&grad_bias[bias_idx], grad_output[id], memory_order_relaxed);
+}
+
+// BatchNorm2D backward (inference mode - simplified)
+// For inference: grad_input = grad_output * gamma / sqrt(var + eps)
+kernel void batchnorm2d_backward(
+    device const float* input [[buffer(0)]],
+    device const float* gamma [[buffer(1)]],
+    device const float* running_var [[buffer(2)]],
+    device const float* grad_output [[buffer(3)]],
+    device float* grad_input [[buffer(4)]],
+    constant uint& batch_size [[buffer(5)]],
+    constant uint& channels [[buffer(6)]],
+    constant uint& height [[buffer(7)]],
+    constant uint& width [[buffer(8)]],
+    constant float& eps [[buffer(9)]],
+    uint3 gid [[thread_position_in_grid]]
+) {
+    uint w_idx = gid.x;
+    uint h_idx = gid.y;
+    uint batch_c = gid.z;
+    uint batch = batch_c / channels;
+    uint c = batch_c % channels;
+
+    if (w_idx >= width || h_idx >= height || batch >= batch_size) return;
+
+    uint idx = batch * channels * height * width
+             + c * height * width
+             + h_idx * width + w_idx;
+
+    float var = running_var[c];
+    float g = gamma[c];
+    float dy = grad_output[idx];
+
+    // grad_input (for inference, simpler form)
+    grad_input[idx] = dy * g * rsqrt(var + eps);
+}
