@@ -346,3 +346,8 @@ lean_exe GemmGen where
 lean_exe GpuFusedKernelTest where
   root := `test.gpu_fused_kernels
   moreLinkArgs := metalLinkArgs
+
+lean_exe GpuBatchingBenchmark where
+  buildType := .release
+  root := `examples.GpuBatchingBenchmark
+  moreLinkArgs := metalLinkArgs
