@@ -1,0 +1,17 @@
+name = "scilean-docs"
+version = "0.1.0"
+defaultTargets = ["SciLeanDocs", "generate-docs"]
+
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "main"
+
+# The content of the documentation is in this Lean library
+[[lean_lib]]
+name = "SciLeanDocs"
+
+# The content is linked into an executable that generates HTML
+[[lean_exe]]
+name = "generate-docs"
+root = "Main"
