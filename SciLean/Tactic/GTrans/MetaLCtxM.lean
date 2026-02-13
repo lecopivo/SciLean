@@ -26,11 +26,9 @@ def Lean.Meta.Context.toCtx (ctx : Meta.Context) : ContextCtx where
   localInstances := ctx.localInstances
 
 open Meta.Context in
-open private Meta.Context.config from Lean.Meta.Basic in -- this does not work :( se we have to to it with Meta.getConfig and throught CoreM
+
 def _root_.Lean.Meta.Context.getConfig (ctx : Meta.Context) : CoreM Meta.Config := do
-  let a : MetaM Meta.Config := Meta.getConfig
-  let (c,_) ← a.run ctx {}
-  pure c
+  return ctx.keyedConfig.config
 
 def Lean.Meta.Context.toCfg (ctx : Meta.Context) : CoreM ContextCfg := do return {
   config := ← ctx.getConfig
@@ -43,12 +41,17 @@ def Lean.Meta.Context.toCfg (ctx : Meta.Context) : CoreM ContextCfg := do return
 
 
 def _root_.Lean.Meta.Context.mkCtxCfg (ctx : ContextCtx) (cfg : ContextCfg) : Meta.Context :=
-  { config := cfg.config
+  { keyedConfig := cfg.config.toConfigWithKey
+    trackZetaDelta := false
+    zetaDeltaSet := {}
     lctx := ctx.lctx
     localInstances := ctx.localInstances
     defEqCtx? := cfg.defEqCtx?
     synthPendingDepth := cfg.synthPendingDepth
-    canUnfold? := cfg.canUnfold? }
+    canUnfold? := cfg.canUnfold?
+    univApprox := cfg.univApprox
+    inTypeClassResolution := cfg.inTypeClassResolution
+    cacheInferType := true }
 
 -- TODO: change the monad such that we can only add variables to the context and not remove them
 --       or completely changes the context
@@ -102,7 +105,7 @@ instance : MonadLift MetaM MetaLCtxM where
   monadLift x := fun cfg ctx => do let r ← x (.mkCtxCfg ctx cfg); pure (r, ctx)
 
 protected def MetaLCtxM.saveState : MetaLCtxM (SavedState×ContextCtx) :=
-  return ({ core := (← Core.saveState), meta := (← get) }, ⟨← getLCtx, ← getLocalInstances⟩)
+  return ({ core := (← Core.saveState), «meta» := (← get) }, ⟨← getLCtx, ← getLocalInstances⟩)
 
 def MetaLCtxM.restore (b : SavedState) (ctx : ContextCtx) : MetaLCtxM Unit := do
   b.restore
@@ -190,7 +193,7 @@ def introLetDecl (name : Name) (type? : Option Expr) (val : Expr) : MetaLCtxM Ex
   let type := type?.getD (← inferType val)
   let fvarId ← mkFreshFVarId
   fun _ ctx => do
-    let ctx := {ctx with lctx := ctx.lctx.mkLetDecl fvarId name type val (nonDep := false) .default}
+    let ctx := {ctx with lctx := ctx.lctx.mkLetDecl fvarId name type val (nondep := false) (kind := default)}
     let fvar := Expr.fvar fvarId
     return (fvar, ctx)
 

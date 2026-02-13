@@ -11,6 +11,7 @@ import SciLean.Tactic.FunTrans.Theorems
 import SciLean.Tactic.FunTrans.Types
 import Mathlib.Tactic.FunProp.Core
 import Mathlib.Tactic.FunProp.Types
+import SciLean.Lean.Meta.RefinedDiscrTree
 
 /-!
 ## `funTrans` core tactic algorithm
@@ -25,7 +26,12 @@ def runFunProp (e : Expr) : SimpM (Option Expr) := do
   let cache := (← get).cache
   modify (fun s => { s with cache := {}}) -- hopefully this prevent duplicating the cache
   let ctx   := (← funTransContext.get).funPropContext
-  let state := { cache := cache : FunProp.State }
+  let env ← getEnv
+  let state : FunProp.State := {
+    cache := cache
+    morTheorems := FunProp.morTheoremsExt.getState env
+    transitionTheorems := FunProp.transitionTheoremsExt.getState env
+  }
   -- We run fun_prop at default transparency
   -- As fun_prop unfolds `id`, `Function.comp`, ... it tries to apply `Continuous id` to
   -- `Continuous (fun x => x)` and this fails when running at 'reducible and instances' transparency
@@ -261,8 +267,7 @@ def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.F
   | .exact =>
     let ext := (morTheoremsExt.getState (← getEnv))
 
-    let candidates ← withConfig (fun cfg => {cfg with iota :=false, zeta := false}) <|
-      ext.theorems.getMatchWithScoreWithExtra e false
+    let candidates ← ext.theorems.getMatchWithExtra e false
     let candidates := candidates.map (·.1) |>.flatten
 
     trace[Meta.Tactic.fun_trans]
@@ -278,8 +283,7 @@ def applyFVarTheorems (e : Expr) : SimpM (Option Simp.Result) := do
 
   let ext := (fvarTheoremsExt.getState (← getEnv))
 
-  let candidates ← withConfig (fun cfg => {cfg with iota :=false, zeta := false}) <|
-    ext.theorems.getMatchWithScoreWithExtra e false
+  let candidates ← ext.theorems.getMatchWithExtra e false
   let candidates := candidates.map (·.1) |>.flatten
 
   trace[Meta.Tactic.fun_trans]
@@ -584,7 +588,7 @@ partial def funTrans (e : Expr) : SimpM Simp.Step := do
 
   -- bubble leading lets infront of function transformationx
   if f.isLet then
-    return ← FunProp.letTelescope f fun xs b => do
+    return ← letTelescope f fun xs b => do
       trace[Meta.Tactic.fun_trans.step] "moving let bindings out"
       let e' := e.setArg funTransDecl.funArgId b
       return .visit { expr := ← mkLambdaFVars xs e' }

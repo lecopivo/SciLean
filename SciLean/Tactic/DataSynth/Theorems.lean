@@ -161,10 +161,16 @@ def getLambdaTheorems (dataSynthName : Name) (thmType : LambdaTheoremType) :
 /-- Generalized transformation theorem -/
 structure GeneralTheorem extends Theorem where
   /-- discrimination tree keys used to index this theorem -/
-  keys        : List RefinedDiscrTree.DTExpr
+  keys        : List RefinedDiscrTree.Key
   /-- priority -/
   priority    : Nat  := eval_prio default
   deriving Inhabited, BEq
+
+/-- Entry for the `DataSynthTheorems` extension. -/
+structure GeneralEntry where
+  thm : GeneralTheorem
+  keysWithLazy : List (RefinedDiscrTree.Key × RefinedDiscrTree.LazyEntry)
+  deriving Inhabited
 
 
 
@@ -176,12 +182,11 @@ def DataSynthTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
 open Mathlib.Meta.FunProp in
 /-- -/
 structure DataSynthTheorems where
-  /-- -/
   theorems     : RefinedDiscrTree GeneralTheorem := {}
   deriving Inhabited
 
-/-- -/
-abbrev DataSynthTheoremsExt := SimpleScopedEnvExtension GeneralTheorem DataSynthTheorems
+/-- extension for generalized transformation theorems -/
+abbrev DataSynthTheoremsExt := SimpleScopedEnvExtension GeneralEntry DataSynthTheorems
 
 
 open Mathlib.Meta.FunProp in
@@ -191,7 +196,9 @@ initialize dataSynthTheoremsExt : DataSynthTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      let thm := e.thm
+      {d with theorems := e.keysWithLazy.foldl (fun thms (key, lazy) =>
+        RefinedDiscrTree.insert thms key (lazy, thm)) d.theorems}
   }
 
 
@@ -214,7 +221,8 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
     args := args.set! i (← mkFreshExprMVar X)
 
   let b := fn.beta args
-  let keys ← RefinedDiscrTree.mkDTExprs b false
+  let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta b
+  let keys := keysWithLazy.map (·.1)
 
   trace[Meta.Tactic.data_synth]
     "dataSynth: {dataSynthDecl.name}\
@@ -230,9 +238,24 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
   }
   return thm
 
+def getEntryFromConst (declName : Name) (prio : Nat := eval_prio default) : MetaM GeneralEntry := do
+  let thm ← getTheoremFromConst declName prio
+  let info ← getConstInfo declName
+  let (_,_,b) ← forallMetaTelescope info.type
+  Meta.letTelescope b fun _ b => do
+  let .some dataSynthDecl ← isDataSynth? b | unreachable!
+  let (fn,args) := b.withApp (fun fn args => (fn,args))
+  let mut args := args
+  for i in dataSynthDecl.outputArgs do
+    let X ← inferType args[i]!
+    args := args.set! i (← mkFreshExprMVar X)
+  let b := fn.beta args
+  let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta b
+  return { thm := thm, keysWithLazy := keysWithLazy }
+
 
 def addTheorem (declName : Name) (kind : AttributeKind := .global) (prio : Nat := eval_prio default) : MetaM Unit := do
 
-  let thm ← getTheoremFromConst declName prio
+  let entry ← getEntryFromConst declName prio
 
-  dataSynthTheoremsExt.add thm kind
+  dataSynthTheoremsExt.add entry kind

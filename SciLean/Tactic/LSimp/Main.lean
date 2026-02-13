@@ -24,6 +24,22 @@ initialize registerTraceClass `Meta.Tactic.simp.steps
 initialize registerTraceClass `Meta.Tactic.simp.time
 initialize registerTraceClass `Meta.Tactic.simp.cache
 
+def toCtorIfLit (e : Expr) : Expr := e
+
+def letFunAppArgs? (e : Expr) : Option (Array Expr × Expr × Expr × Expr × Expr) :=
+  if e.isAppOf ``letFun then
+    let args := e.getAppArgs
+    if args.size >= 4 then
+      let f := args[3]!
+      if f.isLambda then
+        some (args[4:].toArray, args[0]!, args[1]!, args[2]!, f.bindingBody!)
+      else
+        none
+    else
+      none
+  else
+    none
+
 
 theorem pull_if_from_app {α β} (c : Prop) [Decidable c] (t e : α) (f : α → β) :
     f (if c then t else e) = if c then f t else f e := by
@@ -113,7 +129,7 @@ def Result.maybeLetBind (r : Result) (name := `x) : LSimpM Result :=timeThis "le
 
 
 private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
-  let e := e.toCtorIfLit
+  let e := toCtorIfLit e
   matchConstCtor e.getAppFn (fun _ => pure none) fun ctorVal _ =>
     let numArgs := e.getAppNumArgs
     let idx := ctorVal.numParams + i
@@ -309,7 +325,7 @@ partial def reduceStep (e : Expr) : LSimpM Expr := do
     | some e => return e
     | none   => pure ()
   if cfg.zeta then
-    if let some (args, _, _, v, b) := e.letFunAppArgs? then
+    if let some (args, _, _, v, b) := letFunAppArgs? e then
       return mkAppN (b.instantiate1 v) args
     if e.isLet then
       return e.letBody!.instantiate1 e.letValue!
@@ -499,8 +515,19 @@ partial def simpLet (e : Expr) : LSimpM Result := do
   if (← getConfig).zeta then
     return { expr := b.instantiate1 v }
   else
-    match (← Simp.getSimpLetCase n t b) with
-    | .dep | .nondepDepVar =>
+    if e.letNondep! then
+      let rv ← (lsimp v >>= (·.maybeLetBind n))
+
+      let r : Result :=
+        { expr := b.instantiate1 rv.expr
+          proof? := ← rv.proof?.mapM (fun h => mkCongrArg (.lam n t b default) h)
+          vars := rv.vars }
+
+      let bx := b.instantiate1 rv.expr
+      let rbx ← lsimp bx
+      return ← r.mkEqTrans rbx
+    else
+      -- .dep case
       let v' ← ldsimp v
 
       let (vVar,vars) ← do
@@ -510,42 +537,9 @@ partial def simpLet (e : Expr) : LSimpM Result := do
         else
           pure (v', #[])
 
-      -- todo: add option to enable this
-      -- -- special handling of `let x := if c then t else e`
-      -- if let .some (_,c,_,t,e) := v'.app5? ``ite then
-      --   let t := b.instantiate1 t
-      --   let e := b.instantiate1 e
-      --   let bx ← mkAppM ``ite #[c,t,e]
-      --   let rbx ← lsimp bx
-      --   return { rbx with vars := vars ++ rbx.vars }
-
       let bx := b.instantiate1 vVar
       let rbx ← lsimp bx
       return { rbx with vars := vars ++ rbx.vars }
-    | .nondep =>
-      let rv ← (lsimp v >>= (·.maybeLetBind n))
-
-      let r : Result :=
-        { expr := b.instantiate1 rv.expr
-          proof? := ← rv.proof?.mapM (fun h => mkCongrArg (.lam n t b default) h)
-          vars := rv.vars }
-
-      -- -- special handling of `let x := if c then t else e`
-      -- -- todo: move this to a specialized function
-      -- if let .some (_,c,_,x,y) := rv.expr.app5? ``ite then
-      --   let bx ← mkAppM ``ite #[c, .letE n t x b false, .letE n t y b false]
-      --   let r' : Result :=
-      --     { expr := bx
-      --       proof? := ← mkAppM ``pull_if_from_app #[c, x, y, .lam n t b default]
-      --       vars := rv.vars }
-
-      --   let rbx ← lsimp bx
-      --   return ← r.mkEqTrans r' >>= (fun r => r.mkEqTrans rbx)
-
-
-      let bx := b.instantiate1 rv.expr
-      let rbx ← lsimp bx
-      return ← r.mkEqTrans rbx
 
 partial def ldsimpImpl (e : Expr) : LSimpM Expr := timeThis "dsimp" do
   let cfg ← getConfig
@@ -810,7 +804,7 @@ where
 initialize lsimpRef.set lsimpImpl
 
 
-open private Lean.Meta.Simp.withSimpContext from Lean.Meta.Tactic.Simp.Main
+
 
 /-- Run `lsimp` on `e` and process result with `k r' where `k` is executed in modified local context
 where all `r.vars` are valid free vars.
@@ -831,7 +825,9 @@ def main (e : Expr) (k : Result → MetaM α)
 
   -- load context
   -- let ctx := { ctx with config := (← ctx.config.updateArith), lctxInitIndices := (← getLCtx).numIndices }
-  Lean.Meta.Simp.withSimpContext ctx do
+  withConfig (fun c => { c with etaStruct := ctx.config.etaStruct }) <|
+  withTrackingZetaDeltaSet ctx.zetaDeltaSet <|
+  withReducible do
 
     -- run simp
     let (a,s) ← Meta.withoutModifyingLCtx (fun (r,s) => do pure (← k r,s)) do

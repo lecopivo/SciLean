@@ -3,6 +3,7 @@ import Mathlib.Tactic.FunProp
 
 import SciLean.Tactic.GTrans.Decl
 import SciLean.Tactic.GTrans.Theorems
+import SciLean.Lean.Meta.RefinedDiscrTree
 
 import SciLean.Tactic.LetNormalize2
 
@@ -103,7 +104,7 @@ unsafe def synthesizeArgument (x : Expr) (gtrans : Expr → GTransM (Option Expr
 
 
 /-- Replace n-th and all subsequent arguments in `e` with fresh metavariables. -/
-def mkTrailingArgsToFreshMVars (e : Expr) (n : ℕ) : MetaM Expr := do
+def mkTrailingArgsToFreshMVars (e : Expr) (n : Nat) : MetaM Expr := do
   e.withApp fun fn args => do
     let e' := mkAppN fn args[0:n]
     let (xs, _, _) ← forallMetaTelescope (← inferType e')
@@ -111,7 +112,7 @@ def mkTrailingArgsToFreshMVars (e : Expr) (n : ℕ) : MetaM Expr := do
 
 
 
-unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : ℕ)
+unsafe def tryTheorem? (e : Expr) (thm : GTransTheorem) (minOutParam : Nat)
     (gtrans : Expr → GTransM (Option Expr)) : GTransM (Option Expr) := do
 
   trace[Meta.Tactic.gtrans] "goal {← ppExpr e}"
@@ -202,13 +203,11 @@ unsafe def gtrans (e : Expr) : GTransM (Option Expr) := do
     | throwError "expected application of generalized transformation, got {← ppExpr e}"
 
   let ext := gtransTheoremsExt.getState (← getEnv)
-  let thms ← ext.theorems.getMatchWithScore e false
-  let thms := thms |>.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
+  let candidates ← ext.theorems.getMatchWithExtra e false
+  let thms := candidates.map (·.1) |>.flatten |>.qsort (fun x y => x.priority > y.priority)
 
   withTraceNode `Meta.Tactic.gtrans (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] {← ppExpr e}") do
 
-  let keys := ← RefinedDiscrTree.mkDTExprs e false
-  trace[Meta.Tactic.gtrans.candidates] "look up key: {keys}"
   trace[Meta.Tactic.gtrans.candidates] "candidates: {thms.map (·.thmName)}"
 
   let minOutArg := gtransDecl.outputArgs.getMax? (·>·) |>.getD 0

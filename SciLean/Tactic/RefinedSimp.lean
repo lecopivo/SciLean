@@ -1,13 +1,16 @@
+import Lean
 import Lean.Meta.Tactic.Simp
 
 import Mathlib.Lean.Meta.RefinedDiscrTree
 import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+import Mathlib.Tactic.FunProp
+import SciLean.Lean.Meta.RefinedDiscrTree
 
 namespace SciLean
 
 namespace Tactic.RefinedSimp
 
-open Lean Meta Mathlib.Meta.FunProp
+open Lean Meta Mathlib.Meta
 
 initialize registerTraceClass `Meta.Tactic.simp.guard
 
@@ -30,7 +33,7 @@ It has one additional feature and that is argument guard. For example, you can s
 this theorem if theorem argument `f` unifies to identity function.
 -/
 structure RefinedSimpTheorem where
-  keys        : List RefinedDiscrTree.DTExpr := []
+  keys        : List RefinedDiscrTree.Key := []
   /--
     It stores universe parameter names for universe polymorphic proofs.
     Recall that it is non-empty only when we elaborate an expression provided by the user.
@@ -52,8 +55,14 @@ structure RefinedSimpTheorem where
   /-- Array of `(theorem argument id, argument guard)` specifying additional constraints on when
   to apply this theorem. For example, if the theorem has arugument `(f : X → X)` with index `3` then
   `guards := #[(3,.notId)]` will stop applying this theorem if `f` unifies to identity function. -/
-  guards      : Array (ℕ × ArgGuard) := #[]
-  deriving Inhabited, BEq
+  guards      : Array (Nat × ArgGuard) := #[]
+  deriving Inhabited
+
+/-- Entry for the `refinedSimpTheoremsExt` extension. -/
+structure RefinedSimpEntry where
+  thm : RefinedSimpTheorem
+  keysWithLazy : List (RefinedDiscrTree.Key × RefinedDiscrTree.LazyEntry)
+  deriving Inhabited
 
 
 def RefinedSimpTheorem.getValue (simpThm : RefinedSimpTheorem) : MetaM Expr := do
@@ -83,33 +92,35 @@ abbrev RefinedSimpTheoremTree := RefinedDiscrTree RefinedSimpTheorem
 
 
 structure RefinedSimpTheorems where
-  pre          : RefinedSimpTheoremTree := {}
-  post         : RefinedSimpTheoremTree := {}
+  pre          : RefinedSimpTheoremTree := default
+  post         : RefinedSimpTheoremTree := default
   deriving Inhabited
 
+instance : EmptyCollection RefinedSimpTheorems := ⟨default⟩
 
-/-- -/
-initialize refinedSimpTheoremsExt : SimpleScopedEnvExtension RefinedSimpTheorem RefinedSimpTheorems ←
+
+initialize refinedSimpTheoremsExt : SimpleScopedEnvExtension RefinedSimpEntry RefinedSimpTheorems ←
   registerSimpleScopedEnvExtension {
     name     := by exact decl_name%
-    initial  := {}
-    addEntry := fun t thm =>
+    initial  := default
+    addEntry := fun t entry =>
+      let thm := entry.thm
       if thm.post then
-        {t with post := thm.keys.foldl (init:=t.post) (fun tree key => tree.insertDTExpr key thm) }
+        {t with post := entry.keysWithLazy.foldl (init:=t.post) (fun tree (key, lazy) => tree.insert key (lazy, thm)) }
       else
-        {t with pre := thm.keys.foldl (init:=t.pre) (fun tree key => tree.insertDTExpr key thm) }
+        {t with pre := entry.keysWithLazy.foldl (init:=t.pre) (fun tree (key, lazy) => tree.insert key (lazy, thm)) }
   }
 
 
-def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) (post := true)
-    (guards : Array (ℕ × ArgGuard)) : MetaM RefinedSimpTheorem := do
+def getEntryFromConst (declName : Name) (prio : Nat := eval_prio default) (post := true)
+    (guards : Array (Nat × ArgGuard)) : MetaM RefinedSimpEntry := do
   let info ← getConstInfo declName
   let (_,_,b') ← forallMetaTelescope info.type
-  let keys := ← RefinedDiscrTree.mkDTExprs b'.appFn!.appArg! false
+  let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta b'.appFn!.appArg! false
   let thm : RefinedSimpTheorem := {
-    keys        := keys
+    keys        := keysWithLazy.map (·.1)
     levelParams := info.levelParams.toArray
-    proof       := info.value!
+    proof       := Expr.const declName (info.levelParams.map .param)
     priority    := prio
     post        := post
     perm        := false
@@ -117,15 +128,14 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) (pos
     rfl         := false
     guards      := guards
   }
+  return { thm, keysWithLazy }
 
-  return thm
 
-
-def addTheorem (declName : Name) (attrKind : AttributeKind := .global)
-    (prio : Nat := eval_prio default) (post := true) (guards : Array (ℕ × ArgGuard) := #[]) :
+def addTheorem (declName : Name) (_attrKind : AttributeKind := .global)
+    (prio : Nat := eval_prio default) (post := true) (guards : Array (Nat × ArgGuard) := #[]) :
     MetaM Unit := do
-  let thm ← getTheoremFromConst declName prio post guards
-  refinedSimpTheoremsExt.add thm attrKind
+  let entry ← getEntryFromConst declName prio post guards
+  modifyEnv fun env => refinedSimpTheoremsExt.addEntry env entry
 
 
 /-- Check if `thm` can be applied to `e` and if the theorem argument `A : W → Set X` is not
@@ -176,15 +186,9 @@ def refinedRewrite (post : Bool) (e : Expr) : SimpM Simp.Step := do
   let s := (refinedSimpTheoremsExt.getState (← getEnv))
   let s := if post then s.post else s.pre
 
-  let cfg' ← Simp.getConfig
-  let candidates ← withConfig (fun cfg => { cfg with iota := cfg'.iota, zeta := cfg'.zeta, zetaDelta := cfg'.zetaDelta }) <|
-    s.getMatchWithScoreWithExtra e false
-
-  -- flatten, ignore score but keep extra arguments
-  -- then sort by priority
-  let candidates := candidates
-    |>.foldl (init:=#[]) (fun a c => a ++ c.1.map (fun t => (t,c.2.2)))
-    |>.insertionSort (fun (c₁,_) (c₂,_) => c₁.priority > c₂.priority)
+  let candidates ← s.getMatchWithExtra e (unify := false)
+  let candidates := candidates.map (fun (thms, (_, numExtraArgs)) => thms.map (·, numExtraArgs)) |>.flatten
+  let candidates := candidates.insertionSort (fun (c₁,_) (c₂,_) => c₁.priority > c₂.priority)
 
   for (thm,numExtraArgs) in candidates do
 
@@ -213,11 +217,11 @@ private def argumentIndex (declName : Name) (argName : Name) : MetaM (Option Nat
 
 
 open Elab Term in
-unsafe def elabGuards (declName : Name) (guardStx : Syntax) : TermElabM (Array (ℕ × ArgGuard)) := do
+unsafe def elabGuards (declName : Name) (guardStx : Syntax) : TermElabM (Array (Nat × ArgGuard)) := do
   if guardStx.isNone then return #[]
   match guardStx[0] with
   | `(rsimp_guard| guard $[$ids $gs],*) =>
-    let mut grds : (Array (ℕ × ArgGuard)) := #[]
+    let mut grds : (Array (Nat × ArgGuard)) := #[]
     for id in ids, g in gs do
       let argGuardExpr := Expr.const ``ArgGuard []
       let grd ← evalExpr ArgGuard (Expr.const ``ArgGuard []) (← elabTerm g argGuardExpr)

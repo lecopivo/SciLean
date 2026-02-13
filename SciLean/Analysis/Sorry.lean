@@ -22,12 +22,13 @@ abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGro
 abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
   AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
 
-abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β := MulAction.mk sorry_proof sorry_proof
+abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β :=
+  { mul_smul := sorry_proof, one_smul := sorry_proof }
 abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul α β] : DistribMulAction α β :=
-  DistribMulAction.mk (toMulAction := MulAction.mkSorryProofs) sorry_proof sorry_proof
+  { (MulAction.mkSorryProofs (α:=α) (β:=β)) with smul_add := sorry_proof, smul_zero := sorry_proof }
 set_option linter.unusedVariables false in
 abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β :=
-  Module.mk (toDistribMulAction := DistribMulAction.mkSorryProofs) sorry_proof sorry_proof
+  { (DistribMulAction.mkSorryProofs (α:=α) (β:=β)) with add_smul := sorry_proof, zero_smul := sorry_proof }
 
 abbrev ContinuousAdd.mkSorryProofs {α} [Add α] [TopologicalSpace α] : ContinuousAdd α := ContinuousAdd.mk sorry_proof
 abbrev ContinuousNeg.mkSorryProofs {α} [Neg α] [TopologicalSpace α] : ContinuousNeg α := ContinuousNeg.mk sorry_proof

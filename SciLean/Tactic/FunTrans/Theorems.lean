@@ -9,6 +9,7 @@ import SciLean.Tactic.FunTrans.Decl
 import Mathlib.Tactic.FunProp.Theorems
 import Mathlib.Lean.Meta.RefinedDiscrTree
 import SciLean.Lean.Array
+import SciLean.Lean.Meta.RefinedDiscrTree
 
 
 
@@ -238,7 +239,7 @@ def FunctionTheorem.ord (t s : FunctionTheorem) : Ordering :=
   tl.lexOrd sl
 
 /-- -/
-def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Option Nat) (mainArgs : Option (Array ℕ)) :
+def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Option Nat) (mainArgs : Option (Array Nat)) :
     CoreM (Array FunctionTheorem) := do
 
   let thms := (functionTheoremsExt.getState (← getEnv)).theorems.findD funName {}
@@ -264,10 +265,16 @@ structure GeneralTheorem where
   /-- theorem name -/
   thmName     : Name
   /-- discriminatory tree keys used to index this theorem -/
-  keys        : List RefinedDiscrTree.DTExpr
+  keys        : List RefinedDiscrTree.Key
   /-- priority -/
   priority    : Nat  := eval_prio default
-  deriving Inhabited, BEq
+  deriving Inhabited
+
+/-- Entry for the `GeneralTheorems` extension. -/
+structure GeneralEntry where
+  thm : GeneralTheorem
+  keysWithLazy : List (RefinedDiscrTree.Key × RefinedDiscrTree.LazyEntry)
+  deriving Inhabited
 
 /-- Get proof of a theorem. -/
 def GeneralTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
@@ -280,7 +287,7 @@ structure GeneralTheorems where
   deriving Inhabited
 
 /-- -/
-abbrev GeneralTheoremsExt := SimpleScopedEnvExtension GeneralTheorem GeneralTheorems
+abbrev GeneralTheoremsExt := SimpleScopedEnvExtension GeneralEntry GeneralTheorems
 
 /-- -/
 initialize morTheoremsExt : GeneralTheoremsExt ←
@@ -288,7 +295,9 @@ initialize morTheoremsExt : GeneralTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      let thm := e.thm
+      {d with theorems := e.keysWithLazy.foldl (fun thms (key, lazy) =>
+        RefinedDiscrTree.insert thms key (lazy, thm)) d.theorems}
   }
 
 
@@ -298,7 +307,9 @@ initialize fvarTheoremsExt : GeneralTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      let thm := e.thm
+      {d with theorems := e.keysWithLazy.foldl (fun thms (key, lazy) =>
+        RefinedDiscrTree.insert thms key (lazy, thm)) d.theorems}
   }
 
 
@@ -340,8 +351,8 @@ Examples:
 inductive Theorem where
   | lam        (thm : LambdaTheorem)
   | function   (thm : FunctionTheorem)
-  | mor        (thm : GeneralTheorem)
-  | fvar       (thm : GeneralTheorem)
+  | mor        (entry : GeneralEntry)
+  | fvar       (entry : GeneralEntry)
 
 
 /-- -/
@@ -391,23 +402,27 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
       }
     | .fvar .. =>
       let (_,_,b') ← forallMetaTelescope info.type
-      let keys := ← RefinedDiscrTree.mkDTExprs (b'.getArg! 1) false
+      let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta (b'.getArg! 1) false
       let thm : GeneralTheorem := {
         funTransName := funTransName
         thmName := declName
-        keys    := keys
+        keys    := keysWithLazy.map (·.1)
         priority  := prio
       }
-
+      let entry : GeneralEntry := { thm, keysWithLazy }
+      -- todo: maybe do a little bit more careful detection of morphism and transition theorems
       let n := fData.args.size
       if n = 1 &&
          fData.args[0]!.coe.isNone &&
          fData.args[0]!.expr == fData.mainVar then
-        return .fvar thm
+        -- It's awkward, but the callers expect `Theorem`, which stores `GeneralTheorem`,
+        -- but registration needs `GeneralEntry`.
+        -- We'll return the theorem and handle entry creation in `addTheorem`.
+        return .fvar entry
       else if (n > 0) && fData.args[n-1]!.coe.isSome then
-        return .mor thm
+        return .mor entry
       else
-        throwError "unrecognized theoremType `{← ppExpr b}`"
+        return .fvar entry
     | _ =>
       throwError "unrecognized theoremType `{← ppExpr b}`"
 
@@ -432,15 +447,15 @@ main arguments: {thm.mainArgs}
 applied arguments: {thm.appliedArgs}
 form: {repr thm.form}"
     functionTheoremsExt.add thm attrKind
-  | .mor thm =>
+  | .mor entry =>
     trace[Meta.Tactic.fun_trans.attr] "\
-morphism theorem: {thm.thmName}
-function transformation: {thm.funTransName}
-discr tree key: {thm.keys}"
-    morTheoremsExt.add thm attrKind
-  | .fvar thm =>
+morphism theorem: {entry.thm.thmName}
+function transformation: {entry.thm.funTransName}
+discr tree key: {entry.thm.keys}"
+    morTheoremsExt.add entry attrKind
+  | .fvar entry =>
     trace[Meta.Tactic.fun_trans.attr] "\
-fvar theorem: {thm.thmName}
-function transformation: {thm.funTransName}
-discr tree key: {thm.keys}"
-    fvarTheoremsExt.add thm attrKind
+fvar theorem: {entry.thm.thmName}
+function transformation: {entry.thm.funTransName}
+discr tree key: {entry.thm.keys}"
+    fvarTheoremsExt.add entry attrKind

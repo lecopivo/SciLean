@@ -25,8 +25,10 @@ abbrev distP {X} (p) [Dist (WithLp p X)] (x y : X) :=
 -- This is incorrect for `p = ∞` and `p = 0` !!!
 noncomputable
 instance [Dist (WithLp p α)] [Dist (WithLp p β)] : Dist (WithLp p (α×β)) where
-  dist := fun (x,y) (x',y') => ((distP p x x')^p.toReal +
-                                (distP p y y')^p.toReal)^(1/p.toReal)
+  dist x y :=
+    let x := x.ofLp; let y := y.ofLp
+    ((distP p x.1 y.1)^p.toReal +
+     (distP p x.2 y.2)^p.toReal)^(1/p.toReal)
 
 
 noncomputable

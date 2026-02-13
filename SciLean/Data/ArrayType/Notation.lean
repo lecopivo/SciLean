@@ -4,7 +4,7 @@ import SciLean.Data.ArrayLike
 import SciLean.Lean.Meta.Basic
 import Batteries.Lean.Expr
 
-import Mathlib.Data.Matrix.Notation
+import Mathlib.LinearAlgebra.Matrix.Notation
 
 import Qq
 

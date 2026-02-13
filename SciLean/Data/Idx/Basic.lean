@@ -227,7 +227,7 @@ instance : AndOp (Idx n) where
   and := Idx.land
 instance : OrOp (Idx n) where
   or := Idx.lor
-instance : Xor (Idx n) where
+instance : XorOp (Idx n) where
   xor := Idx.xor
 instance : ShiftLeft (Idx n) where
   shiftLeft := Idx.shiftLeft

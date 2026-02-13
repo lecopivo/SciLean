@@ -144,7 +144,7 @@ partial def letNormalize (e : Expr) (config : LetNormalizeConfig) : MetaM Expr :
             let name := xName.appendAfter s!"_{info.fieldNames[i]!}"
             let val  := args[ctor.numParams + i]!
             let type ← inferType val
-            lctx := lctx.mkLetDecl fvarId name type val (nonDep := false) default
+            lctx := lctx.mkLetDecl fvarId name type val
             fvars := fvars.push (.fvar fvarId)
 
           let e' ← withLCtx lctx insts do

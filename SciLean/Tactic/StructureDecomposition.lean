@@ -226,7 +226,7 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
       let decls := (xis.mapIdx fun i xi => (xName.appendAfter (toString i), xBi, fun _ => inferType xi))
       withLocalDecls decls fun xiVars => do
 
-        let xiSet : FVarIdSet := RBTree.fromArray (xiVars.map fun xi => xi.fvarId!) _
+        let xiSet : FVarIdSet := xiVars.foldl (init := {}) fun s xi => s.insert xi.fvarId!
 
         let xVar := (← mkAppM' xmk xiVars).headBeta
 
@@ -239,8 +239,8 @@ def factorDomainThroughProjections (f : Expr) : MetaM (Option DomainDecompositio
           (post := fun e => do pure (.done (← reduceProjOfCtor e))) -- clean up projections
 
         let usedXi : FVarIdSet := -- collect which xi's are used
-          (← (b.collectFVars.run {}))
-          |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xiSet
+          let allFVars := (← b.collectFVars.run {}).2.fvarSet
+          Std.TreeSet.filter (fun fv => xiSet.contains fv) allFVars
 
         let notUsedXi : FVarIdSet := (xiSet.diff usedXi)
 

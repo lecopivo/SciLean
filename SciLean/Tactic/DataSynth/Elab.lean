@@ -1,12 +1,14 @@
 import Lean.Elab.Tactic.Conv
 import SciLean.Tactic.DataSynth.Main
 import SciLean.Tactic.DataSynth.Simproc
+import SciLean.Tactic.DataSynth.Types
 
 namespace SciLean.Tactic.DataSynth
 
 open Lean Meta Elab Tactic
 
 declare_config_elab elabDataSynthConfig Config
+
 
 open Parser.Tactic in
 /-- `date_synth` as conv tactic will fill in meta variables in generalized transformation -/
@@ -28,16 +30,22 @@ syntax (name:=data_synth_conv) "data_synth" optConfig (discharger)? : conv
     | throwError "{e} is not `data_synth` goal"
 
   let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
+  -- let cacheRef : IO.Ref DataSynth.NormCache ← IO.mkRef {}
+  let simpStateRef : IO.Ref Simp.State ← IO.mkRef {}
 
   let disch : Expr → MetaM (Option Expr) :=
     match disch? with
     | none => fun _ => return none
     | some stx => Mathlib.Meta.FunProp.tacticToDischarge ⟨stx.raw[3]⟩
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
-    |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
-    |>.run {}
+  let ctx : DataSynth.Context := { config := cfg, discharge := fun e => do disch e }
+  let (methods, simpCtx, simpStateRef) ← do
+    let methods := (← Simp.mkDefaultMethods).toMethodsRef
+    let simpCtx ← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems])
+    let simpStateRef ← IO.mkRef {}
+    pure (methods, simpCtx, simpStateRef)
+
+  let r? ← DataSynthM.runWith (dataSynth g) ctx methods simpCtx simpStateRef
 
   -- let cacheRef : IO.Ref LSimp.Cache ← IO.mkRef {}
   -- let stateRef : IO.Ref Simp.State ← IO.mkRef {}
@@ -49,7 +57,7 @@ syntax (name:=data_synth_conv) "data_synth" optConfig (discharger)? : conv
   --  |>.run {}
 
   match r? with
-  | some r =>
+  | some (r : Result) =>
     let e' := r.getSolvedGoal
     if ← isDefEq e e' then
       Conv.changeLhs e'
@@ -80,15 +88,17 @@ syntax (name:=data_synth_tac) "data_synth" optConfig (discharger)? ("=>" convSeq
     | none => fun _ => return none
     | some stx => Mathlib.Meta.FunProp.tacticToDischarge ⟨stx.raw[3]⟩
 
-  let stateRef : IO.Ref DataSynth.State ← IO.mkRef {}
+  let ctx : DataSynth.Context := { config := cfg, discharge := fun e => do disch e }
+  let (methods, simpCtx, simpStateRef) ← do
+    let methods := (← Simp.mkDefaultMethods).toMethodsRef
+    let simpCtx ← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems])
+    let simpStateRef ← IO.mkRef {}
+    pure (methods, simpCtx, simpStateRef)
 
-  let (r?,_) ← dataSynth g |>.run {config := cfg, discharge := fun e => do disch e} |>.run stateRef
-    |>.run (← Simp.mkDefaultMethods).toMethodsRef
-    |>.run (← Simp.mkContext (config := cfg.toConfig) (simpTheorems := #[← getSimpTheorems]))
-    |>.run {}
+  let r? ← DataSynthM.runWith (dataSynth g) ctx methods simpCtx simpStateRef
 
   match r? with
-  | some r =>
+  | some (r : Result) =>
     let mut e' := r.getSolvedGoal
     if let some c := c then
       let (e'',eq) ← elabConvRewrite e' #[] (← `(conv| ($c)))

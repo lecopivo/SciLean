@@ -18,10 +18,17 @@ structure GTransTheorem where
   /-- Name of lambda theorem -/
   thmName : Name
   /-- discrimination tree keys used to index this theorem -/
-  keys        : List RefinedDiscrTree.DTExpr
+  keys        : List RefinedDiscrTree.Key
   /-- priority -/
   priority    : Nat  := eval_prio default
   deriving Inhabited, BEq
+
+
+/-- Entry for the `GTransTheorems` extension. -/
+structure GTransEntry where
+  thm : GTransTheorem
+  keysWithLazy : List (RefinedDiscrTree.Key × RefinedDiscrTree.LazyEntry)
+  deriving Inhabited
 
 
 
@@ -38,7 +45,7 @@ structure GTransTheorems where
   deriving Inhabited
 
 /-- -/
-abbrev GTransTheoremsExt := SimpleScopedEnvExtension GTransTheorem GTransTheorems
+abbrev GTransTheoremsExt := SimpleScopedEnvExtension GTransEntry GTransTheorems
 
 
 open Mathlib.Meta.FunProp in
@@ -48,7 +55,9 @@ initialize gtransTheoremsExt : GTransTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with theorems := e.keys.foldl (RefinedDiscrTree.insertDTExpr · · e) d.theorems}
+      let thm := e.thm
+      {d with theorems := e.keysWithLazy.foldl (fun thms (key, lazy) =>
+        RefinedDiscrTree.insert thms key (lazy, thm)) d.theorems}
   }
 
 
@@ -71,20 +80,39 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
     args := args.set! i (← mkFreshExprMVar X)
 
   let b := fn.beta args
+  let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta b
+  let keys := keysWithLazy.map (·.1)
 
   let thm : GTransTheorem := {
     gtransName := gtransDecl.gtransName
     thmName := declName
-    keys    := ← RefinedDiscrTree.mkDTExprs b false
+    keys    := keys
     priority  := prio
   }
   return thm
+
+
+def getEntryFromConst (declName : Name) (prio : Nat := eval_prio default) : MetaM GTransEntry := do
+  let thm ← getTheoremFromConst declName prio
+
+  let info ← getConstInfo declName
+  let (_,_,b) ← forallMetaTelescope info.type
+  Meta.letTelescope b fun _ b => do
+  let .some gtransDecl ← isGTrans? b | unreachable!
+  let (fn,args) := b.withApp (fun fn args => (fn,args))
+  let mut args := args
+  for i in gtransDecl.outputArgs do
+    let X ← inferType args[i]!
+    args := args.set! i (← mkFreshExprMVar X)
+  let b := fn.beta args
+  let keysWithLazy ← RefinedDiscrTree.initializeLazyEntryWithEta b
+  return { thm := thm, keysWithLazy := keysWithLazy }
 
 
 
 
 def addTheorem (declName : Name) (kind : AttributeKind := .global) (prio : Nat := eval_prio default) : MetaM Unit := do
 
-  let thm ← getTheoremFromConst declName prio
+  let entry ← getEntryFromConst declName prio
 
-  gtransTheoremsExt.add thm kind
+  gtransTheoremsExt.add entry kind

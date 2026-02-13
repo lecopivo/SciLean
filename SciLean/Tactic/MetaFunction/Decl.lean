@@ -47,10 +47,10 @@ initialize metaFunExt : MetaFunExt ←
 
 
 def getDeclFromFun? (n : Name) : CoreM (Option MetaFunDecl) := do
-  return (metaFunExt.getState (← getEnv)).funToDecl.find? n
+  return (metaFunExt.getState (← getEnv)).funToDecl.get? n
 
 def getDeclFromProp? (n : Name) : CoreM (Option MetaFunDecl) := do
-  return (metaFunExt.getState (← getEnv)).funToDecl.find? n
+  return (metaFunExt.getState (← getEnv)).funToDecl.get? n
 
 
 

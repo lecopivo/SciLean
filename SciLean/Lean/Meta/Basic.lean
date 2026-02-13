@@ -491,19 +491,7 @@ def withLetDecls [MonadControlT MetaM n] [Monad n]
   {α} (k : β → γ → δ → ε → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
 
-
-private def letTelescopeImpl (e : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α :=
-  lambdaLetTelescope e λ xs b => do
-    if let .some i ← xs.findIdxM? (λ x => do pure !(← x.fvarId!.isLetVar)) then
-      k xs[0:i] (← mkLambdaFVars xs[i:] b)
-    else
-      k xs b
-
 variable [MonadControlT MetaM n] [Monad n]
-
-def letTelescope (e : Expr) (k : Array Expr → Expr → n α) : n α :=
-  map2MetaM (fun k => letTelescopeImpl e k) k
-
 
 private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
   if fuel = 0 then

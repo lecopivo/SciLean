@@ -1,9 +1,10 @@
 import Lean
 import Mathlib.Lean.Meta.RefinedDiscrTree
+import Mathlib.Tactic.FunProp
 
 
 open Lean Meta
-open Mathlib.Meta.FunProp
+open Mathlib.Meta
 
 namespace SciLean.Tactic.DataSynth
 
@@ -33,7 +34,7 @@ initialize dataSynthDeclsExt : DataSynthDeclsExt ←
 
 
 def getDataSynth (dataSynthName : Name) : MetaM DataSynthDecl := do
-  return (dataSynthDeclsExt.getState (← getEnv)).decls.find! dataSynthName
+  return (dataSynthDeclsExt.getState (← getEnv)).decls.get! dataSynthName
 
 
 def addDataSynthDecl (declName : Name) (outArgs : Array Name) (inArg? : Option Name) : MetaM Unit := do
@@ -86,7 +87,7 @@ def isDataSynth? (e : Expr) : MetaM (Option DataSynthDecl) := do
   let .some (fnName,_) := e.getAppFn'.const?
     | return none
 
-  let .some DataSynthDecl := ext.decls.find? fnName
+  let .some DataSynthDecl := ext.decls.get? fnName
     | return none
 
   if e.getAppNumArgs' = DataSynthDecl.nargs then

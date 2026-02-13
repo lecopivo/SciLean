@@ -40,7 +40,7 @@ def fold {I n β} [IndexType I n] [FoldM I Id]
     (r : IndexType.Range I) (init : β) (f : I → β → β) : β :=
   foldM (m:=Id) r init (fun i x => pure (f i x))
 
-instance {m : Type v → Type w} [FoldM I m] :
+instance {m : Type v → Type w} [FoldM I m] [Monad m] :
     ForIn m (IndexType.Range I) I where
   forIn := forIn
 

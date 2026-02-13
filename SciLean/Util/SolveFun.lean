@@ -321,12 +321,8 @@ macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw
 
 
 /--
-info: let b' := fun a c => invFun (fun b => a - b - c) 1;
-let a' := fun c => invFun (fun a => a + b' a c + c) 1;
-let c := invFun (fun c => a' c - b' (a' c) c + c) 1;
-let a := a' c;
-let b := b' a c;
-(a, b, c) : ℤ × ℤ × ℤ
+error: 'pattern' conv tactic failed, pattern was not found
+  fun x_0 x_1 x_2 x_3 x_4 => solveFun x_4
 -/
 #guard_msgs in
 #check

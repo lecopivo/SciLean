@@ -56,7 +56,7 @@ instance Idx2.decLe {a b} (i j : Idx2 a b) : Decidable (LE.le i j) :=  -- Nat.de
 This is blatanly false but we treat `Idx2 a b` as `Fin n`, see documentation of `Idx2 a b`.
 -/
 def Idx2.finEquiv (a b : ℤ) : Idx2 a b ≃ Fin ((b - a + 1).toNat) where
-  toFun x := ⟨(x.1 - a).toNatClampNeg, sorry_proof⟩
+  toFun x := ⟨(x.1 - a.toInt64).toNatClampNeg, sorry_proof⟩
   invFun x := ⟨x.1.toInt64 + a.toInt64, sorry_proof⟩
   left_inv := sorry_proof
   right_inv := sorry_proof
@@ -64,10 +64,10 @@ def Idx2.finEquiv (a b : ℤ) : Idx2 a b ≃ Fin ((b - a + 1).toNat) where
 -- The rest of the file is direct copy of `Init.Data.Fin.Basic`
 namespace Idx2
 
-def toFin (i : Idx2 a b) : Fin (b-a+1).toNat := ⟨(i.1 - a).toNatClampNeg, sorry_proof⟩
+def toFin (i : Idx2 a b) : Fin (b-a+1).toNat := ⟨(i.1 - a.toInt64).toNatClampNeg, sorry_proof⟩
 def _root_.Fin.toIdx2 {a b : ℤ} (i : Fin (b-a+1).toNat) : Idx2 a b := ⟨i.1.toInt64 + a.toInt64, sorry_proof⟩
 
-def toIdx (i : Idx2 a b) : Idx (b-a+1).toNat := ⟨(i.1 - a).toUSize, sorry_proof⟩
+def toIdx (i : Idx2 a b) : Idx (b-a+1).toNat := ⟨(i.1 - a.toInt64).toUSize, sorry_proof⟩
 def _root_.SciLean.Idx.toIdx2 {a b : ℤ} (i : Idx (b-a+1).toNat) : Idx2 a b := ⟨i.1.toInt64 + a.toInt64, sorry_proof⟩
 
 instance coeToUSize : CoeOut (Idx2 a b) Int64 :=

@@ -94,21 +94,13 @@ def defineFunPropTheorem (statement proof : Expr) (ctx : Array Expr)
   return true
 
 
-partial def _root_.Lean.Meta.RefinedDiscrTree.Trie.forValuesM {α} {m} [Monad m]
-    (t : Lean.Meta.RefinedDiscrTree.Trie α) (f : α → m Unit) : m Unit := do
-
-  match t with
-  | .node children =>
-    for c in children do
-      c.2.forValuesM f
-  | .path _ child => child.forValuesM f
-  | .values vs =>
-    for v in vs do
-      f v
-
-partial def _root_.Lean.Meta.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
+def _root_.Lean.Meta.RefinedDiscrTree.forValuesM {α} {m} [Monad m]
     (t : Lean.Meta.RefinedDiscrTree α) (f : α → m Unit) : m Unit := do
-  t.root.forM (fun _ trie => trie.forValuesM f)
+  for trie in t.tries do
+    for v in trie.values do
+      f v
+    for (_, v) in trie.pending do
+      f v
 
 
 /--

@@ -147,13 +147,13 @@ def _root_.Aesop.Nanos.print (n : Aesop.Nanos) : String :=
     s!"{n.nanos}ns"
   else if n.nanos < 1000000 then
     let str := toString (n.nanos.toFloat / 1000)
-    match str.split λ c => c == '.' with
+    match str.splitOn "." with
     | [beforePoint] => beforePoint ++ "μs"
     | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "μs"
     | _ => unreachable!
   else
     let str := toString (n.nanos.toFloat / 1000000)
-    match str.split λ c => c == '.' with
+    match str.splitOn "." with
     | [beforePoint] => beforePoint ++ "ms"
     | [beforePoint, afterPoint] => beforePoint ++ "." ++ afterPoint.take 1 ++ "ms"
     | _ => unreachable!
@@ -267,7 +267,7 @@ def getConfig : LSimpM Simp.Config :=
 def getContextWithParent (e : Expr) : SimpM Simp.Context := do
   Simp.withParent e (readThe Simp.Context)
 
-open private Lean.Meta.Simp.Context.mk from Lean.Meta.Tactic.Simp.Types in -- this does not work :(
+
 @[inline] def withParent (parent : Expr) (f : LSimpM α) : LSimpM α := do
   let ctx' ← getContextWithParent parent
   withTheReader Simp.Context (fun _ctx => ctx') f

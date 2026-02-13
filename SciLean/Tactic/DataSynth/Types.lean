@@ -152,6 +152,9 @@ def DataSynthM.runInMetaM (e : DataSynthM α) : MetaM α := do
        (← Simp.mkContext)
        (← ST.mkRef {})
 
+def DataSynthM.runWith (e : DataSynthM α) (ctx : Context) (methods : Simp.MethodsRef) (simpCtx : Simp.Context) (simpState : IO.Ref Simp.State) : MetaM α := do
+  e ctx (← ST.mkRef {}) (← ST.mkRef {}) methods simpCtx simpState
+
 
 /-- Log error message that will displayed to the user at the end. -/
 def logError (msg : MessageData) : DataSynthM Unit := do
