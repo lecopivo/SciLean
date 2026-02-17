@@ -18,7 +18,7 @@ local instance [Zero R] : Inhabited R := ⟨0⟩
 def list_sum1 (l : List R) (n : Nat) : R :=
   match n with
   | 0 => 0
-  | n+1 => l.get! n + list_sum1 l n
+  | n+1 => l[n]! + list_sum1 l n
 
 
 def list_sum1_estimator (θ : R) (l : List R) (n : Nat) : Rand R :=

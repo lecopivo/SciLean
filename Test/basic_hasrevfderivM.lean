@@ -21,7 +21,11 @@ info: HasRevFDeriv ℝ
   (ydg₁_1, fun dy =>
     let dy₁ := ydg₁ * dy;
     let dy₂ := a_1 * dy;
-    let dy := dy₁ * a_1;
+    let a_2 := starRingEnd ℝ;
+    let a_3 := a_2 a_1;
+    let dy := dy₁ * a_3;
+    let a_4 := starRingEnd ℝ;
+    let a := a_4 a;
     let dx := dy * a;
     let dx := dx + dy₂;
     let dy₁ := x * dx;

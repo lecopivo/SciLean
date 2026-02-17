@@ -132,16 +132,29 @@ example
   : revFDeriv K (fun yy : Y×Y×Y×Y => f yy.1 (f yy.2.1 (f yy.2.2.1 (f yy.2.2.2 x))))
     =
     fun x_1 =>
-      let zdf := <∂ (x0:=x_1.snd.snd.snd), f x0 x;
-      let zdf_1 := <∂ (x0x1:=(x_1.snd.snd.fst, zdf.fst)), f x0x1.fst x0x1.snd;
-      let zdf_2 := <∂ (x0x1:=(x_1.snd.fst, zdf_1.fst)), f x0x1.fst x0x1.snd;
-      let zdf_3 := <∂ (x0x1:=(x_1.fst, zdf_2.fst)), f x0x1.fst x0x1.snd;
-      (zdf_3.fst, fun dz =>
-        let dy := Prod.snd zdf_3 dz;
-        let dy_1 := Prod.snd zdf_2 dy.snd;
-        let dy_2 := Prod.snd zdf_1 dy_1.snd;
-        let dy_3 := Prod.snd zdf dy_2.snd;
-        (dy.fst, dy_1.fst, dy_2.fst, dy_3)) :=
+      let ydg := x_1.1;
+      let yzdf := x_1.2;
+      let ydg_1 := yzdf.1;
+      let yzdf := x_1.2;
+      let yzdf := yzdf.2;
+      let ydg_2 := yzdf.1;
+      let yzdf :=
+        let yzdf := x_1.2;
+        (yzdf.2, fun dz => (0, 0, dz));
+      let ydg_3 := yzdf.1.2;
+      let zdf := <∂ (x0:=ydg_3), f x0 x;
+      let zdf_1 := zdf.1;
+      let zdf_2 := <∂ (x0x1:=(ydg_2, zdf_1)), f x0x1.1 x0x1.2;
+      let zdf_3 := zdf_2.1;
+      let zdf_4 := <∂ (x0x1:=(ydg_1, zdf_3)), f x0x1.1 x0x1.2;
+      let zdf_5 := zdf_4.1;
+      let zdf_6 := <∂ (x0x1:=(ydg, zdf_5)), f x0x1.1 x0x1.2;
+      (zdf_6.1, fun dz =>
+        let dy := zdf_6.2 dz;
+        let dy_1 := zdf_4.2 dy.2;
+        let dy_2 := zdf_2.2 dy_1.2;
+        let dy_3 := zdf.2 dy_2.2;
+        (dy.1, 0) + ((0, dy_1.1, 0) + ((0, 0, dy_2.1, 0) + yzdf.2 (0, dy_3)))) :=
 by
   conv => lhs; lfun_trans
 

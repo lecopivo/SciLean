@@ -11,10 +11,10 @@ info: HasFwdFDeriv R
     match x with
     | ((a, fst, snd), snd_1) => a)
   fun x dx =>
-  let x₁ := x.1;
-  let x₂ := dx.1;
-  let x₁ := x₁.1;
-  let x₂ := x₂.1;
+  have x₁ := x.1;
+  have x₂ := dx.1;
+  have x₁ := x₁.1;
+  have x₂ := x₂.1;
   (x₁, x₂) : Prop
 -/
 #guard_msgs in
@@ -29,13 +29,13 @@ info: HasRevFDerivUpdate R
     match x with
     | ((a, fst, snd), snd_1) => a)
   fun x =>
-  let x₁ := x.1;
-  let x₁ := x₁.1;
+  have x₁ := x.1;
+  have x₁ := x₁.1;
   (x₁, fun dz dx =>
-    let dy₂ := 0;
-    let dx' := dx.1;
-    let dy' := dx.2;
-    let dx₁ := dx' + (dz, dy₂);
+    have dy₂ := 0;
+    have dx' := dx.1;
+    have dy' := dx.2;
+    have dx₁ := dx' + (dz, dy₂);
     (dx₁, dy')) : Prop
 -/
 #guard_msgs in

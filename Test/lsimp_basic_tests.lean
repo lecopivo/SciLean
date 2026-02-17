@@ -26,7 +26,7 @@ example (n : Nat) :
 example (n : Nat) :
   (let a := (0 + 1 * n); a)
   =
-  n := by (conv => lhs; lsimp)
+  n := by (conv => lhs; lsimp; simp)
 
 example (n : Nat) :
     (let a :=
@@ -37,7 +37,7 @@ example (n : Nat) :
      a + b)
     =
     n + (n + 3) + n + 2 + (n + (n + 3) + n + 2 + 5) := by
-  (conv => lhs; lsimp)
+  (conv => lhs; lsimp; simp)
 
 example (n : Nat) (i : Fin n) :
     (let j := 2*i.1
@@ -70,7 +70,7 @@ example :
 example :
   (fun n => let a := (0 + 1 * n * 1 * 2); a)
   =
-  (fun n => n * 2) := by (conv => lhs; lsimp)
+  (fun n => n * 2) := by (conv => lhs; lsimp; simp)
 
 
 example :
@@ -80,7 +80,7 @@ example :
      a)
     =
     (fun n => n + n) := by
-  (conv => lhs; lsimp)
+  (conv => lhs; lsimp; simp)
 
 
 example :
@@ -115,8 +115,8 @@ x : ℕ
         (x,y)).1 rewrite_by lsimp
 
 /--
-info: (let x := a * b;
-  let y := x * c;
+info: (have x := a * b;
+  have y := x * c;
   (x, y)).1 : ℕ
 -/
 #guard_msgs in

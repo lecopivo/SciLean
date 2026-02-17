@@ -158,6 +158,8 @@ info: lstmObjective.arg_mainParamsextraParams.HasRevFDeriv_simple_rule {slen len
             IndexType.fold IndexType.Range.full dx fun i dw =>
               let x₁ := x₁[i];
               let a := exp x₁;
+              let a_1 := starRingEnd Float;
+              let a := a_1 a;
               let dy := dy_1 * a;
               let xi := dw[i];
               let x := setElem dw i (xi + dy) True.intro;

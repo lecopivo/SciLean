@@ -11,8 +11,8 @@ variable {X : Type} [MeasurableSpace X] [AddCommGroup X] [Module ℝ X] [Topolog
 /--
 info: (do
     let x ← x'
-    let x_1 ← y'
-    pure (x + x_1)).mean : X
+    let y : X := y'.mean
+    pure (x + y)).mean : X
 -/
 #guard_msgs in
 #check

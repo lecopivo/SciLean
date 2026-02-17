@@ -21,10 +21,9 @@ variable
 instance : MatrixType R (R^[I]) (R^[J]) (R^[I,J]) where
   equiv := ⟨fun _ => True, sorry_proof⟩ -- TODO: provide proper implementation of the equivalence
   tmulAdd a y x A :=
-    -- I do not understant why I should call it this way, it seems that x and y are swapped ...
-    let A := BLAS.LevelTwoData.ger .RowMajor nJ nI a x.1 0 1 y.1 0 1 A.1 0 nJ
-    -- for some reason this is incorrect
-    -- let A := BLAS.LevelTwoData.ger .RowMajor nm nn a y.1 0 1 x.1 0 1 A.1 0 nn
+    -- Row-major GER expects: M = rows, N = cols, lda >= N.
+    -- For R^[I,J], rows are I and cols are J.
+    let A := BLAS.LevelTwoData.ger .RowMajor nI nJ a y.1 0 1 x.1 0 1 A.1 0 nJ
     ⟨A, sorry_proof⟩
   matVecMulAdd a A x b y :=
     let y := BLAS.LevelTwoData.gemv .RowMajor .NoTrans

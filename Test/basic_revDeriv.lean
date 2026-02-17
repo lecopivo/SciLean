@@ -64,12 +64,13 @@ example
       let ydg := x_1.1;
       let yzdf := x_1.2;
       let ydg_1 := yzdf.1;
-      let xydf := x_1.2;
-      let yzdf := xydf.2;
+      let yzdf := x_1.2;
+      let yzdf := yzdf.2;
       let ydg_2 := yzdf.1;
-      let xydf := x_1.2;
-      let yzdf := xydf.2;
-      let ydg_3 := yzdf.2;
+      let yzdf :=
+        let yzdf := x_1.2;
+        (yzdf.2, fun dz => (0, 0, dz));
+      let ydg_3 := yzdf.1.2;
       let zdf := revFDeriv K (fun x0 => f x0 x) ydg_3;
       let zdf_1 := zdf.1;
       let zdf_2 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg_2, zdf_1);
@@ -79,13 +80,10 @@ example
       let zdf_6 := revFDeriv K (fun x0x1 => f x0x1.1 x0x1.2) (ydg, zdf_5);
       (zdf_6.1, fun dz =>
         let dy := zdf_6.2 dz;
-        let dx := dy.1;
-        let dy := zdf_4.2 dy.2;
-        let dy_1 := zdf_2.2 dy.2;
-        let dy_2 := zdf.2 dy_1.2;
-        let dx_1 := dy.1;
-        let dx_2 := dy_1.1;
-        (dx, dx_1, dx_2, dy_2)) :=
+        let dy_1 := zdf_4.2 dy.2;
+        let dy_2 := zdf_2.2 dy_1.2;
+        let dy_3 := zdf.2 dy_2.2;
+        (dy.1, 0) + ((0, dy_1.1, 0) + ((0, 0, dy_2.1, 0) + yzdf.2 (0, dy_3)))) :=
 by
   conv => lhs; lfun_trans
 
@@ -141,7 +139,6 @@ example
     fun x => (∑ᴵ i, x i, fun dx _ => dx) :=
 by
   conv => lhs; autodiff
-  sorry_proof
 
 example
   : revFDeriv K (fun (x : Fin 10 → K) => ∑ᴵ i, ‖x i‖₂²)

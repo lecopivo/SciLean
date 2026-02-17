@@ -9,7 +9,7 @@ variable {n} (i : Idx n) (j : Idx 3)
 /--
 info: HasRevFDeriv Float (fun x => x[i]) fun x =>
   (x[i], fun xi =>
-    let x' := setElem 0 i xi True.intro;
+    have x' := setElem 0 i xi True.intro;
     x') : Prop
 -/
 #guard_msgs in
@@ -19,7 +19,7 @@ info: HasRevFDeriv Float (fun x => x[i]) fun x =>
 /--
 info: HasRevFDeriv Float (fun x => x[(i, j)]) fun x =>
   (x[(i, j)], fun xi =>
-    let x' := setElem 0 (i, j) xi True.intro;
+    have x' := setElem 0 (i, j) xi True.intro;
     x') : Prop
 -/
 #guard_msgs in
@@ -29,7 +29,7 @@ info: HasRevFDeriv Float (fun x => x[(i, j)]) fun x =>
 /--
 info: HasRevFDeriv Float (fun x => x[(i, j)]) fun x =>
   (x[(i, j)], fun xi =>
-    let x' := setElem 0 (i, j) xi True.intro;
+    have x' := setElem 0 (i, j) xi True.intro;
     x') : Prop
 -/
 #guard_msgs in

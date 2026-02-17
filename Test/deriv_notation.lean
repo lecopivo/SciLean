@@ -72,14 +72,17 @@ df (0, 0) : K
 #guard_msgs in
 #check ∂! (fun x : K => x^2)
 
-/-- info: fun x => (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K → K × K →L[K] K × K -/
+/-- info: fun x => fun x =>L[K] (x.1, x.2) + (x.1, x.2) : K × K → K × K →L[K] K × K -/
 #guard_msgs in
 #check (∂ (fun x : K×K => x + x)) rewrite_by
   autodiff
   simp only [ContinuousLinearMap.add_apply]
 
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check (∂! (fun x => x*x) (1:K))
 

@@ -106,14 +106,14 @@ variable (x : Float^[4,5]^[2,3])
 
 -- "broken" as it clashes with `fun (i : Idx 2) (j : Idx 3) => x[i,j]`
 /--
-error: application type mismatch
-  Prod.mk ij
-argument
+error: Application type mismatch: The argument
   ij
 has type
-  Idx 2 × Idx 3 : Type
+  Idx 2 × Idx 3
 but is expected to have type
-  Idx 2 : Type
+  Idx 2
+in the application
+  Prod.mk ij
 ---
 info: fun ij kl => x[(sorry, sorry)] : Idx 2 × Idx 3 → Idx 4 × Idx 5 → Float^[4, 5]
 -/
