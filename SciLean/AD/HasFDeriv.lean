@@ -279,7 +279,9 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_complex
   simp +unfoldPartialApp only [Norm2.norm2]
   apply hasFDerivAt_from_hasFDerivAt
   case deriv => data_synth
-  case simp => ext; dsimp
+  case simp =>
+    ext u
+    rfl
 
 @[data_synth]
 theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real
@@ -294,5 +296,10 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real
   apply hasFDerivAt_from_hasFDerivAt
   case deriv => data_synth
   case simp =>
-    ext; dsimp; (conv => rhs; enter[1]; rw[← AdjointSpace.conj_symm])
-    simp only [conj_for_real_scalar]; ring
+    ext u
+    dsimp
+    have hconj : (starRingEnd R) ⟪u, x⟫[R] = ⟪x, u⟫[R] := by
+      simpa using (@AdjointSpace.conj_symm R X _ _ inferInstance x u)
+    have hux : ⟪u, x⟫[R] = ⟪x, u⟫[R] := by
+      simpa [conj_for_real_scalar] using hconj
+    simp [two_mul, hux]

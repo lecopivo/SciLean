@@ -113,13 +113,10 @@ def perform_linesearch (method : BFGS R) (state : State R n) (d : ObjectiveFunct
 
   let φ := fun α => d.f (state.x + α • state.s)
 
-  -- WARNING! Here we run IO code in pure code, the last `()` is `IO.RealWorld`
-  --          This hould be fixed, eiter remove LineSearch.call from IO or make this function in IO
-  match method.lineSearch.call φ φ₀ dφ₀ state.alpha () () with
-  | .ok (αφα,_) _ =>
-    return .ok αφα
-  | .error e _ =>
-    return .error e
+  match (method.lineSearch.call φ φ₀ dφ₀ state.alpha).run () with
+  | .error e => return .error e
+  | .ok ((α, φα), _) =>
+    return .ok (α, φα)
 
 
 def updateState (method : BFGS R) (state : State R n) (d : ObjectiveFunction R (R^[n])) :

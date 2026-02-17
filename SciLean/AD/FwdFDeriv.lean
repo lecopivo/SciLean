@@ -299,7 +299,10 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule
     fun y dy =>
       let y₁ := y.1; let y₂ := y.2
       let dy₁ := dy.1; let dy₂ := dy.2
-      (y₁ * y₂, y₁ * dy₂ + dy₁ * y₂) := by unfold fwdFDeriv; fun_trans
+      (y₁ * y₂, y₁ * dy₂ + dy₁ * y₂) := by
+  unfold fwdFDeriv
+  fun_trans
+  simp [mul_comm]
 
 
 @[fun_trans]
@@ -313,7 +316,10 @@ theorem HMul.hMul.arg_a0a1.fwdFDeriv_rule_at (x : X) (f g : X → K)
       let zdz := (fwdFDeriv K g x dx)
       let z := zdz.1; let dz := zdz.2
       (y * z, y * dz + dy * z) := by
-  funext dx; unfold fwdFDeriv; fun_trans
+  funext dx
+  unfold fwdFDeriv
+  fun_trans
+  simp [mul_comm]
 
 
 -- HSMul.hSMul -----------------------------------------------------------------

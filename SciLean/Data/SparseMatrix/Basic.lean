@@ -64,7 +64,7 @@ structure SparseMatrixAssembled (R : Type*) [PlainDataType R] (I J : Type*)
   -- the number of indices match the number of data
   h_size (j : Fin nJ) : (indexMap[j]).size = (data[j]).size
   -- rows are given in increasing order
-  sorted_rows (j : Fin nJ) : (List.ofFn (fun i => (indexMap[j].get i.toIdx))).Sorted (·≤·)
+  sorted_rows (j : Fin nJ) : (List.ofFn (fun i => (indexMap[j].get i.toIdx))).Pairwise (·≤·)
 
 
 namespace SparseMatrixAssembled
@@ -155,5 +155,5 @@ There are three different formats of sparse matrix
 g-/
 def SparseMatrix
     (R : Type*) [PlainDataType R] [Zero R] [Add R]
-    (I J : Type*) {nI} [IndexType I nI] {nJ} [IndexType J nJ] : Type :=
+    (I J : Type*) {nI} [IndexType I nI] {nJ} [IndexType J nJ] : Type _ :=
   Quotient (SparseMatrix.setoid R I J)

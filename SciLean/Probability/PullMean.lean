@@ -30,6 +30,15 @@ private theorem let_mean (x' : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
     let x ← x'
     return (f x)) := sorry_proof
 
+private def runFunProp (e : Expr) : MetaM (Option FunProp.Result) := do
+  let env ← getEnv
+  let ctx : FunProp.Context := {}
+  let state : FunProp.State := {
+    morTheorems := FunProp.morTheoremsExt.getState env
+    transitionTheorems := FunProp.transitionTheoremsExt.getState env
+  }
+  return (← (FunProp.funProp e).run ctx state).1
+
 
 simproc_decl pullMean (_) := fun e => do
 
@@ -41,7 +50,7 @@ simproc_decl pullMean (_) := fun e => do
       let x := v.appArg!
       let f := Expr.lam n t b.appArg! .default
       let Hf ← mkAppM ``IsAffineRandMap #[f]
-      let (.some hf, _) ← FunProp.funProp Hf {} {} -- todo: utilized `simp` cache!
+      let .some hf ← runFunProp Hf -- todo: utilize `simp` cache!
         | throwError "the subexpression `{← ppExpr f}` has to be affine function"
       let prf ← mkAppM ``let_mean_mean #[x,f,hf.proof]
       let rhs := (← inferType prf).appArg!
@@ -50,7 +59,7 @@ simproc_decl pullMean (_) := fun e => do
       let x := v.appArg!
       let f := Expr.lam n t b .default
       let Hf ← mkAppM ``IsAffineMap #[q(ℝ), f]
-      let (.some hf, _) ← FunProp.funProp Hf {} {} -- todo: utilized `simp` cache!
+      let .some hf ← runFunProp Hf -- todo: utilize `simp` cache!
         | throwError "the subexpression `{← ppExpr f}` has to be affine function"
       let prf ← mkAppM ``let_mean #[x,f,hf.proof]
       let rhs := (← inferType prf).appArg!

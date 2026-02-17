@@ -33,13 +33,22 @@ data_array_data_synth_abbrev uncurry X R in x : HasAdjointUpdate R by
   case simp => intros; rfl
 
 data_array_data_synth_abbrev uncurry X R in x : HasRevFDeriv R by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+  apply (hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df' := fun (_ : X^[J]^[I]) (dy : X^[I,J]) => dy.curry))
   case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
+  case adjoint =>
+    intro x
+    change HasAdjoint R (fun dx : X^[J]^[I] => dx.uncurry) (fun dy : X^[I,J] => dy.curry)
+    data_synth
   case simp => rfl
 
 data_array_data_synth_abbrev uncurry X R in x : HasRevFDerivUpdate R by
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+  apply (hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df' := fun (_ : X^[J]^[I]) (dy : X^[I,J]) (dx : X^[J]^[I]) => dx + dy.curry))
   case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
+  case adjoint =>
+    intro x
+    change HasAdjointUpdate R (fun dx : X^[J]^[I] => dx.uncurry)
+      (fun dy : X^[I,J] => fun dx : X^[J]^[I] => dx + dy.curry)
+    data_synth
   case simp => rfl

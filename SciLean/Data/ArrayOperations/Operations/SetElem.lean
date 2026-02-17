@@ -195,8 +195,8 @@ theorem setElem.arg_xs.HasRevFDeriv_rule {𝕜 X I Y : Type*}
            (dx', dxi))) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intros; data_synth
-  case adjoint => intros; dsimp; data_synth
-  case simp => simp
+  case adjoint => intros; simp; data_synth
+  case simp => rfl
 
 open Classical
 @[data_synth]
@@ -219,4 +219,4 @@ theorem setElem.arg_xs.HasRevFDerivUpdate_rule {𝕜 X I Y : Type*}
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv   => intros; data_synth
   case adjoint => intros; simp; data_synth
-  case simp => simp
+  case simp => rfl

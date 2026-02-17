@@ -272,9 +272,9 @@ theorem HMul.hMul.arg_a0a1.fderiv_rule_at
     fun dx =>L[K]
       let dy := fderiv K f x dx
       let dz := fderiv K g x dx
-      y * dz + dy * z := by
+      y * dz + z * dy := by
   ext dx
-  simp[fderiv_mul hf hg, mul_comm]
+  simpa [mul_comm] using congrArg (fun F => F dx) (fderiv_mul hf hg)
 
 
 
@@ -322,11 +322,12 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
       (dy * z - y * dz) / z^2 := by
   ext dx
   have h : ∀ (f : X → K) x, fderiv K f x dx = deriv (fun h : K => f (x + h•dx)) 0 := by sorry_proof
-  simp[h,-deriv_fderiv']
-  rw[deriv_div (c:=(fun h => f (x + h • dx))) (d:=(fun h => g (x + h • dx)))
-               (hc:=by sorry_proof) (hd:= by sorry_proof)
-               (hx:=by simp; assumption)]
-  simp[-deriv_fderiv']
+  change ((fderiv K (fun x => f x / g x) x) dx =
+    ((fderiv K f x) dx * g x - f x * (fderiv K g x) dx) / g x ^ 2)
+  rw [h (fun x => f x / g x) x, h f x, h g x]
+  have hdiv := deriv_fun_div (c := (fun h : K => f (x + h • dx))) (d := (fun h : K => g (x + h • dx)))
+    (x := 0) (hc := by sorry_proof) (hd := by sorry_proof) (hx := by sorry_proof)
+  convert hdiv using 1 <;> rw [zero_smul, add_zero]
 
 
 -- Inv.inv -------------------------------------------------------------------

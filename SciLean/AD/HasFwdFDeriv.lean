@@ -502,7 +502,7 @@ theorem Norm2.norm2.arg_a0.HasFwdFDeriv_simple_rule_real :
         2 * ⟪x,dx⟫[R])) := by
   apply hasFwdFDeriv_from_hasFDerivAt
   case deriv => intros; data_synth
-  case simp => intros; simp_all; (conv_rhs => enter[1]; rw[←AdjointSpace.conj_symm]; simp); ring
+  case simp => intros; simp_all
 
 
 set_option linter.unusedVariables false in

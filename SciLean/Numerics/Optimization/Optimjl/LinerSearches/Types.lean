@@ -17,7 +17,7 @@ inductive LineSearchError where
 
 
 abbrev LineSearchM (Method State : Type) :=
-  ReaderT Method $ StateT State (EIO LineSearchError)
+  ReaderT Method $ StateT State (Except LineSearchError)
 
 
 variable (R)

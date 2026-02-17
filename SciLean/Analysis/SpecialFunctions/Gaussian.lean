@@ -154,38 +154,4 @@ theorem mul_gaussian_gaussian (μ₁ μ₂ : X) (σ₁ σ₂ : R) (x : X) :
     let σ' := (σ₁*σ₂)/σ₁₂  -- √(σ₁^2 + σ₂^2)
     let S₁₂ := gaussian μ₁ σ' μ₂
     S₁₂ * gaussian μ₁₂ σ₁₂ x := by
-
-  have h : ∀ a b c d : R, (a*b)*(c*d) = (a*c)*(b*d) := by intros; ring
-  simp only [gaussian]
-  conv => lhs; rw[h]
-  conv => rhs; rw[h]
-  simp only [exp_pull, pow_pull]
-
-  have : 0 < σ₁ := sorry_proof
-  have : 0 < σ₂ := sorry_proof
-
-  apply congr
-  apply congrArg
-
-
-  · apply congrFun; apply congrArg
-    simp only [div_eq_mul_inv]
-    simp only [pow_push,inv_eq_pow,sqrt_eq_pow,
-               pow_pow,pow_pow_nat_real,pow_pow_real_nat]
-    norm_num
-    generalize hβ : (σ₁ * σ₁ + σ₂ * σ₂) = β
-    have : 0 < β := by rw[←hβ]; sorry_proof
-    simp only [← inv_eq_pow, ←pow_nat_to_real]
-    field_simp
-    ring
-
-  · apply congrArg
-
-    generalize h   : (σ₁ * σ₁ * (σ₁ * σ₁ + σ₂ * σ₂)⁻¹) = c
-    generalize h'' : (σ₂ * σ₂ * (σ₁ * σ₁ + σ₂ * σ₂)⁻¹) = e
-    generalize h'   : sqrt (σ₁ * σ₁ * (σ₂ * σ₂) * (σ₁ * σ₁ + σ₂ * σ₂)⁻¹) = d
-
-    simp only [norm2_def, smul_pull, sub_pull, add_pull]
-    simp only [div_eq_mul_inv, inv_eq_pow, sqrt_eq_pow, pow_push, pow_pow]
-
-    sorry_proof
+  sorry_proof

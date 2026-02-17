@@ -75,13 +75,13 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
 
   trace[Meta.Tactic.structuralInverse.step] "inverting system in variables {← xVars.mapM ppExpr}\n{← equationsToString yVals fVals}"
 
-  let xIdSet : FVarIdSet := .fromArray (xVars.map (fun x => x.fvarId!)) _
+  let xIdSet : FVarIdSet := xVars.foldl (init := {}) fun s x => s.insert x.fvarId!
 
   -- data is and array of (yId, value, set of xId aprearing in value)
   let mut eqs ← fVals.mapIdxM fun i val => do
     let varSet : FVarIdSet := -- collect which xi's are used
-      (← (val.collectFVars.run {}))
-      |>.snd.fvarSet.intersectBy (fun _ _ _ => ()) xIdSet
+      let allFVars := (← (val.collectFVars.run {})).2.fvarSet
+      Std.TreeSet.filter (fun fv => xIdSet.contains fv) allFVars
     pure (i,val,varSet)
 
   let mut lctx ← getLCtx
@@ -189,7 +189,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
 
   trace[Meta.Tactic.structuralInverse.step] "system after backward pass\n{← afterBackwardPassSystemToString lctx xResVars' xVars'' xVars xVals}"
 
-  let resolvedIdSet : FVarIdSet := .fromArray (xVars'.map (fun x => x.fvarId!)) _
+  let resolvedIdSet : FVarIdSet := xVars'.foldl (init := {}) fun s x => s.insert x.fvarId!
   let unresolvedIdSet := xIdSet.diff resolvedIdSet
 
   let sinv : SystemInverse := {

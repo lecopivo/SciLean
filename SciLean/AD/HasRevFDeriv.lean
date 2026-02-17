@@ -1015,10 +1015,19 @@ theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule :
       (s, fun dr =>
         let dx := (2*dr) • x
         dx)) := by
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intro; data_synth
-  case adjoint => intro; dsimp; data_synth
-  case simp => funext x; simp; funext dr; module
+  refine hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun x => fun dx =>L[R]
+      ⟪(2 : R) • x, dx⟫[R])
+    (df' := fun x dr => dr • ((2 : R) • x)) ?_ ?_ ?_
+  · intro x
+    simpa [AdjointSpace.inner_smul_left, conj_for_real_scalar] using
+      (Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real (R := R) (X := X) x)
+  · intro x
+    simpa [smul_smul] using
+      (Inner.inner.arg_a1.HasAdjoint_simple_rule_real
+        (R := R) (K := R) ((2 : R) • x))
+  · funext x
+    simp [smul_smul, mul_comm]
 
 @[data_synth]
 theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
@@ -1029,10 +1038,19 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
       (s, fun dr x' =>
         let dx := (2*dr) • x + x'
         dx)) := by
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  case deriv => intro; data_synth
-  case adjoint => intro; dsimp; data_synth
-  case simp => funext x; simp; funext dr x'; module
+  refine hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun x => fun dx =>L[R]
+      ⟪(2 : R) • x, dx⟫[R])
+    (df' := fun x dr x' => x' + dr • ((2 : R) • x)) ?_ ?_ ?_
+  · intro x
+    simpa [AdjointSpace.inner_smul_left, conj_for_real_scalar] using
+      (Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_real (R := R) (X := X) x)
+  · intro x
+    simpa [smul_smul] using
+      (Inner.inner.arg_a1.HasAdjointUpdate_simple_rule_real
+        (R := R) (K := R) ((2 : R) • x))
+  · funext x
+    ext <;> simp [smul_smul, mul_comm, add_comm]
 
 set_option linter.unusedVariables false in
 @[data_synth]

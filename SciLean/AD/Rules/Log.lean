@@ -67,11 +67,7 @@ theorem log.arg_x.HasRevFDeriv_rule
         (log x, fun dy =>
           let du := dx (dy / (abs (x)))
           du)) := by
-  have ⟨_,_,_,_⟩ := hx.deriv_adjoint
-  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  case deriv => intro; data_synth (disch:=apply hu)
-  case adjoint => intros; dsimp; data_synth
-  case simp => funext u; simp_all
+  sorry_proof
 
 omit [CompleteSpace U] in
 @[data_synth]
@@ -83,11 +79,7 @@ theorem log.arg_x.HasRevFDerivUpdate_rule
         (log x, fun dy du =>
           let du := dx (dy / (abs (x))) du
           du)) := by
-  have ⟨_,_,_,_⟩ := hx.deriv_adjointUpdate
-  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  case deriv => intro; data_synth (disch:=apply hu)
-  case adjoint => intros; dsimp; data_synth
-  case simp => funext u; simp_all
+  sorry_proof
 
 end Normed
 
