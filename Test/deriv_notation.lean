@@ -86,18 +86,41 @@ dz : K
 #guard_msgs in
 #check (∂! (fun x => x*x) (1:K))
 
-/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
+/--
+info: fun x =>L[K]
+  let dx₁ := x.1;
+  let dx₁_1 := x.2;
+  let dz :=
+    let dx₁ := x.1;
+    let dx₁_2 := x.2;
+    (dx₁, dx₁_2);
+  let dz := (dx₁, dx₁_1) + dz;
+  dz : K × K →L[K] K × K
+-/
 #guard_msgs in
 #check ((∂ (x:=((1:K),(2:K))), (x + x)))
   rewrite_by
     autodiff
 
 
-/-- info: 1 + 1 : K -/
+/--
+info: let dz := 1 + 1;
+dz : K
+-/
 #guard_msgs in
 #check ∂! (x:=(1:K)), x*x
 
-/-- info: (fun dx =>L[K] dx) + fun dx =>L[K] dx : K × K →L[K] K × K -/
+/--
+info: fun x =>L[K]
+  let dx₁ := x.1;
+  let dx₁_1 := x.2;
+  let dz :=
+    let dx₁ := x.1;
+    let dx₁_2 := x.2;
+    (dx₁, dx₁_2);
+  let dz := (dx₁, dx₁_1) + dz;
+  dz : K × K →L[K] K × K
+-/
 #guard_msgs in
 #check ∂! (x:=((1:K),(2:K))), (x + x)
 
@@ -141,19 +164,19 @@ set_default_scalar K
 
 -- This is broken :( and I don't really know how to solve it
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ∇ x : (K×K), x.1
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ∇! x : (K×K), x.2
@@ -161,10 +184,10 @@ Additional diagnostic information may be available using the `set_option diagnos
 variable (y : K × K)
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ∇ (x:=y), (x + x)
@@ -174,28 +197,28 @@ Additional diagnostic information may be available using the `set_option diagnos
 #check ∇ (x :K), x
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ∇ (fun x => x + x) y
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ∇ (fun x => x + x) ((1.0,2.0) : K×K)
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf K (K × K) (ProdMatrixCol (K × K) (K × K))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #check ((∇! x : (K×K), ⟪x,(1,0)⟫)) rewrite_by autodiff
@@ -215,19 +238,19 @@ set_default_scalar Float
 
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #eval ∇! (fun x : Float×Float => (x + x).2) (1.0,2.0)
 
 /--
-error: failed to synthesize
+error: failed to synthesize instance of type class
   TensorProductSelf Float (Float × Float) (ProdMatrixCol (Float × Float) (Float × Float))
 
-Additional diagnostic information may be available using the `set_option diagnostics true` command.
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
 -/
 #guard_msgs in
 #eval ∇! (x:=((1.0 : Float),(2.0:Float))), (x + x).1

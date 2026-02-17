@@ -100,7 +100,7 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
     let x₁_15 := x₁_6 + x₁_14;
     (x₁_15, fun dz =>
       let dy₁ := -(x₁_4 * dz);
-      let dx := dy₁ • x';
+      let dx := 0 + (starRingEnd Float) dy₁ • x';
       let dy₁ := x₁_8 * dz;
       let dy₁_1 := -(x₁_10 * dz);
       let dx₁ := DataArrayN.scalAdd 0 1 dy₁_1;
@@ -110,7 +110,7 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
           let x₁_16 := ⊞ j => x₁₂₁[j] + x₁_1[j] - 0.5 * ‖x₁[j] * (x.row i - x₁₂₂₁.row j)‖₂²;
           let x_3 := x₁_16.logsumexpSoftmax;
           let x' := x_3.2;
-          let dx := dz • x';
+          let dx := (starRingEnd Float) dz • x';
           let dx :=
             IndexType.fold IndexType.Range.full dw fun i_1 dx_2 =>
               let x₁ := x₁[i_1];
@@ -157,6 +157,8 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
                   let dxi := dxi[i];
                   let dx₁ := dx.1;
                   let dx₂ := dx.2;
+                  let a_1 := starRingEnd Float;
+                  let a := a_1 a;
                   let dy := dxi * a;
                   let xi := dx₁[i.1];
                   let x := setElem dx₁ i.1 (xi + dy) True.intro;
@@ -165,9 +167,9 @@ info: gmmObjective.arg_alphasmeanslogdiaglt.HasRevFDeriv_simple_rule {d k n : �
                   let dxi := dxi[i];
                   let dx₁ := dx.2;
                   let dx₂ := dx.1;
-                  let xi := dx₁[{ val := USize.ofNat d * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }];
+                  let xi := dx₁[{ val := d.toUSize * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }];
                   let x :=
-                    setElem dx₁ { val := USize.ofNat d * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }
+                    setElem dx₁ { val := d.toUSize * ↑i.2 + ↑i.1 - ↑i.2 - 1 - ↑i.2 * (↑i.2 + 1) / 2, isLt := ⋯ }
                       (xi + dxi) True.intro;
                   (dx₂, x);
           let dy := dx_2.1;

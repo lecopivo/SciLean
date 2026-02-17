@@ -4,10 +4,7 @@ open SciLean
 
 
 /--
-info: fun i =>
-  let foo := i * 42;
-  let foo_1 := i + 42;
-  (foo, foo_1) : ℕ → ℕ × ℕ
+info: fun i => (i * 42, i + 42) : ℕ → ℕ × ℕ
 -/
 #guard_msgs in
 #check
@@ -19,10 +16,7 @@ info: fun i =>
      lsimp
 
 /--
-info: fun i =>
-  let foo := i * 42;
-  let foo_1 := i + 42;
-  (foo, foo_1) : ℕ → ℕ × ℕ
+info: fun i => (i * 42, i + 42) : ℕ → ℕ × ℕ
 -/
 #guard_msgs in
 #check
@@ -37,8 +31,7 @@ info: fun i =>
 /--
 info: fun i =>
   let j := 42 * i;
-  let foo := i + j;
-  foo : ℕ → ℕ
+  i + j : ℕ → ℕ
 -/
 #guard_msgs in
 #check
@@ -52,9 +45,7 @@ info: fun i =>
 
 
 /--
-info: fun i =>
-  let foo := i + 42;
-  foo : ℕ → ℕ
+info: fun i => i + 42 : ℕ → ℕ
 -/
 #guard_msgs in
 #check
