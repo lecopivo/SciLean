@@ -32,7 +32,7 @@ instance : LevelOneData (DataArray Float) Float Float where
 
 set_option linter.unusedVariables false in
 instance : LevelOneDataExt (DataArray Float) Float Float where
-  const N a := dconst N.toUSize a
+  const N a := DataArray.replicate N a
   sum N X offX incX := dsum N.toUSize X offX.toUSize incX.toUSize
   axpby N a X offX incX b Y offY incY := daxpby N.toUSize a X offX.toUSize incX.toUSize b Y offY.toUSize incY.toUSize
   scaladd N a X offX incX b := dscaladd N.toUSize a X offX.toUSize incX.toUSize b

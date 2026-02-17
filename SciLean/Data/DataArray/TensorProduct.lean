@@ -27,11 +27,11 @@ instance : MatrixType R (R^[I]) (R^[J]) (R^[I,J]) where
     ⟨A, sorry_proof⟩
   matVecMulAdd a A x b y :=
     let y := BLAS.LevelTwoData.gemv .RowMajor .NoTrans
-      nJ nI a A.1 0 nJ x.1 0 1 b y.1 0 1
+      nI nJ a A.1 0 nJ x.1 0 1 b y.1 0 1
     ⟨y, sorry_proof⟩
   vecMatMulAdd a y A b x :=
     let x := BLAS.LevelTwoData.gemv .RowMajor .Trans
-      nJ nI a A.1 0 nJ y.1 0 1 b x.1 0 1
+      nI nJ a A.1 0 nJ y.1 0 1 b x.1 0 1
     ⟨x, sorry_proof⟩
   tmulAdd_eq_tmul := sorry_proof
 
