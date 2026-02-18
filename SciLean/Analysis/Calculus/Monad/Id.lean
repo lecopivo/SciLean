@@ -51,7 +51,7 @@ noncomputable
 instance : FwdFDerivMonad K Id' Id' where
   fwdFDerivM f := fun x dx => pure (fwdFDeriv K (fun x => (f x).run) x dx)
   fwdFDerivM_pure f := by simp[pure]
-  fwdFDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
+  fwdFDerivM_bind := by simp[Bind.bind]; sorry_proof
   fwdFDerivM_pair y := by intros; simp; sorry_proof
 
 noncomputable
@@ -60,7 +60,7 @@ instance : RevFDerivMonad K Id' Id' where
     let ydf := revFDeriv K (fun x => (f x).run) x
     pure (ydf.1, fun dy => pure (ydf.2 dy))
   revFDerivM_pure f := by simp[pure]
-  revFDerivM_bind := by simp[Id',Bind.bind]; sorry_proof
+  revFDerivM_bind := by simp[Bind.bind]; sorry_proof
   revFDerivM_pair y := by intros; simp; sorry_proof
 
 instance : HasRevFDerivMonad K Id' Id' where
@@ -69,7 +69,7 @@ instance : HasRevFDerivMonad K Id' Id' where
       (fun x => (f x).run)
       (fun x => let ydf := (f' x).run; (ydf.1, fun dy => (ydf.2 dy).run))
   HasRevFDerivM_pure f := by simp[pure]
-  HasRevFDerivM_bind := by intros; simp[Id',Bind.bind]; sorry_proof
+  HasRevFDerivM_bind := by intros; simp[Bind.bind]; sorry_proof
   HasRevFDerivM_pair y := by intros; simp; sorry_proof
 
 end SciLean

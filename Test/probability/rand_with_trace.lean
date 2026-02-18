@@ -20,7 +20,7 @@ info: ((normal 0.0 1.0).sample `v1).bind (fun x => return' x)
 
 
 def tt :=
-    (let (_,x) <~ forLoop (init:=(0.0,#[])) (n:=50) (fun i (x,xs) =>
+    (let (_,x) <~ forLoop (init:=(0.0,#[])) (n:=50) (fun _i (x,xs) =>
                     let x' <~ sample (normal x 1.0) `v1
                     return' (x', xs.push x'))
      let y <~ sample (normal x.1.sum 1.0) `y
@@ -98,9 +98,9 @@ def temperature :=
      let dataInit <~ sample (normal tempInit 1.0) `data_init
      let data := #[dataInit]
 
-     let (_,_,temps,acons,data) <~
+     let (_,_,_temps,_acons,_data) <~
        forLoop (init:=(tempInit,aconInit,temps,acons,data)) (n:=20)
-         (fun i (tempPrev,aconPrev,temps,acons,data) =>
+         (fun _i (tempPrev,aconPrev,temps,acons,data) =>
             let m :=
               if tempPrev < tempLower then false
               else if tempPrev > tempUpper then true

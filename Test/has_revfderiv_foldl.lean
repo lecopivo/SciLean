@@ -10,6 +10,7 @@ variable
   {X} [NormedAddCommGroup X] [AdjointSpace R X]
   {Y} [NormedAddCommGroup Y] [AdjointSpace R Y]
 
+set_option linter.unusedVariables false in
 def evalGrad (f : X → R) {f'} (hf : HasRevFDeriv R f f') (x : X) : X := (f' x).2 1
 
 #exit

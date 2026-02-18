@@ -169,7 +169,7 @@ theorem pull_E_nat_rec (x₀ : C 0) (r : (n : Nat) → Rand (D n))
   induction n
   case zero => simp[mean]
   case succ n hn =>
-    simp[hn,mean,map]
+    simp[hn,mean]
     conv => simp only [rand_pull_E,map]
     conv =>
       lhs

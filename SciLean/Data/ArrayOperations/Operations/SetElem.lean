@@ -151,7 +151,7 @@ theorem setElem.arg_xs.HasAdjoint_rule {𝕜 X I Y : Type*}
   case adjoint =>
     rintro ⟨x,y⟩ x'
     simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,AdjointSpace.inner_prod_split,
-         IndexType.sum_eq_finset_sum, Finset.sum_ite]
+         Finset.sum_ite]
     simp only [Finset.sum_filter]
     simp; ac_rfl
   case is_linear => apply setElem.arg_xsv.IsContinuousLinearMap_rule

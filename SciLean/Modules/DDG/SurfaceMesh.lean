@@ -470,11 +470,11 @@ def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
   let mut vertices : Array (SciLean.Float3) := #[]
   let mut faces : Array Nat := #[]
   let mut i := 0
-  if lines[i]!.trim != "OFF"
+  if lines[i]!.trimAscii.toString != "OFF"
   then throw <| MeshBuilderError.parseError s!"expected 'OFF' on line {i+1}. but found '{lines[i]!}' which is not .OFF"
   i := i + 1
 
-  let [n_vertices, n_faces, _n_edges] := lines[i]!.trim.splitOn " "
+  let [n_vertices, n_faces, _n_edges] := lines[i]!.trimAscii.toString.splitOn " "
     | throw <| MeshBuilderError.parseError s!"expected number of vertices, faces, edges information on line {i+1}, but found '{lines[i]!}'"
   i := i + 1
 
@@ -485,7 +485,7 @@ def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
     | throw <| MeshBuilderError.parseError s! "unable to parse num faces {n_faces}"
 
   for _ in Array.range n_vertices do
-    let coords_raw := lines[i]!.trim.splitOn " "
+    let coords_raw := lines[i]!.trimAscii.toString.splitOn " "
     let mut v : Array Float := #[]
     for coord in coords_raw do
       let .ok coord := Lean.Json.Parser.num |>.run coord
@@ -495,7 +495,7 @@ def SurfaceMesh.fromOFFString (lines : Array String) : MeshBuilderM Unit := do
     i := i + 1
 
   for _ in [0:n_faces] do
-    let face_indexes_raw := lines[i]!.trim.splitOn " "
+    let face_indexes_raw := lines[i]!.trimAscii.toString.splitOn " "
     let mut f : Array Nat := #[]
     for ix in face_indexes_raw.drop 1 do
       let .some ix := ix.toNat?

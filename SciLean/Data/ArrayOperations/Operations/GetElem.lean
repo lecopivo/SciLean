@@ -69,7 +69,7 @@ theorem getElem.arg_xs.HasAdjoint_rule_applied_index {𝕜 X I Y : Type*}
         let x := setElem (0:X) i xi .intro
         x) := by
   constructor
-  case adjoint => intro x y; simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull,IndexType.sum_eq_finset_sum]
+  case adjoint => intro x y; simp[inner_eq_sum_getElem (I:=I),Tactic.if_pull]
   case is_linear => fun_prop
 
 @[data_synth]

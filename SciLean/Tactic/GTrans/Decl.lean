@@ -21,7 +21,7 @@ structure GTransDecls where
   decls : NameMap GTransDecl := {}
   deriving Inhabited
 
-/-- -/
+/-- Extension type storing registered generalized transformations. -/
 abbrev GTransDeclsExt := SimpleScopedEnvExtension GTransDecl GTransDecls
 
 initialize gtransDeclsExt : GTransDeclsExt ←

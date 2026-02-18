@@ -21,7 +21,7 @@ structure DataSynthDecls where
   decls : NameMap DataSynthDecl := {}
   deriving Inhabited
 
-/-- -/
+/-- Extension type storing registered data-synthesis declarations. -/
 abbrev DataSynthDeclsExt := SimpleScopedEnvExtension DataSynthDecl DataSynthDecls
 
 initialize dataSynthDeclsExt : DataSynthDeclsExt ←

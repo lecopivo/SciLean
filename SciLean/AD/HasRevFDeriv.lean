@@ -875,7 +875,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule
     HasRevFDeriv K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
-        (A.sum (fun i => f i), fun dx i => A.toSet.indicator (fun _ => dx) i)) := by
+        (A.sum (fun i => f i), fun dx i => (A : Set I).indicator (fun _ => dx) i)) := by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
@@ -889,7 +889,7 @@ theorem Finset.sum.arg_f.HasRevFDeriv_rule'
     HasRevFDeriv K
       (fun f : I → X => A.sum f)
       (fun f =>
-        (A.sum (fun i => f i), fun dx i => A.toSet.indicator (fun _ => dx) i)) := by
+        (A.sum (fun i => f i), fun dx i => (A : Set I).indicator (fun _ => dx) i)) := by
   apply Finset.sum.arg_f.HasRevFDeriv_rule
 
 @[data_synth]
@@ -898,7 +898,7 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule
     HasRevFDerivUpdate K
       (fun f : I → X => A.sum (fun i => f i))
       (fun f =>
-        (A.sum (fun i => f i), fun dx df i => df i + A.toSet.indicator (fun _ => dx) i)) := by
+        (A.sum (fun i => f i), fun dx df i => df i + (A : Set I).indicator (fun _ => dx) i)) := by
   apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
   case deriv => intro; data_synth
   case adjoint => intro x; simp; data_synth
@@ -914,7 +914,7 @@ theorem Finset.sum.arg_f.HasRevFDerivUpdate_rule'
       (fun f =>
         (A.sum (fun i => f i), fun dx df i =>
           let dxi := df i
-          let dx := dxi + A.toSet.indicator (fun _ => dx) i
+          let dx := dxi + (A : Set I).indicator (fun _ => dx) i
           dx)) := by
   apply Finset.sum.arg_f.HasRevFDerivUpdate_rule
 

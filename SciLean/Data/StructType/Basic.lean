@@ -206,7 +206,7 @@ instance instStrucTypeProd
     match i with
     | .inl a => (StructType.structModify a f x, y)
     | .inr b => (x, StructType.structModify b f y)
-  left_inv := by intro x; funext i; induction i <;> simp[LeftInverse]
+  left_inv := by intro x; funext i; induction i <;> simp[]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by
@@ -228,7 +228,7 @@ instance instStrucTypeSigma
     match i with
     | .inl a => ⟨structModify a f x, y⟩
     | .inr b => ⟨x, structModify b f y⟩
-  left_inv := by intro x; funext i; induction i <;> simp[LeftInverse]
+  left_inv := by intro x; funext i; induction i <;> simp[]
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by

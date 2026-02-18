@@ -334,7 +334,7 @@ theorem HMul.hMul.arg_a0.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right]
+    [adjoint_inner_left,AdjointSpace.inner_smul_left]
   intros; ac_rfl
 
 open ComplexConjugate in
@@ -347,7 +347,7 @@ theorem HMul.hMul.arg_a1.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right]
+    [adjoint_inner_left,AdjointSpace.inner_smul_left]
   intros; ac_rfl
 
 
@@ -394,7 +394,7 @@ theorem HDiv.hDiv.arg_a0.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right]
+    [adjoint_inner_left,AdjointSpace.inner_smul_left]
   simp [div_eq_mul_inv]
   intros; ac_rfl
 
@@ -481,7 +481,7 @@ theorem Inner.inner.arg_a1.adjoint_rule
 by
   rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
   simp (disch:=fun_prop)
-    [adjoint_inner_left,AdjointSpace.inner_smul_left,AdjointSpace.conj_symm,mul_comm]
+    [adjoint_inner_left,AdjointSpace.inner_smul_left,mul_comm]
 
 
 section OnRealSpace

@@ -128,10 +128,10 @@ instance : LawfulMonad Rand where
   bind_pure_comp := by intros; rfl
   bind_map       := by intros; rfl
   pure_bind      := sorry_proof -- by intros; ext; simp[Bind.bind,Pure.pure]
-  bind_assoc     := by intros; ext; simp[Bind.bind,Pure.pure]
+  bind_assoc     := by intros; ext; simp[Bind.bind]
   map_const      := by intros; ext; rfl
   id_map         := sorry_proof -- by intros; ext; simp[Bind.bind,Pure.pure,id,Functor.map]
-  seqLeft_eq     := by intros; ext; simp[Bind.bind,Pure.pure,Seq.seq,Function.const,Functor.map,SeqLeft.seqLeft]
+  seqLeft_eq     := by intros; ext; simp[Bind.bind,Pure.pure,Seq.seq,Functor.map,SeqLeft.seqLeft]
   seqRight_eq    := by intros; ext; simp[Bind.bind,Pure.pure,Seq.seq,Function.const,Functor.map,SeqRight.seqRight]
   pure_seq       := by intros; ext; simp[Bind.bind,Pure.pure,Seq.seq,Functor.map]
 
@@ -252,7 +252,7 @@ theorem reparameterize [Nonempty X] (f : X → Y) (hf : f.Injective) {r : Rand X
     (r.map f).E (fun y => φ (invf y)) := by
   simp [E]
   rw[weakIntegral_map sorry_proof sorry_proof]
-  simp [E,Function.invFun_comp' hf]
+  simp [Function.invFun_comp' hf]
 
 section Mean
 
@@ -264,7 +264,7 @@ def mean (r : Rand X) : X := r.E id
 @[rand_pull_E]
 theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
     x.E φ = (x.map φ).mean := by
-  simp [bind,mean,pure,E]
+  simp [mean,E]
   rw[weakIntegral_map sorry_proof sorry_proof]
   rfl
 
@@ -350,7 +350,7 @@ theorem pdf_wrt_self (x : Rand X) [LawfulRand x] : x.pdf R x.ℙ = 1 := sorry_pr
 @[simp,simp_core]
 theorem bind_pdf (ν : Measure Y) (x : Rand X) (f : X → Rand Y) :
     (x >>= f).pdf R ν = fun y => ∫ x', ((f x').pdf R ν y) ∂x.ℙ := by
-  funext y; simp[Rand.pdf,Bind.bind,Pure.pure]; sorry_proof
+  funext y; simp[Rand.pdf,Bind.bind]; sorry_proof
 
 @[simp,simp_core]
 theorem ite_pdf (c) [Decidable c] (t e : Rand X) (μ : Measure X) :

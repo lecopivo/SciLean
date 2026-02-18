@@ -216,7 +216,7 @@ instance [OfFn α ι γ] [OfFn β κ γ] :
 instance [GetElem' α ι γ] [GetElem' β κ γ]
     [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
     LawfulOfFn (α×β) (ι⊕κ) where
-  getElem_ofFn := by intro f i; cases i <;> simp[getElem,ofFn]
+  getElem_ofFn := by intro f i; cases i <;> simp[getElem]
 
 @[simp, simp_core]
 theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]

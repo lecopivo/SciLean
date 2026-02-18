@@ -31,7 +31,7 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
 
   DifferentiableM_pair f hf :=
     by
-      simp[bind, StateT.bind, pure, StateT.pure, Functor.map]
+      simp[bind, StateT.bind, pure, StateT.pure]
       fun_prop
 
 
@@ -56,14 +56,14 @@ instance (S : Type) [NormedAddCommGroup S] [NormedSpace K S] :
     by
       funext x dx sds
       simp [DifferentiableM] at hf; simp [DifferentiableM] at hg
-      simp[fwdFDeriv, bind, StateT.bind]
+      simp[bind, StateT.bind]
       fun_trans
 
   fwdFDerivM_pair f hf :=
     by
       funext x dx sds
       simp [DifferentiableM] at hf
-      simp[bind, StateT.bind, pure, StateT.pure, Functor.map]
+      simp[bind, StateT.bind, pure, StateT.pure]
       fun_trans only
       simp
 
@@ -92,7 +92,7 @@ theorem _root_.getThe.arg.fwdFDerivValM_rule
     getThe (S×S) :=
 by
   funext
-  simp[getThe, MonadStateOf.get, StateT.get,fwdFDerivValM, fwdFDerivM, pure, StateT.pure]
+  simp[getThe, MonadStateOf.get, StateT.get,fwdFDerivValM, fwdFDerivM]
   fun_trans
 
 -- MonadStateOf.set ------------------------------------------------------------
@@ -103,7 +103,7 @@ theorem _root_.MonadStateOf.set.arg_a0.DifferentiableM_rule
   (s : X → S) (ha0 : Differentiable K s)
   : DifferentiableM K (m:=StateT S m) (fun x => set (s x)) :=
 by
-  simp[set, StateT.set, DifferentiableValM, DifferentiableM]
+  simp[set, StateT.set, DifferentiableM]
   fun_prop
 
 
@@ -130,7 +130,7 @@ theorem _root_.modifyThe.arg_f.DifferentiableM_rule
   (f : X → S → S) (ha0 : Differentiable K (fun xs : X×S => f xs.1 xs.2))
   : DifferentiableM K (m:=StateT S m) (fun x => modifyThe S (f x)) :=
 by
-  simp[modifyThe, MonadStateOf.modifyGet, StateT.modifyGet, DifferentiableValM, DifferentiableM]
+  simp[modifyThe, MonadStateOf.modifyGet, StateT.modifyGet, DifferentiableM]
   fun_prop
 
 
@@ -146,7 +146,7 @@ theorem _root_.modifyThe.arg_f.fwdFDerivM_rule
       pure ((),())) :=
 by
   funext
-  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,fwdFDerivM,bind,Bind.bind, StateT.bind]
+  simp[modifyThe, MonadStateOf.modifyGet, StateT.modifyGet,fwdFDerivM,bind,Bind.bind, StateT.bind]
   fun_trans; congr
 
 
@@ -158,7 +158,7 @@ theorem _root_.modify.arg_f.DifferentiableM_rule
   (f : X → S → S) (ha0 : Differentiable K (fun xs : X×S => f xs.1 xs.2))
   : DifferentiableM K (m:=StateT S m) (fun x => modify (f x)) :=
 by
-  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet, DifferentiableValM, DifferentiableM]
+  simp[modify, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet, DifferentiableM]
   fun_prop
 
 
@@ -213,7 +213,7 @@ instance (S : Type) [NormedAddCommGroup S] [AdjointSpace K S] [CompleteSpace S] 
     by
       funext x s
       simp [DifferentiableM] at hf; simp [DifferentiableM] at hg
-      simp[revFDeriv, bind, StateT.bind, StateT.pure, pure,Functor.map]
+      simp[bind, StateT.bind, StateT.pure, pure]
       fun_trans
       rfl
 
@@ -245,7 +245,7 @@ theorem _root_.getThe.arg.revFDerivValM_rule
       pure ((← getThe S), fun ds => modifyThe S (fun ds' => ds + ds'))) :=
 by
   funext
-  simp[getThe, MonadStateOf.get, StateT.get,revFDerivValM, revFDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet]
+  simp[getThe, MonadStateOf.get, StateT.get,revFDerivValM, revFDerivM, pure, StateT.pure, bind, StateT.bind, modifyThe, MonadStateOf.modifyGet]
   fun_trans; rfl
 
 -- MonadState.get --------------------------------------------------------------
@@ -259,7 +259,7 @@ theorem _root_.MonadState.get.arg.revFDerivValM_rule
       pure ((← get), fun ds => modify (fun ds' => ds + ds'))) :=
 by
   funext
-  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revFDerivValM, revFDerivM, pure, StateT.pure, bind, StateT.bind, set, StateT.set, modifyThe, modify, MonadStateOf.modifyGet, StateT.modifyGet, modifyGet]
+  simp[MonadState.get, getThe, MonadStateOf.get, StateT.get,revFDerivValM, revFDerivM, pure, StateT.pure, bind, StateT.bind, modify, MonadStateOf.modifyGet, modifyGet]
   fun_trans; rfl
 
 
@@ -280,7 +280,7 @@ theorem _root_.MonadStateOf.set.arg_a0.revFDerivM_rule
               pure dx)) :=
 by
   funext
-  simp[set, StateT.set, revFDerivM, getThe, MonadStateOf.get, StateT.get, bind, StateT.bind, pure, StateT.pure, get]
+  simp[set, StateT.set, revFDerivM, getThe, MonadStateOf.get, bind, StateT.bind, pure, StateT.pure, get]
   fun_trans; congr; funext; simp[StateT.get, StateT.bind,StateT.set,StateT.pure]
 
 -- -- modifyThe ----------------------------------------------------------------------
@@ -331,7 +331,7 @@ theorem _root_.modify.arg_f.revFDerivM_rule
               pure dxs.1)) :=
 by
   funext
-  simp[modifyThe, modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revFDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
+  simp[modifyGet, MonadStateOf.modifyGet, StateT.modifyGet,revFDerivM, bind, StateT.bind, getThe, MonadStateOf.get, StateT.get, set, StateT.set, get, pure, StateT.pure, modify]
   fun_trans; congr; funext; simp[StateT.bind,StateT.pure,StateT.get,StateT.set]
 
 end RevFDerivMonad

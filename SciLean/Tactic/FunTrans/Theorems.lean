@@ -103,7 +103,7 @@ def detectLambdaTheoremArgs (f : Expr) (ctxVars : Array Expr) :
   | _ => return none
 
 
-/--  -/
+/-- Lambda-theorem descriptor used by the `fun_trans` theorem registry. -/
 structure LambdaTheorem where
   /-- Name of function transformation -/
   funTransName : Name
@@ -115,7 +115,7 @@ structure LambdaTheorem where
   thmArgs : LambdaTheoremArgs
   deriving Inhabited, BEq
 
-/-- -/
+/-- Extension payload for registered lambda theorems. -/
 structure LambdaTheorems where
   /-- map: function transfromation name × theorem type → lambda theorem -/
   theorems : Std.HashMap (Name × LambdaTheoremType) (Array LambdaTheorem) := {}
@@ -126,7 +126,7 @@ structure LambdaTheorems where
 def LambdaTheorem.getProof (thm : LambdaTheorem) : MetaM Expr := do
   mkConstWithFreshMVarLevels thm.thmName
 
-/-- -/
+/-- Extension type storing function-level transformation theorems. -/
 abbrev LambdaTheoremsExt := SimpleScopedEnvExtension LambdaTheorem LambdaTheorems
 
 /-- Extension storing all lambda theorems. -/
@@ -198,7 +198,7 @@ structure FunctionTheorem where
 
 private local instance : Ord Name := ⟨Name.quickCmp⟩
 
-/-- -/
+/-- Storage for generalized function-transformation theorems. -/
 structure FunctionTheorems where
   /-- map: function name → function transformation → function theorem -/
   theorems : Batteries.RBMap Name (Batteries.RBMap Name (Array FunctionTheorem) compare) compare := {}
@@ -212,7 +212,7 @@ def FunctionTheorem.getProof (thm : FunctionTheorem) : MetaM Expr := do
   | .fvar id => pure (.fvar id)
 
 
-/-- -/
+/-- Extension payload for registered function-level transformation theorems. -/
 abbrev FunctionTheoremsExt := SimpleScopedEnvExtension FunctionTheorem FunctionTheorems
 
 /-- Extension storing all function theorems. -/
@@ -238,7 +238,7 @@ def FunctionTheorem.ord (t s : FunctionTheorem) : Ordering :=
 
   tl.lexOrd sl
 
-/-- -/
+/-- Retrieve and prioritize registered theorems matching a function and transformer. -/
 def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Option Nat) (mainArgs : Option (Array Nat)) :
     CoreM (Array FunctionTheorem) := do
 
@@ -280,16 +280,16 @@ structure GeneralEntry where
 def GeneralTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
   mkConstWithFreshMVarLevels thm.thmName
 
-/-- -/
+/-- Storage for generalized theorems keyed by discrimination-tree patterns. -/
 structure GeneralTheorems where
-  /-- -/
+  /-- Discrimination tree indexed by theorem keys. -/
   theorems     : RefinedDiscrTree GeneralTheorem := {}
   deriving Inhabited
 
-/-- -/
+/-- Extension type storing generalized theorems in the environment. -/
 abbrev GeneralTheoremsExt := SimpleScopedEnvExtension GeneralEntry GeneralTheorems
 
-/-- -/
+/-- Register morphism theorems in the scoped extension. -/
 initialize morTheoremsExt : GeneralTheoremsExt ←
   registerSimpleScopedEnvExtension {
     name     := by exact decl_name%
@@ -301,7 +301,7 @@ initialize morTheoremsExt : GeneralTheoremsExt ←
   }
 
 
-/-- -/
+/-- Register local `fvar` theorems in the scoped extension. -/
 initialize fvarTheoremsExt : GeneralTheoremsExt ←
   registerSimpleScopedEnvExtension {
     name     := by exact decl_name%
@@ -355,7 +355,7 @@ inductive Theorem where
   | fvar       (entry : GeneralEntry)
 
 
-/-- -/
+/-- Parse a declaration and classify it as a supported transformation theorem. -/
 def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : MetaM Theorem := do
   let info ← getConstInfo declName
   forallTelescope info.type fun xs b => do
@@ -427,7 +427,7 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
       throwError "unrecognized theoremType `{← ppExpr b}`"
 
 
-/-- -/
+/-- Register theorem declaration in the relevant function-transformation extension. -/
 def addTheorem (declName : Name) (attrKind : AttributeKind := .global)
     (prio : Nat := eval_prio default) : MetaM Unit := do
   match (← getTheoremFromConst declName prio) with

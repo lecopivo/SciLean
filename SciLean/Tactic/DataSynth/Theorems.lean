@@ -180,7 +180,7 @@ def DataSynthTheorem.getProof (thm : GeneralTheorem) : MetaM Expr := do
 
 
 open Mathlib.Meta.FunProp in
-/-- -/
+/-- Storage for generalized data-synthesis theorems. -/
 structure DataSynthTheorems where
   theorems     : RefinedDiscrTree GeneralTheorem := {}
   deriving Inhabited
@@ -190,7 +190,7 @@ abbrev DataSynthTheoremsExt := SimpleScopedEnvExtension GeneralEntry DataSynthTh
 
 
 open Mathlib.Meta.FunProp in
-/-- -/
+/-- Register generalized data-synthesis theorems in the scoped extension. -/
 initialize dataSynthTheoremsExt : DataSynthTheoremsExt ←
   registerSimpleScopedEnvExtension {
     name     := by exact decl_name%

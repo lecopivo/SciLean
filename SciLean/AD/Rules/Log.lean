@@ -58,6 +58,7 @@ theorem log.arg_x.HasFwdFDerivAt_rule
 
 
 omit [CompleteSpace U] in
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem log.arg_x.HasRevFDeriv_rule
     (x : U → R) {x'} (hx : HasRevFDeriv R x x') (hu : ∀ u, x u ≠ 0) :
@@ -70,6 +71,7 @@ theorem log.arg_x.HasRevFDeriv_rule
   sorry_proof
 
 omit [CompleteSpace U] in
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem log.arg_x.HasRevFDerivUpdate_rule
     (x : U → R) {x'} (hx : HasRevFDerivUpdate R x x') (hu : ∀ u, x u ≠ 0) :

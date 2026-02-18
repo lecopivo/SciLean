@@ -144,7 +144,7 @@ theorem inner_self_nonpos {x : E} : re ⟪x, x⟫ ≤ 0 ↔ x = 0 := by
   constructor
   · have ⟨c,d,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
     have ⟨h,_⟩ := h x
-    intro h'; simp[h'] at h
+    intro h'; simp[] at h
     have : ‖x‖^2 ≤ 0 := by nlinarith
     have : ‖x‖ ≤ 0 := by nlinarith
     simp_all only [gt_iff_lt, smul_eq_mul, norm_le_zero_iff]

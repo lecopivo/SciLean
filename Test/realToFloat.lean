@@ -20,7 +20,7 @@ by
   conv =>
     lhs
     fun_trans -- missing `fun_trans` feature
-  sorry
+  sorry_proof
 
 
 example
@@ -31,4 +31,4 @@ by
   conv =>
     lhs
     fun_trans; simp  -- missing `fun_trans` feature
-  sorry
+  sorry_proof

@@ -85,7 +85,7 @@ by
   have h := fun (x x' : X) (y y' : Y) => hg.map_add (x,y) (x',y')
   have h' := fun x y => hg.map_neg (x,y)
   simp at h; simp at h'
-  simp[← neg_add_eq_sub,hg.map_add,hg.map_neg,h,h']
+  simp[← neg_add_eq_sub,h,h']
 
 theorem _root_.IsAddGroupHom.sub_pull₂  (x x' : X) (y y' : Y)
   : g (x - x') (y - y') = g x y - g x' y' :=
@@ -93,7 +93,7 @@ by
   have h := fun (x x' : X) (y y' : Y) => hg.map_add (x,y) (x',y')
   have h' := fun x y => hg.map_neg (x,y)
   simp at h; simp at h'
-  simp[← neg_add_eq_sub,hg.map_add,hg.map_neg,h,h']
+  simp[← neg_add_eq_sub,h,h']
 
 theorem _root_.IsAddGroupHom.neg_push₂ (x : X) (y : Y)
   : - g x y = g (- x) (- y) :=

@@ -1,4 +1,4 @@
-import Mathlib.Analysis.Matrix
+import Mathlib.Analysis.Matrix.Normed
 
 import SciLean.Analysis.AdjointSpace.Adjoint
 

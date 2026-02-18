@@ -25,7 +25,7 @@ satisfying
 meta_fun_def naiveBoundsOnIdentity (a b : ℤ) :
   naiveBoundOn (fun x => x) (Icc a b) := max |a| |b|
 satisfied_by
-  constructor; rintro x ⟨ha,hb⟩; simp_all; sorry_proof
+  constructor; rintro x ⟨_,_⟩; simp_all; sorry_proof
 
 meta_fun_def naiveBoundsOnConst (c a b : ℤ) :
   naiveBoundOn (fun _ => id c) (Icc a b) := |c|
@@ -60,7 +60,7 @@ meta_fun_def naiveBoundsOnMul (f g : ℤ → ℤ) (a b : ℤ) :
     let bg := naiveBoundOn g (Icc a b)
     bf * bg
 satisfied_by
-  rintro b ⟨hb⟩ b' ⟨hb'⟩; constructor; rintro x ⟨h,h'⟩
+  rintro b ⟨_⟩ b' ⟨_⟩; constructor; rintro x ⟨_,_⟩
   sorry_proof
 
 
@@ -82,6 +82,7 @@ bf * bg
 #guard_msgs in
 #eval_meta_fun naiveBoundOn (fun _ => (id 3)) (Icc (-2) (3))
 
+set_option linter.unusedVariables false in
 def getNaiveBoundOn (f : ℤ → ℤ) (s : Set ℤ) {n} (h : NaiveBoundOn f s n := by data_synth) := n
 
 /-- info: 224 -/
@@ -181,6 +182,7 @@ info: ((RingExpr.atom 0).mul (RingExpr.atom (0 + 1))).add
 
 variable {R : Type} [Ring R]
 
+set_option linter.unusedVariables false in
 def ringToString (atoms : List R) (x : R) {e} (he : LiftRingExpr atoms x e := by data_synth) : String :=
   e.toString
 

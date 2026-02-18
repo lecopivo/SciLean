@@ -69,7 +69,7 @@ structure State (R X : Type) (m : ℕ) [Zero X] [Neg X] [RealScalar R] [PlainDat
    dg_history : Vector X m := ⊞ (i:Fin m) => (0:X)
    /-- ρₙ := 1 / ⟪∇f(xₙ₊₁) - ∇f(xₙ), xₙ₊₁ - xₙ⟫ -/
    ρ : R^[m] := (0 : R^[m])
-   /-- -/
+   /-- Counter of pseudo-iterations used by the optimizer state machine. -/
    pseudo_iteration : ℤ := 0
    -- /-- preconditioner scale -/
    -- precon : R := 1

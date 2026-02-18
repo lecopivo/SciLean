@@ -8,6 +8,7 @@ variable
 
 set_default_scalar K
 
+set_option linter.unusedVariables false in
 example (f : X → X) (hf : Differentiable K f) (x dx)
   : (∂ (x'':=x;dx), (let df := ∂ (x':=0), f x'
                      df x'' + df x''))

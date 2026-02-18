@@ -28,8 +28,12 @@ info: fun x dx =>
          x := x+x
          return x) rewrite_by autodiff
 
-instance [NormedAddCommGroup X] : NormedAddCommGroup (ForInStep X) := sorry
-instance {𝕜} [RCLike 𝕜] [NormedAddCommGroup X] [AdjointSpace 𝕜 X] : AdjointSpace 𝕜 (ForInStep X) := sorry
+noncomputable instance [NormedAddCommGroup X] : NormedAddCommGroup (ForInStep X) := by
+  classical
+  exact Classical.choice (sorry_proof : Nonempty (NormedAddCommGroup (ForInStep X)))
+noncomputable instance {𝕜} [RCLike 𝕜] [NormedAddCommGroup X] [AdjointSpace 𝕜 X] : AdjointSpace 𝕜 (ForInStep X) := by
+  classical
+  exact Classical.choice (sorry_proof : Nonempty (AdjointSpace 𝕜 (ForInStep X)))
 
 @[data_synth]
 theorem asdf
@@ -47,6 +51,7 @@ theorem asdf'
   IsContinuousLinearMap 𝕜 (fun x : X => ForInStep.yield x) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 -- @[data_synth]
 theorem forIn.hasRevFDerivM_rule_pure {I : Type} {nI} [IndexType I nI] (r : IndexType.Range I)
    (K : Type) [RCLike K]
@@ -76,6 +81,7 @@ theorem forIn.hasRevFDerivM_rule_pure {I : Type} {nI} [IndexType I nI] (r : Inde
          pure (dw + dw'))) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem forIn.hasRevFDerivM_rule_pure' {I : Type} {nI} [IndexType I nI] (r : IndexType.Range I)
    (K : Type) [RCLike K]
@@ -105,6 +111,7 @@ theorem forIn.hasRevFDerivM_rule_pure' {I : Type} {nI} [IndexType I nI] (r : Ind
          pure (dw + dw'))) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem forIn.hasRevFDerivUpdateM_rule_pure' {I : Type} {nI} [IndexType I nI] (r : IndexType.Range I)
    (K : Type) [RCLike K]
@@ -175,6 +182,7 @@ theorem MProd.snd.HasRevFDerivUpdate_rule
    HasRevFDerivUpdate K (fun xy : MProd X Y => xy.2) (fun xy => ⟨xy.2, fun dy dxy => ⟨dxy.1,dxy.2 + dy⟩⟩) := sorry_proof
 
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem MProd.mk.HasRevFDeriv_rule
    {K : Type} [RCLike K]
@@ -189,6 +197,7 @@ theorem MProd.mk.HasRevFDeriv_rule
        let' (z,dg') := g' x
        (⟨y,z⟩, fun dyz => dg' dyz.2 (df' dyz.1))) := sorry_proof
 
+set_option linter.unusedVariables false in
 @[data_synth]
 theorem MProd.mk.HasRevFDerivUpdate_rule
    {K : Type} [RCLike K]

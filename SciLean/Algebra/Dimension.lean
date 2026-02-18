@@ -64,7 +64,7 @@ instance {R} [Field R] {n m}
     {Y} [AddCommGroup Y] [Module R Y] [Module.Finite R Y] [dY : Dimension R Y m] :
     Dimension R (X×Y) (n+m) where
   is_dim := by
-    simp [dX.is_dim, dY.is_dim]
+    simp []
 
 -- instance {R} [Field R] {n}
 --     {I} [IndexType I]

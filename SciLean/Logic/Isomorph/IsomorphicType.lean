@@ -38,12 +38,12 @@ def invIsomorph (f : α' → β') (a : α) : β :=
 theorem isomorph.app (f : α → β) (x : α)
   : (IsomorphicType.equiv tag) (f x) = isomorph tag f (IsomorphicType.equiv tag x) :=
 by
-  simp[IsomorphicType.equiv, isomorph]
+  simp[isomorph]
 
 theorem isomorph.ext (a b : α)
   : (IsomorphicType.equiv tag a) = (IsomorphicType.equiv tag b) → a = b :=
 by
-  simp[IsomorphicType.equiv]
+  simp[]
 
 theorem isomorph.funext {β β' : Sort _} [IsomorphicType tag β β'] (f g : α → β)
   : isomorph tag f = isomorph tag g → f = g :=
@@ -56,16 +56,16 @@ instance : IsomorphicType tag (α × β) (α' × β') where
       (IsomorphicType.equiv tag x, IsomorphicType.equiv tag y)
     invFun := fun (x,y) =>
       ((IsomorphicType.equiv tag).symm x, (IsomorphicType.equiv tag).symm y)
-    left_inv := by simp[Function.LeftInverse, IsomorphicType.equiv]
-    right_inv := by simp[Function.LeftInverse, Function.RightInverse, IsomorphicType.equiv]
+    left_inv := by simp[Function.LeftInverse]
+    right_inv := by simp[Function.LeftInverse, Function.RightInverse]
   }
 
 instance : IsomorphicType tag (α → β) (α' → β') where
   equiv := {
     toFun := fun f => isomorph tag f
     invFun := fun f => invIsomorph tag f
-    left_inv := by intro f; funext x; simp [-isomorph.app, IsomorphicType.equiv, isomorph, invIsomorph]
-    right_inv := by intro f; funext x; simp[IsomorphicType.equiv, isomorph, invIsomorph]
+    left_inv := by intro f; funext x; simp [-isomorph.app, isomorph, invIsomorph]
+    right_inv := by intro f; funext x; simp[isomorph, invIsomorph]
   }
 
 instance (P : Prop) : IsomorphicType tag P P where

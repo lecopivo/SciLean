@@ -126,7 +126,7 @@ theorem pi_rule [Fold ι] [Fold ι] -- these instances have different universes
        := by
 
   unfold revFDeriv
-  simp (disch:=fun_prop) only [fderiv.pi_rule_at,adjoint.pi_rule]
+  simp (disch:=fun_prop) only [fderiv.pi_rule_at]
   fun_trans
   sorry_proof
 

@@ -7,8 +7,8 @@ partial def String.splitToByteChunks (str : String) (chunkByteSize : Nat) : Arra
   let e : Nat := str.endPos.offset.byteIdx
   while s < e do
     let mut s' := s
-    while (str.next ⟨s'⟩).byteIdx - s ≤ chunkByteSize && s' < e do
-      s' := (str.next ⟨s'⟩).byteIdx
+    while (String.Pos.Raw.next str ⟨s'⟩).byteIdx - s ≤ chunkByteSize && s' < e do
+      s' := (String.Pos.Raw.next str ⟨s'⟩).byteIdx
     chunks := chunks.push ⟨str, ⟨s⟩, ⟨s'⟩⟩
     s := s'
   chunks

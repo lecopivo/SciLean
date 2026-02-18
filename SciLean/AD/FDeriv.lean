@@ -34,7 +34,7 @@ attribute [fun_trans] fderiv
 theorem deriv_fderiv'
   {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  (f : 𝕜 → X) : deriv f = fun x => fderiv 𝕜 f x 1 := by funext x; rw[← deriv_fderiv]; simp
+  (f : 𝕜 → X) : deriv f = fun x => fderiv 𝕜 f x 1 := by funext x; rw[← toSpanSingleton_deriv]; simp
 
 -- SciLean prefers `fderiv` over `deriv`
 attribute [-simp] fderiv_eq_smul_deriv
@@ -327,7 +327,7 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
   rw [h (fun x => f x / g x) x, h f x, h g x]
   have hdiv := deriv_fun_div (c := (fun h : K => f (x + h • dx))) (d := (fun h : K => g (x + h • dx)))
     (x := 0) (hc := by sorry_proof) (hd := by sorry_proof) (hx := by sorry_proof)
-  convert hdiv using 1 <;> rw [zero_smul, add_zero]
+  convert hdiv using 1; rw [zero_smul, add_zero]
 
 
 -- Inv.inv -------------------------------------------------------------------

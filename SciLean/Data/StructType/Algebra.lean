@@ -415,7 +415,7 @@ variable
     apply TopologicalStruct.structMake_continuous
 
   def_fun_prop with_transitive (i : I) : Continuous fun (xi : XI i) => oneHot (X:=X) i xi by
-    simp[oneHot, autoParam]
+    simp[oneHot]
     fun_prop
 
 end OnTopologicalSpace
@@ -440,7 +440,7 @@ variable
   def_fun_prop with_transitive (i : I) : IsContinuousLinearMap K fun (xi : XI i) => oneHot (X:=X) i xi by
     constructor
     · fun_prop
-    · simp[oneHot, autoParam]; fun_prop
+    · simp[oneHot]; fun_prop
 
 end OnTopologicalVectorSpace
 
