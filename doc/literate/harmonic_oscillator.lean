@@ -1,9 +1,14 @@
-import SciLean.Mechanics
-import SciLean.Operators.ODE
+module
+
+public import SciLean.Mechanics
+public import SciLean.Operators.ODE
 -- import SciLean.Solver
 -- import SciLean.Tactic.LiftLimit
 -- import SciLean.Tactic.FinishImpl
-import SciLean.Solver.Solver
+public import SciLean.Solver.Solver
+
+@[expose] public section
+
 
 open SciLean
 

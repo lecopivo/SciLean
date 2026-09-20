@@ -1,11 +1,16 @@
-import Mathlib.Algebra.Module.LinearMap.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.LinearAlgebra.Prod
+module
 
-import SciLean.Data.IndexType
-import SciLean.Meta.GenerateLinearMapSimp
+public import Mathlib.Algebra.Module.LinearMap.Basic
+public import Mathlib.Algebra.Module.Prod
+public import Mathlib.LinearAlgebra.Prod
 
-import Mathlib.Tactic.FunProp
+public import SciLean.Data.IndexType
+public import SciLean.Meta.GenerateLinearMapSimp
+
+public import Mathlib.Tactic.FunProp
+
+@[expose] public section
+
 
 open SciLean
 

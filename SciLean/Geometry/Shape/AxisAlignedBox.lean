@@ -1,6 +1,11 @@
-import SciLean.Core
-import SciLean.Modules.Geometry.Shape
-import SciLean.Modules.Geometry.Shape.Sphere
+module
+
+public import SciLean.Core
+public import SciLean.Modules.Geometry.Shape
+public import SciLean.Modules.Geometry.Shape.Sphere
+
+@[expose] public section
+
 
 open FiniteDimensional
 

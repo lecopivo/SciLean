@@ -1,4 +1,9 @@
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 open SciLean ComplexConjugate
 

@@ -1,7 +1,12 @@
-import Mathlib.Topology.Basic
-import Mathlib.Order.Filter.Basic
+module
 
-import SciLean.Util.Limit
+public import Mathlib.Topology.Basic
+public import Mathlib.Order.Filter.Basic
+
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

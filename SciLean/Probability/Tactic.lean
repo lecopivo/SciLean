@@ -1,5 +1,10 @@
-import SciLean.Probability.PushPullExpectation
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Probability.PushPullExpectation
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean.Rand
 

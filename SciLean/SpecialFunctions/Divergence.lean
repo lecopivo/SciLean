@@ -1,5 +1,10 @@
-import SciLean.Core
-import SciLean.Core.HomDoodle
+module
+
+public import SciLean.Core
+public import SciLean.Core.HomDoodle
+
+@[expose] public section
+
 
 
 namespace SciLean

@@ -3,10 +3,20 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import Lean
+module
 
-import SciLean.Tactic.FunTrans.Decl
-import SciLean.Tactic.FunTrans.Theorems
+public import Lean
+
+public meta import Lean
+
+public import SciLean.Tactic.FunTrans.Decl
+
+public meta import SciLean.Tactic.FunTrans.Decl
+public import SciLean.Tactic.FunTrans.Theorems
+public meta import SciLean.Tactic.FunTrans.Theorems
+
+@[expose] public meta section
+
 
 /-!
 ## `funTrans` attribute
@@ -19,7 +29,7 @@ open Lean Meta
 namespace Meta.FunTrans
 
 
-private def funTransHelpString : String :=
+def funTransHelpString : String :=
 "`funTrans` tactic to compute function transformations like `fderiv` or `adjoint`"
 
 /-- Initialization of `funTrans` attribute -/

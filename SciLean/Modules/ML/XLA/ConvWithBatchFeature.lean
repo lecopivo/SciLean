@@ -1,8 +1,13 @@
-import SciLean.Modules.ML.XLA.ConvWithPaddingStride
-import SciLean.Modules.ML.XLA.Pad
-import SciLean.Modules.ML.XLA.DotGeneral
-import SciLean.Modules.ML.XLA.Slice
-import Mathlib.Tactic.SplitIfs
+module
+
+public import SciLean.Modules.ML.XLA.ConvWithPaddingStride
+public import SciLean.Modules.ML.XLA.Pad
+public import SciLean.Modules.ML.XLA.DotGeneral
+public import SciLean.Modules.ML.XLA.Slice
+public import Mathlib.Tactic.SplitIfs
+
+@[expose] public section
+
 
 namespace SciLean
 

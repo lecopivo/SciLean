@@ -1,6 +1,11 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Data.DataArray.DataArray
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Data.DataArray.DataArray
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -118,7 +123,7 @@ macro "𝐈[" X:term "]" : term => `(𝐈[defaultScalar%, $X])
 /-- `𝐈` is the identity Matrix  -/
 macro "𝐈" : term => `(𝐈[defaultScalar%, _])
 
-@[app_unexpander identityMatrix] def unexpandIdentityMatrix : Lean.PrettyPrinter.Unexpander
+@[app_unexpander identityMatrix] meta def unexpandIdentityMatrix : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $_) => `(𝐈)
   | _ => throw ()
 

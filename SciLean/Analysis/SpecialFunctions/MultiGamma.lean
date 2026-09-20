@@ -1,4 +1,9 @@
-import SciLean.Analysis.Scalar
+module
+
+public import SciLean.Analysis.Scalar
+
+@[expose] public section
+
 
 namespace SciLean
 

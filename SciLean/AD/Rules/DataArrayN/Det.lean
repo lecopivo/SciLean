@@ -1,8 +1,13 @@
-import SciLean.Data.DataArray.Operations
+module
 
-import SciLean.AD.Rules.Common
-import SciLean.AD.Rules.DataArrayN.Minor
-import SciLean.AD.Rules.IndexType.Sum
+public import SciLean.Data.DataArray.Operations
+
+public import SciLean.AD.Rules.Common
+public import SciLean.AD.Rules.DataArrayN.Minor
+public import SciLean.AD.Rules.IndexType.Sum
+
+@[expose] public section
+
 
 namespace SciLean
 

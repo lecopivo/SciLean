@@ -1,4 +1,9 @@
-import Lean
+module
+
+public import Lean
+
+@[expose] public section
+
 namespace SciLean
 
 /--
@@ -47,7 +52,7 @@ macro " alternatives_fst " : conv => `(conv| simp (config := {zeta := false}) on
 macro " alternatives_snd " : conv => `(conv| simp (config := {zeta := false}) only [Alternatives.pick_snd])
 
 
-@[app_unexpander Alternatives.choose] def unexpandAlternativecChoose : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Alternatives.choose] meta def unexpandAlternativecChoose : Lean.PrettyPrinter.Unexpander
   | `($(_) $a $b $_) =>
     `(alternatives
        fst: $a

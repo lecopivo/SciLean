@@ -1,7 +1,12 @@
-import SciLean.Data.DataArray.TensorOperations
-import SciLean.Data.ArrayOperations.Operations.GetElem
+module
 
-import SciLean.AD.Rules.Common
+public import SciLean.Data.DataArray.TensorOperations
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+
+public import SciLean.AD.Rules.Common
+
+@[expose] public section
+
 
 namespace SciLean
 

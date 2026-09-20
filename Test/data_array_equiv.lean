@@ -1,8 +1,13 @@
 -- import SciLean.Data.DataArray.VectorType
 -- import SciLean.Data.DataArray.MatrixType
-import SciLean.Data.DataArray.Float
-import SciLean.Data.DataArray.Algebra
-import SciLean.Data.Vector
+module
+
+public import SciLean.Data.DataArray.Float
+public import SciLean.Data.DataArray.Algebra
+public import SciLean.Data.Vector
+
+@[expose] public section
+
 
 open SciLean
 

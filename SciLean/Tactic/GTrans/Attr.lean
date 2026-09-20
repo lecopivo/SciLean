@@ -1,5 +1,13 @@
-import SciLean.Tactic.GTrans.Theorems
-import SciLean.Tactic.GTrans.Decl
+module
+
+public import SciLean.Tactic.GTrans.Theorems
+
+public meta import SciLean.Tactic.GTrans.Theorems
+public import SciLean.Tactic.GTrans.Decl
+public meta import SciLean.Tactic.GTrans.Decl
+
+@[expose] public meta section
+
 
 open Lean Meta
 

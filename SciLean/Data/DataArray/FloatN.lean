@@ -1,11 +1,16 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Data.DataArray.Float
-import SciLean.Data.Instances.Sigma
+module
 
-import SciLean.Tactic.SimpleProxyType
-import SciLean.Tactic.LSimp
-import Mathlib.Data.Fintype.Sum
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.DataArrayEquiv
+public import SciLean.Data.DataArray.Float
+public import SciLean.Data.Instances.Sigma
+
+public import SciLean.Tactic.SimpleProxyType
+public import SciLean.Tactic.LSimp
+public import Mathlib.Data.Fintype.Sum
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,5 +1,10 @@
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 -- import SciLean.Data
 
 open ComplexConjugate

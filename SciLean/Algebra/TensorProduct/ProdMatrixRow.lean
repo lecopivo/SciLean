@@ -1,7 +1,12 @@
-import SciLean.Analysis.AdjointSpace.Adjoint
+module
 
-import SciLean.Tactic.SimpleProxyType
-import SciLean.Data.Instances.Sigma
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+public import SciLean.Tactic.SimpleProxyType
+public import SciLean.Data.Instances.Sigma
+
+@[expose] public section
+
 
 namespace SciLean
 

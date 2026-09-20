@@ -1,4 +1,9 @@
-import SciLean.Analysis.AdjointSpace.Adjoint
+module
+
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 open Module
 

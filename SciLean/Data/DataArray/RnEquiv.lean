@@ -1,8 +1,13 @@
-import LeanBLAS
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Analysis.AdjointSpace.Basic
+module
+
+public import LeanBLAS
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.DataArrayEquiv
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Analysis.AdjointSpace.Basic
+
+@[expose] public section
+
 
 /-! Class `HasRnEquiv X n R` states that `X` is canonically isomorphic to `R^[n]`
 

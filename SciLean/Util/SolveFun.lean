@@ -1,16 +1,22 @@
-import Lean
-import Mathlib.Basic.Nonempty
-import Mathlib.Algebra.Group.Defs
-import Mathlib.Logic.Function.Basic
-import Mathlib.Algebra.Group.Int.Defs
+module
 
-import SciLean.Data.Curry
-import SciLean.Lean.Meta.Basic
-import SciLean.Lean.Array
-import SciLean.Tactic.LetNormalize
-import SciLean.Util.SorryProof
+public import Lean
+public import Mathlib.Basic.Nonempty
+public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Logic.Function.Basic
+public import Mathlib.Algebra.Group.Int.Defs
 
-import Batteries.Data.Array.Merge
+public import SciLean.Data.Curry
+public import SciLean.Lean.Meta.Basic
+public import SciLean.Lean.Array
+public import SciLean.Tactic.LetNormalize
+public import SciLean.Util.SorryProof
+
+public import Batteries.Data.Array.Merge
+public meta import Batteries.Data.Array.Merge
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -58,7 +64,7 @@ elab (priority:=high) "solve" xs:funBinder* ", " b:term : term => do
   Meta.mkAppM ``solveFun #[f]
 
 
-@[app_unexpander solveFun] def unexpandSolveFun : Lean.PrettyPrinter.Unexpander
+@[app_unexpander solveFun] meta def unexpandSolveFun : Lean.PrettyPrinter.Unexpander
 
   | `($(_) fun $xs* => $b) =>
     `(solve $xs*, $b)
@@ -106,7 +112,7 @@ open Lean Meta
 /-- Take and expresion of the form `P₁ ∧ ... ∧ Pₙ` and return array `#[P₁, ..., Pₙ]`
 
 It ignores bracketing, so both `(P₁ ∧ P₂) ∧ P₃` and `P₁ ∧ (P₂ ∧ P₃)` produce `#[P₁, P₂, P₃]`-/
-def splitAnd? (e : Expr) : MetaM (Array Expr) := do
+meta def splitAnd? (e : Expr) : MetaM (Array Expr) := do
   match e with
   | .mdata _ e' => splitAnd? e'
   | .app (.app (.const name _) x) y =>
@@ -151,7 +157,7 @@ will return
 
 TODO: This should produce proof that those two terms are equal
 -/
-def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
+meta def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
   if e.isAppOfArity ``solveFun 5 then
     lambdaTelescope (e.getArg! 4) fun xs b => do
       let is := is.sortDedup
@@ -219,7 +225,7 @@ def solveForFrom (e : Expr) (is js : Array Nat) : MetaM (Expr×Expr×MVarId) := 
     throwError "Error in solveForFrom: not application of `solveFun`\n{← ppExpr e}"
 
 
-def solveForNameFrom (e : Expr) (names : Array Name) (js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
+meta def solveForNameFrom (e : Expr) (names : Array Name) (js : Array Nat) : MetaM (Expr×Expr×MVarId) := do
   if e.isAppOfArity ``solveFun 5 then do
     let is ← lambdaTelescope (e.getArg! 4) fun xs _ =>
       names.mapM (fun name => do
@@ -261,7 +267,7 @@ produces
 ```
 
 Warring: this tactic currently uses `sorry`!-/
-local syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num+ " := " term : conv
+syntax (name:=solve_for_core_tactic) "solve_for_core " ident+ " from " num+ " := " term : conv
 
 @[inherit_doc solve_for_core_tactic]
 macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " uniq:term : conv =>
@@ -269,7 +275,7 @@ macro (name:=solve_for_tacitc) "solve_for " xs:ident+ " from " js:num+ " := " un
 
 
 open Lean Elab Tactic Conv
-@[tactic solve_for_core_tactic] def solveForTactic : Tactic := fun stx =>
+@[tactic solve_for_core_tactic] meta def solveForTactic : Tactic := fun stx =>
   withMainContext do
   match stx with
   | `(conv| solve_for_core $xs* from $js* := $prf) => do

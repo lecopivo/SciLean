@@ -1,6 +1,11 @@
-import SciLean.Util.SorryProof
-import Mathlib.Order.Defs.PartialOrder
-import Std.Tactic.BVDecide
+module
+
+public import SciLean.Util.SorryProof
+public import Mathlib.Order.Defs.PartialOrder
+public import Std.Tactic.BVDecide
+
+@[expose] public section
+
 
 private unsafe def USize.toInt64Impl (x : USize) : Int64 := unsafeCast x.toUInt64
 

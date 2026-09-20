@@ -1,4 +1,9 @@
-import SciLean.Modules.ML.Dense
+module
+
+public import SciLean.Modules.ML.Dense
+
+@[expose] public section
+
 
 open SciLean
 

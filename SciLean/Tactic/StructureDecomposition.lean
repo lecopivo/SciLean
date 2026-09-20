@@ -1,5 +1,13 @@
-import SciLean.Lean.Expr
-import SciLean.Lean.Meta.Basic
+module
+
+public import SciLean.Lean.Expr
+
+public meta import SciLean.Lean.Expr
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 namespace SciLean.Meta
 
@@ -36,7 +44,7 @@ def simpleDataStructure (structName : Name) : MetaM Bool := do
   return true
 
 
-private def buildMk (mk : Expr) (mks : List Expr) (vars vals : Array Expr) : MetaM Expr :=
+def buildMk (mk : Expr) (mks : List Expr) (vars vals : Array Expr) : MetaM Expr :=
   match mks with
   | [] => mkLambdaFVars vars (mkAppN mk vals)
   | mk' :: mks' =>

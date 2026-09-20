@@ -1,4 +1,9 @@
-import Lean
+module
+
+public import Lean
+
+@[expose] public section
+
 
 register_simp_attr rand_simp
 register_simp_attr rand_AD

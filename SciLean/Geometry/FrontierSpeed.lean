@@ -1,10 +1,15 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Analysis.SpecialFunctions.Norm2
-import SciLean.Analysis.AdjointSpace.Geometry
+module
 
-import SciLean.Tactic.Autodiff
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Analysis.SpecialFunctions.Norm2
+public import SciLean.Analysis.AdjointSpace.Geometry
+
+public import SciLean.Tactic.Autodiff
+
+@[expose] public section
+
 -- import SciLean.Tactic.GTrans
 
 set_option linter.unusedVariables false

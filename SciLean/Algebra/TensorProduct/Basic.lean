@@ -1,11 +1,16 @@
 
-import Mathlib.LinearAlgebra.TensorProduct.Basic
-import Mathlib.Data.Erased
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.SpecialFunctions.Inner
+public import Mathlib.LinearAlgebra.TensorProduct.Basic
+public import Mathlib.Data.Erased
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.SpecialFunctions.Inner
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -142,7 +147,7 @@ elab (priority:=high) x:term:101 " ⊗[" R:term "] " y:term:100 : term => do
 
 macro (priority:=high) x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
 
-@[app_unexpander tmul] def unexpandTMul : Lean.PrettyPrinter.Unexpander
+@[app_unexpander tmul] meta def unexpandTMul : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $y $x) => `($y ⊗ $x)
   | _ => throw ()
 

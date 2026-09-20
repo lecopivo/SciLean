@@ -1,5 +1,10 @@
-import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
-import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
+module
+
+public import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
+public import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

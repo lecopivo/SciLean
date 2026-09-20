@@ -1,9 +1,14 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.Notation.Deriv
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.Notation.Deriv
+
+@[expose] public section
+
 -- import SciLean.Analysis.Calculus.Notation.RevDeriv
 
 set_option linter.unusedVariables false

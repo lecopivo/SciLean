@@ -1,7 +1,12 @@
-import SciLean.Core
-import SciLean.Core.Functions.Trigonometric
-import SciLean.Core.FloatAsReal
-import SciLean.Core.Meta.GenerateRevDeriv
+module
+
+public import SciLean.Core
+public import SciLean.Core.Functions.Trigonometric
+public import SciLean.Core.FloatAsReal
+public import SciLean.Core.Meta.GenerateRevDeriv
+
+@[expose] public section
+
 
 namespace SciLean.ML
 

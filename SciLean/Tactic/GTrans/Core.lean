@@ -1,14 +1,31 @@
-import Lean
-import Mathlib.Tactic.FunProp
+module
 
-import SciLean.Tactic.GTrans.Decl
-import SciLean.Tactic.GTrans.Theorems
-import SciLean.Lean.Meta.RefinedDiscrTree
+public import Lean
 
-import SciLean.Tactic.LetNormalize2
+public meta import Lean
+public import Mathlib.Tactic.FunProp
+public meta import Mathlib.Tactic.FunProp
 
-import SciLean.Lean.ToSSA
-import SciLean.Lean.ExceptToEmoji
+public import SciLean.Tactic.GTrans.Decl
+
+public meta import SciLean.Tactic.GTrans.Decl
+public import SciLean.Tactic.GTrans.Theorems
+public meta import SciLean.Tactic.GTrans.Theorems
+public import SciLean.Lean.Meta.RefinedDiscrTree
+public meta import SciLean.Lean.Meta.RefinedDiscrTree
+
+public import SciLean.Tactic.LetNormalize2
+
+public meta import SciLean.Tactic.LetNormalize2
+
+public import SciLean.Lean.ToSSA
+
+public meta import SciLean.Lean.ToSSA
+public import SciLean.Lean.ExceptToEmoji
+public meta import SciLean.Lean.ExceptToEmoji
+
+@[expose] public meta section
+
 
 open Lean Meta Qq
 open Mathlib.Meta.FunProp
@@ -39,7 +56,7 @@ abbrev GTransM := ReaderT Context $ StateRefT State MetaM
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-private def ppExprWithType (e : Expr) : MetaM String := do
+def ppExprWithType (e : Expr) : MetaM String := do
   return s!"{← ppExpr e} : {← ppExpr (← inferType e)}"
 
 

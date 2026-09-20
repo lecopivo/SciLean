@@ -1,8 +1,13 @@
-import Mathlib.Algebra.Field.Defs
-import Mathlib.GroupTheory.GroupAction.Basic
-import Mathlib.Tactic.FunProp
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.GroupTheory.GroupAction.Basic
+public import Mathlib.Tactic.FunProp
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

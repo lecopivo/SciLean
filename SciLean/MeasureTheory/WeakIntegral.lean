@@ -1,9 +1,14 @@
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
+module
+
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 -- import Mathlib.MeasureTheory.Integral.Bochner.L1
 -- import Mathlib.MeasureTheory.Integral.Bochner.VitaliCaratheodory
 
-import SciLean.Meta.SimpAttr
-import SciLean.Util.SorryProof
+public import SciLean.Meta.SimpAttr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace MeasureTheory
 

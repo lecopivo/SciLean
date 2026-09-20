@@ -1,9 +1,14 @@
-import SciLean.Logic.Isomorph.Isomorph
-import SciLean.Logic.Isomorph.RealToFloat.Type
+module
 
-import Mathlib.Analysis.Complex.Exponential
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+public import SciLean.Logic.Isomorph.Isomorph
+public import SciLean.Logic.Isomorph.RealToFloat.Type
+
+public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+
+@[expose] public section
+
 
 open SciLean
 

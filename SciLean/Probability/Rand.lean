@@ -1,16 +1,21 @@
-import Mathlib.Data.Erased
-import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Measure.GiryMonad
+module
 
-import SciLean.Algebra.IsAffineMap
-import SciLean.Analysis.Scalar
-import SciLean.Logic.Function.Bijective
-import SciLean.MeasureTheory.WeakIntegral
-import SciLean.Meta.Notation.Do
-import SciLean.Meta.SimpAttr
-import SciLean.Probability.SimpAttr
-import SciLean.Util.Limit
+public import Mathlib.Data.Erased
+public import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import Mathlib.MeasureTheory.Measure.GiryMonad
+
+public import SciLean.Algebra.IsAffineMap
+public import SciLean.Analysis.Scalar
+public import SciLean.Logic.Function.Bijective
+public import SciLean.MeasureTheory.WeakIntegral
+public import SciLean.Meta.Notation.Do
+public import SciLean.Meta.SimpAttr
+public import SciLean.Probability.SimpAttr
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 -- import Mathlib.Control.Random
 -- import SciLean.Mathlib.MeasureTheory.WeakIntegral
@@ -396,7 +401,7 @@ scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x
 
 
 open Lean Parser
-@[app_unexpander Rand.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Rand.combine] meta def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
 | `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
 | _ => throw ()
 

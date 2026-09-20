@@ -1,16 +1,35 @@
-import Lean
-import Lean.Util.Trace
+module
 
-import Aesop.Nanos
-import Aesop.Util.Basic
-import Batteries.Data.List.Basic
+public import Lean
 
-import SciLean.Lean.Meta.Basic
+public meta import Lean
+public import Lean.Util.Trace
+public meta import Lean.Util.Trace
 
-import SciLean.Tactic.GTrans.MetaLCtxM
+public import Aesop.Nanos
 
-import SciLean.Tactic.FunTrans.Core
-import SciLean.Tactic.FunTrans.Elab
+public meta import Aesop.Nanos
+public import Aesop.Util.Basic
+public meta import Aesop.Util.Basic
+public import Batteries.Data.List.Basic
+public meta import Batteries.Data.List.Basic
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+
+public import SciLean.Tactic.GTrans.MetaLCtxM
+
+public meta import SciLean.Tactic.GTrans.MetaLCtxM
+
+public import SciLean.Tactic.FunTrans.Core
+
+public meta import SciLean.Tactic.FunTrans.Core
+public import SciLean.Tactic.FunTrans.Elab
+public meta import SciLean.Tactic.FunTrans.Elab
+
+@[expose] public meta section
+
 
 open Lean Meta
 

@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 namespace SciLean
 
 
@@ -5,7 +9,7 @@ namespace SciLean
 syntax "rec_val" term ppLine "| " term " => " term ppLine "| " term ", " term " => "  term : term
 
 @[app_unexpander Nat.recOn]
-def unexpandNatRecOn : Lean.PrettyPrinter.Unexpander
+meta def unexpandNatRecOn : Lean.PrettyPrinter.Unexpander
   | `($(_) $_mot $n $base $succ) =>
     match succ with
     | `(fun ($m:ident : $_Y:term) ($prev:ident : $_P:term) => $b) =>
@@ -32,7 +36,7 @@ def unexpandNatRecOn : Lean.PrettyPrinter.Unexpander
 
 -- Pretty printing of `Nat.rec`
 @[app_unexpander Nat.rec]
-def unexpandNatRec : Lean.PrettyPrinter.Unexpander
+meta def unexpandNatRec : Lean.PrettyPrinter.Unexpander
   | `($(_) $_mot $base $succ $n) =>
     match succ with
     | `(fun ($m:ident : $_Y:term) ($prev:ident : $_P:term) => $b) =>

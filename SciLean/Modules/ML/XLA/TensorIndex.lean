@@ -1,8 +1,13 @@
-import SciLean.Data.FinProd
-import SciLean.Data.ListN
-import SciLean.Data.DataArray
-import Mathlib.Tactic.Ring
-import SciLean.Tactic.CompiledTactics
+module
+
+public import SciLean.Data.FinProd
+public import SciLean.Data.ListN
+public import SciLean.Data.DataArray
+public import Mathlib.Tactic.Ring
+public import SciLean.Tactic.CompiledTactics
+
+@[expose] public section
+
 
 namespace SciLean
 

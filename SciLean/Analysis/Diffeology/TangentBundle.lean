@@ -1,4 +1,9 @@
-import SciLean.Analysis.Diffeology.Basic
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+
+@[expose] public section
+
 -- import SciLean.Analysis.Diffeology.DiffeologyMap
 
 /-!

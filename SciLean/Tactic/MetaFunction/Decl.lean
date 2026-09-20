@@ -1,6 +1,15 @@
-import Lean
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.Attr
+module
+
+public import Lean
+
+public meta import Lean
+public import SciLean.Tactic.DataSynth.Elab
+public meta import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.Attr
+public meta import SciLean.Tactic.DataSynth.Attr
+
+@[expose] public meta section
+
 
 open Lean Meta
 

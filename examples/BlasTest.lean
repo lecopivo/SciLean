@@ -1,4 +1,9 @@
-import LeanBLAS
+module
+
+public import LeanBLAS
+
+@[expose] public section
+
 
 open BLAS
 

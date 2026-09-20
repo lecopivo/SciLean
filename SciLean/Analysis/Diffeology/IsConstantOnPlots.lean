@@ -1,7 +1,12 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.TangentSpace
-import SciLean.Analysis.Diffeology.Prod
-import SciLean.Analysis.Diffeology.Array
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.TangentSpace
+public import SciLean.Analysis.Diffeology.Prod
+public import SciLean.Analysis.Diffeology.Array
+
+@[expose] public section
+
 
 namespace SciLean
 

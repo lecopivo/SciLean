@@ -1,15 +1,20 @@
-import Mathlib.Algebra.Group.Defs
-import Mathlib.Algebra.Module.Defs
-import Mathlib.Logic.Equiv.Defs
-import Mathlib.Analysis.Normed.Module.Basic
-import Mathlib.Topology.UniformSpace.Basic
-import Mathlib.Topology.MetricSpace.Pseudo.Constructions
-import Mathlib.Tactic.ProxyType
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
+public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Algebra.Module.Defs
+public import Mathlib.Logic.Equiv.Defs
+public import Mathlib.Analysis.Normed.Module.Basic
+public import Mathlib.Topology.UniformSpace.Basic
+public import Mathlib.Topology.MetricSpace.Pseudo.Constructions
+public import Mathlib.Tactic.ProxyType
 
-import SciLean.Util.SorryProof
-import SciLean.Util.RewriteBy
+public import SciLean.Analysis.AdjointSpace.Basic
+
+public import SciLean.Util.SorryProof
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

@@ -1,5 +1,13 @@
-import Lean
-import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+module
+
+public import Lean
+
+public meta import Lean
+public import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+
+@[expose] public meta section
+
 
 namespace Lean.Meta.RefinedDiscrTree
 

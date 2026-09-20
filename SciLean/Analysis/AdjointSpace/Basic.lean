@@ -1,12 +1,17 @@
-import Mathlib.Analysis.Normed.Module.Basic
-import Mathlib.Analysis.InnerProductSpace.Basic
+module
 
-import SciLean.Util.SorryProof
-import SciLean.Meta.SimpAttr
+public import Mathlib.Analysis.Normed.Module.Basic
+public import Mathlib.Analysis.InnerProductSpace.Basic
 
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.Operations
+public import SciLean.Util.SorryProof
+public import SciLean.Meta.SimpAttr
+
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.IndexType.Operations
+
+@[expose] public section
+
 
 open ComplexConjugate RCLike
 /--

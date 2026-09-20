@@ -9,7 +9,12 @@ For more information on writing your own `Sampleable` and `Testable`
 instances, see `Testing.SlimCheck.Testable`.
 -/
 
-import Lean
+module
+
+public import Lean
+
+@[expose] public section
+
 open Lean
 
 initialize registerTraceClass `SciLean.Modules.DDG.SurfaceMesh

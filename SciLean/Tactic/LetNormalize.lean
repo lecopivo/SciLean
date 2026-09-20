@@ -1,12 +1,27 @@
-import Lean.Elab.Tactic.ElabTerm
-import Lean.Elab.Tactic.Conv.Basic
+module
 
-import Lean.Elab.GuardMsgs
+public import Lean.Elab.Tactic.ElabTerm
 
-import SciLean.Lean.Meta.Basic
-import SciLean.Lean.Expr
+public meta import Lean.Elab.Tactic.ElabTerm
+public import Lean.Elab.Tactic.Conv.Basic
+public meta import Lean.Elab.Tactic.Conv.Basic
 
-import SciLean.Util.RewriteBy
+public import Lean.Elab.GuardMsgs
+
+public meta import Lean.Elab.GuardMsgs
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Lean.Expr
+public meta import SciLean.Lean.Expr
+
+public import SciLean.Util.RewriteBy
+
+public meta import SciLean.Util.RewriteBy
+
+public meta section
+
 
 namespace SciLean.Meta.LetNormalize
 

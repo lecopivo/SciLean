@@ -1,16 +1,21 @@
-import SciLean.Algebra.Dimension
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Analysis.SpecialFunctions.Norm2
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Meta.Notation.Let'
-import SciLean.Tactic.Autodiff
-import SciLean.Lean.ToSSA
+module
 
-import SciLean.AD.Rules.Log
-import SciLean.AD.Rules.Exp
+public import SciLean.Algebra.Dimension
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.Calculus.ContDiff
+public import SciLean.Analysis.SpecialFunctions.Norm2
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Meta.Notation.Let'
+public import SciLean.Tactic.Autodiff
+public import SciLean.Lean.ToSSA
 
-import Mathlib.Probability.Distributions.Gaussian.Real
+public import SciLean.AD.Rules.Log
+public import SciLean.AD.Rules.Exp
+
+public import Mathlib.Probability.Distributions.Gaussian.Real
+
+@[expose] public section
+
 
 namespace SciLean
 

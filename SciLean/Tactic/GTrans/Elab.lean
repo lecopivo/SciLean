@@ -1,10 +1,23 @@
-import Lean.Elab.Tactic.Conv
+module
 
-import SciLean.Tactic.GTrans.Core
-import SciLean.Util.RewriteBy
-import SciLean.Tactic.InferVar
+public import Lean.Elab.Tactic.Conv
 
-import Mathlib.Tactic.FunProp.Elab
+public meta import Lean.Elab.Tactic.Conv
+
+public import SciLean.Tactic.GTrans.Core
+
+public meta import SciLean.Tactic.GTrans.Core
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+public import SciLean.Tactic.InferVar
+public meta import SciLean.Tactic.InferVar
+
+public import Mathlib.Tactic.FunProp.Elab
+
+public meta import Mathlib.Tactic.FunProp.Elab
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -25,9 +38,9 @@ open Lean.Parser.Tactic in
 syntax (name:=gtrans_conv') "gtrans" (config)? (discharger)? (normalizer)? : conv
 
 
-declare_config_elab elabGTransConfig  SciLean.Tactic.GTrans.Config
+declare_config_elab_legacy elabGTransConfig  SciLean.Tactic.GTrans.Config
 
-private def emptyDischarge : Expr → MetaM (Option Expr) :=
+def emptyDischarge : Expr → MetaM (Option Expr) :=
   fun e =>
     withTraceNode `Meta.Tactic.gtrans
       (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do
@@ -36,7 +49,7 @@ private def emptyDischarge : Expr → MetaM (Option Expr) :=
 
 -- todo: don't use fun_prop's `tacticToDischarge`
 open Lean.Parser.Tactic Mathlib.Meta.FunProp in
-private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr → MetaM (Option Expr)) := do
+def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr → MetaM (Option Expr)) := do
     match disch with
     | none => pure emptyDischarge
     | some d =>
@@ -46,7 +59,7 @@ private def elabDischarger (disch : Option (TSyntax ``discharger)) : MetaM (Expr
 
 
 open Lean.Parser.Tactic Mathlib.Meta.FunProp in
-private def elabNormalizer (norm : Option (TSyntax ``normalizer)) : Expr → MetaM Simp.Result :=
+def elabNormalizer (norm : Option (TSyntax ``normalizer)) : Expr → MetaM Simp.Result :=
     match norm with
     | none => (fun e => pure { expr := e} )
     | some d =>

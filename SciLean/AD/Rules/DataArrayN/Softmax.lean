@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 -- import SciLean.Data.VectorType.Operations.Exp
 -- import SciLean.Data.VectorType.Operations.Sum
 -- import SciLean.Data.VectorType.Operations.Mul

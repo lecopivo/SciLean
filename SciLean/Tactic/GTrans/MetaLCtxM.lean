@@ -1,7 +1,17 @@
-import Lean
-import Qq
+module
 
-import SciLean.Lean.Meta.Basic
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 open Lean Meta
 
@@ -10,16 +20,16 @@ structure _root_.Lean.Meta.ContextCtx where
   localInstances    : LocalInstances       := #[]
   deriving Inhabited
 
-open private Lean.Meta.Config.toKey from Lean.Meta.Basic in
 structure _root_.Lean.Meta.ContextCfg where
-  config            : Meta.Config          := {}
-  configKey         : UInt64               := config.toKey
+  keyedConfig       : Meta.ConfigWithKey   := default
   defEqCtx?         : Option DefEqContext  := none
   synthPendingDepth : Nat                  := 0
   customCanUnfoldPredicate? : Option (Meta.Config → ConstantInfo → CoreM Bool) := none
   univApprox        : Bool := false
   inTypeClassResolution : Bool := false
+  deriving Inhabited
 
+def _root_.Lean.Meta.ContextCfg.config (cfg : ContextCfg) : Meta.Config := cfg.keyedConfig.config
 
 def Lean.Meta.Context.toCtx (ctx : Meta.Context) : ContextCtx where
   lctx := ctx.lctx
@@ -31,7 +41,7 @@ def _root_.Lean.Meta.Context.getConfig (ctx : Meta.Context) : CoreM Meta.Config 
   return ctx.keyedConfig.config
 
 def Lean.Meta.Context.toCfg (ctx : Meta.Context) : CoreM ContextCfg := do return {
-  config := ← ctx.getConfig
+  keyedConfig := ctx.keyedConfig
   defEqCtx? := ctx.defEqCtx?
   synthPendingDepth := ctx.synthPendingDepth
   customCanUnfoldPredicate? := ctx.customCanUnfoldPredicate?
@@ -41,7 +51,7 @@ def Lean.Meta.Context.toCfg (ctx : Meta.Context) : CoreM ContextCfg := do return
 
 
 def _root_.Lean.Meta.Context.mkCtxCfg (ctx : ContextCtx) (cfg : ContextCfg) : Meta.Context :=
-  { keyedConfig := cfg.config.toConfigWithKey
+  { keyedConfig := cfg.keyedConfig
     trackZetaDelta := false
     zetaDeltaSet := {}
     lctx := ctx.lctx

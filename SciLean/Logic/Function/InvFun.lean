@@ -1,7 +1,12 @@
-import SciLean.Logic.Function.Bijective
+module
 
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Logic.Function.Bijective
+
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Elab
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

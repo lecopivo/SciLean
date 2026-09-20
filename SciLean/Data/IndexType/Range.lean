@@ -1,6 +1,11 @@
-import Mathlib.Logic.Equiv.Defs
+module
 
-import SciLean.Data.IndexType.Init
+public import Mathlib.Logic.Equiv.Defs
+
+public import SciLean.Data.IndexType.Init
+
+@[expose] public section
+
 
 namespace SciLean.IndexType
 

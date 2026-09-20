@@ -1,9 +1,14 @@
-import Mathlib.Topology.MetricSpace.Basic
-import Mathlib.Analysis.Normed.Lp.WithLp
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
+module
 
-import SciLean.Meta.SimpAttr
-import SciLean.Util.SorryProof
+public import Mathlib.Topology.MetricSpace.Basic
+public import Mathlib.Analysis.Normed.Lp.WithLp
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+
+public import SciLean.Meta.SimpAttr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 abbrev MetricSpaceP (X : Type _) (p) := MetricSpace (WithLp p X)
 

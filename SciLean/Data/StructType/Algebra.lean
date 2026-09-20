@@ -1,13 +1,18 @@
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Algebra.IsAffineMap
-import SciLean.Topology.Continuous
-import SciLean.Analysis.Sorry
+module
 
-import SciLean.Data.StructType.Basic
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Algebra.IsAffineMap
+public import SciLean.Topology.Continuous
+public import SciLean.Analysis.Sorry
 
-import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Meta.GenerateFunProp
-import SciLean.Meta.GenerateAddGroupHomSimp
+public import SciLean.Data.StructType.Basic
+
+public import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Meta.GenerateAddGroupHomSimp
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false

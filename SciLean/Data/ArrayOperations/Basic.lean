@@ -1,7 +1,12 @@
-import Mathlib.Logic.Function.Defs
-import SciLean.Meta.SimpAttr
-import SciLean.Lean.Expr
-import SciLean.Util.SorryProof
+module
+
+public import Mathlib.Logic.Function.Defs
+public import SciLean.Meta.SimpAttr
+public import SciLean.Lean.Expr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

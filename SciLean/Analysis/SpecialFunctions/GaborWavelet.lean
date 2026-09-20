@@ -1,4 +1,9 @@
-import SciLean.Analysis.SpecialFunctions.Gaussian
+module
+
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+
+@[expose] public section
+
 
 namespace SciLean
 

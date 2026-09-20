@@ -1,8 +1,13 @@
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
-import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Tactic.Autodiff
+module
+
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
+public import SciLean.Analysis.AdjointSpace.Geometry
+public import SciLean.Tactic.Autodiff
+
+@[expose] public section
+
 
 -- import SciLean.Core.Transformations.BoundingBall
 -- import SciLean.Core.Transformations.RnDeriv

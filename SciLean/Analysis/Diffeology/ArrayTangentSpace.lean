@@ -1,9 +1,14 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.TangentSpace
-import SciLean.Analysis.Diffeology.VecDiffeology
-import SciLean.Analysis.Diffeology.Option
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.TangentSpace
+public import SciLean.Analysis.Diffeology.VecDiffeology
+public import SciLean.Analysis.Diffeology.Option
+public import SciLean.Analysis.Calculus.ContDiff
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean
 

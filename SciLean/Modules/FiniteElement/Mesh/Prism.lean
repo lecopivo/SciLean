@@ -1,7 +1,12 @@
 -- import SciLean.Algebra
-import SciLean.Data.FinProd
-import SciLean.Data.DataArray
-import SciLean.Data.Mesh.PrismRepr
+module
+
+public import SciLean.Data.FinProd
+public import SciLean.Data.DataArray
+public import SciLean.Data.Mesh.PrismRepr
+
+@[expose] public section
+
 
 namespace SciLean
 

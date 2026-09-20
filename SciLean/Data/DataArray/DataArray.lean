@@ -1,11 +1,16 @@
-import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.ArrayType.Basic
-import SciLean.Data.ArrayType.Notation
-import SciLean.Tactic.InferVar
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.ArrayLike
+module
+
+public import SciLean.Data.DataArray.PlainDataType
+public import SciLean.Data.ArrayType.Basic
+public import SciLean.Data.ArrayType.Notation
+public import SciLean.Tactic.InferVar
+public import SciLean.Data.IndexType
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.ArrayLike
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 
@@ -461,7 +466,7 @@ theorem DataArrayN.transpose_transpose [Fold.{_,0} I] [Fold.{_,0} J] (x : X^[I,J
 
 set_option linter.dupNamespace false in
 open Lean in
-partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArray `dimSpec) := do
+meta partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArray `dimSpec) := do
   match s with
   | .node _ ``coeNotation #[.atom _ "↑", .node _ ``Lean.Parser.Term.app #[.ident _ _ ``Set.Icc _,.node _ _ #[a,b]]] =>
     let a : Term := ⟨a⟩
@@ -481,7 +486,7 @@ partial def parseDimProd (s : Syntax) : Lean.PrettyPrinter.UnexpandM (TSyntaxArr
 
 
 @[app_unexpander DataArrayN]
-def unexpandDataArrayN : Lean.PrettyPrinter.Unexpander
+meta def unexpandDataArrayN : Lean.PrettyPrinter.Unexpander
   | `($(_) $X $I) => do
     let dims ← parseDimProd I
     `($X^[$dims,*])

@@ -1,5 +1,13 @@
-import Lean
-import Aesop
+module
+
+public import Lean
+
+public meta import Lean
+public import Aesop
+public meta import Aesop
+
+@[expose] public meta section
+
 
 open Lean Meta Elab Term Tactic Conv in
 elab "time_tactic" t:conv : conv => do

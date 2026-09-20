@@ -3,8 +3,16 @@ Copyright (c) 2023 Kyle Miller. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kyle Miller, Tomáš Skřivan
 -/
-import Mathlib.Tactic.Basic
-import SciLean.Lean.Meta.Structure
+module
+
+public import Mathlib.Tactic.Basic
+
+public meta import Mathlib.Tactic.Basic
+public import SciLean.Lean.Meta.Structure
+public meta import SciLean.Lean.Meta.Structure
+
+@[expose] public meta section
+
 
 /-!
 # The `lift_lets` tactic
@@ -42,7 +50,7 @@ structure Lean.Expr.LiftLets2Config where
 Auxiliary definition for `Lean.Expr.liftLets`. Takes a list of the accumulated fvars.
 This list is used during the computation to merge let bindings.
 -/
-private partial def Lean.Expr.liftLets2Aux {α} (config : LiftLets2Config) (e : Expr) (fvars : Array Expr)
+partial def Lean.Expr.liftLets2Aux {α} (config : LiftLets2Config) (e : Expr) (fvars : Array Expr)
     (f : Array Expr → Expr → MetaM α) : MetaM α := do
   if (e.find? Expr.isLet).isNone then
     -- If `e` contains no `let` expressions, then we can avoid recursing into it.

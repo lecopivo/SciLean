@@ -1,4 +1,9 @@
-import SciLean.Data.IndexType.Basic
+module
+
+public import SciLean.Data.IndexType.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

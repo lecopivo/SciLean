@@ -1,5 +1,10 @@
-import SciLean.Core
-import SciLean.Data.GenericArray
+module
+
+public import SciLean.Core
+public import SciLean.Data.GenericArray
+
+@[expose] public section
+
 
 set_option synthInstance.maxSize 2048
 

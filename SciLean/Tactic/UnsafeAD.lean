@@ -1,5 +1,13 @@
-import Mathlib.Algebra.Group.Defs
-import SciLean.Logic.Function.Constant
+module
+
+public import Mathlib.Algebra.Group.Defs
+
+public meta import Mathlib.Algebra.Group.Defs
+public import SciLean.Logic.Function.Constant
+public meta import SciLean.Logic.Function.Constant
+
+@[expose] public meta section
+
 
 namespace SciLean.UnsafeAD
 

@@ -1,7 +1,17 @@
-import SciLean.Meta.SimpAttr
+module
 
-import Mathlib.Data.FunLike.Basic -- this import does not seem to be enough
-import Mathlib.Logic.Equiv.Defs
+public import SciLean.Meta.SimpAttr
+
+public meta import SciLean.Meta.SimpAttr
+
+public import Mathlib.Data.FunLike.Basic -- this import does not seem to be enough
+
+public meta import Mathlib.Data.FunLike.Basic -- this import does not seem to be enough
+public import Mathlib.Logic.Equiv.Defs
+public meta import Mathlib.Logic.Equiv.Defs
+
+@[expose] public meta section
+
 
 namespace Scilean
 

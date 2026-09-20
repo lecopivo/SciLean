@@ -1,4 +1,9 @@
-import Lean
+module
+
+public import Lean
+
+@[expose] public section
+
 
 inductive ListN (α : Type u) : Nat → Type u
   | nil : ListN α 0
@@ -81,12 +86,12 @@ macro_rules
   `(ListN.cons (n:=$n) $x [$xs,*]')
 
 @[app_unexpander ListN.nil]
-def unexpandListNNil : Lean.PrettyPrinter.Unexpander
+meta def unexpandListNNil : Lean.PrettyPrinter.Unexpander
   | `($(_)) =>
     `([]')
 
 @[app_unexpander ListN.cons]
-def unexpandListNCons : Lean.PrettyPrinter.Unexpander
+meta def unexpandListNCons : Lean.PrettyPrinter.Unexpander
   | `($(_) $x []') =>
     `([$x]')
   | `($(_) $x [$xs',*]') =>

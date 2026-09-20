@@ -1,6 +1,15 @@
-import Lean
-import Mathlib.Lean.Meta.RefinedDiscrTree
-import Mathlib.Tactic.FunProp
+module
+
+public import Lean
+
+public meta import Lean
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+public import Mathlib.Tactic.FunProp
+public meta import Mathlib.Tactic.FunProp
+
+@[expose] public meta section
+
 
 
 open Lean Meta

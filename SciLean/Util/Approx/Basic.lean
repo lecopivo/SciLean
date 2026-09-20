@@ -1,8 +1,13 @@
 -- import Mathlib.Analysis.Calculus.FDeriv.Basic
 
-import SciLean.Util.Approx.ApproxSolution
-import SciLean.Util.Limit
-import SciLean.Util.SorryProof
+module
+
+public import SciLean.Util.Approx.ApproxSolution
+public import SciLean.Util.Limit
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

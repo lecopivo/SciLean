@@ -1,5 +1,10 @@
-import SciLean
-import SciLean.Data.IndexType.RangeNotation
+module
+
+public import SciLean
+public import SciLean.Data.IndexType.RangeNotation
+
+@[expose] public section
+
 
 open SciLean
 

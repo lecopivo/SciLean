@@ -1,4 +1,9 @@
-import SciLean.Tactic.InferVar
+module
+
+public import SciLean.Tactic.InferVar
+
+@[expose] public section
+
 
 open SciLean
 

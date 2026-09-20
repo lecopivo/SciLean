@@ -1,13 +1,18 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.MatMul
-import SciLean.Algebra.TensorProduct.Self
-import SciLean.Algebra.MatrixType.Basic
-import SciLean.Data.ArrayOperations.Operations.GetElem
-import SciLean.Data.ArrayOperations.Operations.OfFn
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.Basis
+module
 
-import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.TensorProduct.MatMul
+public import SciLean.Algebra.TensorProduct.Self
+public import SciLean.Algebra.MatrixType.Basic
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+public import SciLean.Data.ArrayOperations.Operations.OfFn
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.Basis
+
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 namespace SciLean
 

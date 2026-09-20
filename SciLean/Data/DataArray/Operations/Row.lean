@@ -1,5 +1,10 @@
-import SciLean.Data.DataArray.Operations.Curry
-import SciLean.Data.ArrayOperations.Operations.GetElem
+module
+
+public import SciLean.Data.DataArray.Operations.Curry
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+
+@[expose] public section
+
 
 
 namespace SciLean.DataArrayN

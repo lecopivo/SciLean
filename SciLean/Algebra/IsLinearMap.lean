@@ -1,11 +1,16 @@
-import Mathlib.Algebra.Module.LinearMap.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.LinearAlgebra.Prod
+module
 
-import SciLean.Algebra.IsAddGroupHom
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Analysis.Normed.Norm2
-import SciLean.Meta.GenerateLinearMapSimp
+public import Mathlib.Algebra.Module.LinearMap.Basic
+public import Mathlib.Algebra.Module.Prod
+public import Mathlib.LinearAlgebra.Prod
+
+public import SciLean.Algebra.IsAddGroupHom
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Analysis.Normed.Norm2
+public import SciLean.Meta.GenerateLinearMapSimp
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -92,7 +97,7 @@ theorem LinearMap.mk'_coe (f : X → Y) (hf : IsLinearMap R f) :
 theorem LinearMap.eta_reduce (f : X →ₗ[R] Y) :
     mk' R f.1 ⟨f.1.2,f.2⟩ = f := by rfl
 
-@[app_unexpander LinearMap.mk'] def unexpandLinearMapMk : Lean.PrettyPrinter.Unexpander
+@[app_unexpander LinearMap.mk'] meta def unexpandLinearMapMk : Lean.PrettyPrinter.Unexpander
   | `($(_) $R $f:term $_:term) =>
     match f with
     | `(fun $x':ident => $b:term) => `(fun $x' =>ₗ[$R] $b)

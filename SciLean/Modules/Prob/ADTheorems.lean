@@ -1,6 +1,11 @@
-import SciLean.Core.FunctionTransformations
-import SciLean.Modules.Prob.SimpAttr
-import SciLean.Modules.Prob.FDRand
+module
+
+public import SciLean.Core.FunctionTransformations
+public import SciLean.Modules.Prob.SimpAttr
+public import SciLean.Modules.Prob.FDRand
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

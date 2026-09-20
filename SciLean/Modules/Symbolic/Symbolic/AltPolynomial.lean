@@ -1,8 +1,13 @@
-import SciLean.Math.Symbolic.Basic
-import SciLean.Math.Symbolic.Monomial
-import SciLean.Math.Symbolic.FreeAlgebra
+module
 
-import SciLean.Operators.Calculus.Basic
+public import SciLean.Math.Symbolic.Basic
+public import SciLean.Math.Symbolic.Monomial
+public import SciLean.Math.Symbolic.FreeAlgebra
+
+public import SciLean.Operators.Calculus.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

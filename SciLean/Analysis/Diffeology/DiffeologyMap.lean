@@ -1,5 +1,10 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.NormedSpace
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.NormedSpace
+
+@[expose] public section
+
 
 namespace SciLean
 

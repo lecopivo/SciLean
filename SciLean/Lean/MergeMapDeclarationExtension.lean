@@ -1,5 +1,13 @@
-import Lean
-import SciLean.Lean.Array
+module
+
+public import Lean
+
+public meta import Lean
+public import SciLean.Lean.Array
+public meta import SciLean.Lean.Array
+
+@[expose] public meta section
+
 
 open Lean
 

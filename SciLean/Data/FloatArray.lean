@@ -1,1 +1,6 @@
-import SciLean.FFI.FloatArray
+module
+
+public import SciLean.FFI.FloatArray
+
+@[expose] public section
+

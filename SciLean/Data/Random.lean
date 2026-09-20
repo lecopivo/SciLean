@@ -1,6 +1,11 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.Int64
-import Mathlib.Control.Random
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.Int64
+public import Mathlib.Control.Random
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,5 +1,10 @@
-import examples.MNISTClassifier.DataUtil
-import examples.MNISTClassifier.Model
+module
+
+public import examples.MNISTClassifier.DataUtil
+public import examples.MNISTClassifier.Model
+
+@[expose] public section
+
 
 open SciLean
 

@@ -1,11 +1,16 @@
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 open SciLean
 

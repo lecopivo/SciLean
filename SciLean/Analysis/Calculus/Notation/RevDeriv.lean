@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.Notation.Deriv
-import SciLean.Analysis.Calculus.RevFDeriv
+module
+
+public import SciLean.Analysis.Calculus.Notation.Deriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+
+@[expose] public section
+
 
 
 --------------------------------------------------------------------------------
@@ -43,7 +48,7 @@ macro_rules
 | `(<∂! ($x:term := $val:term), $b) => `(<∂! (fun $x => $b) $val)
 
 
-@[app_unexpander revFDeriv] def unexpandRevFDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander revFDeriv] meta def unexpandRevFDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x) =>
     match f with

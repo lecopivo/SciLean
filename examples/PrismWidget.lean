@@ -1,6 +1,11 @@
-import ProofWidgets.Component.InteractiveSvg
-import ProofWidgets.Component.HtmlDisplay
-import SciLean.Data.Mesh.Prism
+module
+
+public import ProofWidgets.Component.InteractiveSvg
+public import ProofWidgets.Component.HtmlDisplay
+public import SciLean.Data.Mesh.Prism
+
+@[expose] public section
+
 
 open Lean
 open ProofWidgets Svg Jsx

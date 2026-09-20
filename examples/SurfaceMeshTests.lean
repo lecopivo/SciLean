@@ -1,4 +1,9 @@
-import SciLean.Modules.DDG.SurfaceMesh
+module
+
+public import SciLean.Modules.DDG.SurfaceMesh
+
+@[expose] public section
+
 
 def testTetrahedron : IO Bool := do
   let base0 : SciLean.Float3 := ⊞[0.0,0,0]

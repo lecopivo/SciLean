@@ -1,6 +1,11 @@
-import Mathlib.Analysis.Matrix.Normed
+module
 
-import SciLean.Analysis.AdjointSpace.Adjoint
+public import Mathlib.Analysis.Matrix.Normed
+
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 namespace SciLean
 

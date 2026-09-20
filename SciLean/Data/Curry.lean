@@ -1,4 +1,9 @@
-import SciLean.Util.SorryProof
+module
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 namespace SciLean
 
 --------------------------------------------------------------------------------

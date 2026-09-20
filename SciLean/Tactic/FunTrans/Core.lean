@@ -3,16 +3,32 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import Lean
-import Qq
-import Batteries.Tactic.Exact
+module
 
-import SciLean.Tactic.FunTrans.Theorems
-import SciLean.Tactic.FunTrans.Types
-import Mathlib.Tactic.FunProp.Core
-import Mathlib.Tactic.FunProp.Types
-import SciLean.Lean.Meta.RefinedDiscrTree
-import SciLean.Lean.ExceptToEmoji
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+public import Batteries.Tactic.Exact
+public meta import Batteries.Tactic.Exact
+
+public import SciLean.Tactic.FunTrans.Theorems
+
+public meta import SciLean.Tactic.FunTrans.Theorems
+public import SciLean.Tactic.FunTrans.Types
+public meta import SciLean.Tactic.FunTrans.Types
+public import Mathlib.Tactic.FunProp.Core
+public meta import Mathlib.Tactic.FunProp.Core
+public import Mathlib.Tactic.FunProp.Types
+public meta import Mathlib.Tactic.FunProp.Types
+public import SciLean.Lean.Meta.RefinedDiscrTree
+public meta import SciLean.Lean.Meta.RefinedDiscrTree
+public import SciLean.Lean.ExceptToEmoji
+public meta import SciLean.Lean.ExceptToEmoji
+
+@[expose] public meta section
+
 
 /-!
 ## `funTrans` core tactic algorithm
@@ -45,7 +61,7 @@ def runFunProp (e : Expr) : SimpM (Option Expr) := do
   | .none => return .none
 
 
-private def ppOrigin' (origin : FunProp.Origin) : MetaM String := do
+def ppOrigin' (origin : FunProp.Origin) : MetaM String := do
   match origin with
   | .fvar id => return s!"{← ppExpr (.fvar id)} : {← ppExpr (← inferType (.fvar id))}"
   | _ => pure (toString origin.name)
@@ -53,7 +69,7 @@ private def ppOrigin' (origin : FunProp.Origin) : MetaM String := do
 
 -- TODO: remove this once updated to newer version of mathlib
 /-- Is `e` a `fun_prop` goal? For example `∀ y z, Continuous fun x => f x y z` -/
-private def FunProp.isFunPropGoal (e : Expr) : MetaM Bool := do
+def FunProp.isFunPropGoal (e : Expr) : MetaM Bool := do
   forallTelescope e fun _ b =>
   return (← FunProp.getFunProp? b).isSome
 

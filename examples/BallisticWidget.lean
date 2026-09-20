@@ -1,6 +1,11 @@
-import ProofWidgets.Component.InteractiveSvg
-import ProofWidgets.Component.HtmlDisplay
-import examples.Ballistic
+module
+
+public import ProofWidgets.Component.InteractiveSvg
+public import ProofWidgets.Component.HtmlDisplay
+public import examples.Ballistic
+
+@[expose] public section
+
 
 open Lean
 open ProofWidgets Svg Jsx

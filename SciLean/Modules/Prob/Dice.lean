@@ -1,5 +1,10 @@
-import Probly.Basic
-import Probly.RewriteBy
+module
+
+public import Probly.Basic
+public import Probly.RewriteBy
+
+@[expose] public section
+
 
 open ENNReal BigOperators Finset
 

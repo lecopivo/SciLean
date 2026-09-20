@@ -1,6 +1,11 @@
-import SciLean
+module
 
-import SciLean
+public import SciLean
+
+public import SciLean
+
+@[expose] public section
+
 open SciLean
 
 example : Differentiable ℝ (fun ((_,_,z) : ℝ×ℝ×ℝ) => z) := by fun_prop

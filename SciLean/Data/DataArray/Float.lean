@@ -1,8 +1,13 @@
-import LeanBLAS
+module
 
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.FloatArray
-import SciLean.Analysis.Scalar.FloatAsReal
+public import LeanBLAS
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.FloatArray
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 namespace SciLean
 

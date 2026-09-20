@@ -1,4 +1,9 @@
-import SciLean.Math.Symbolic.Basic
+module
+
+public import SciLean.Math.Symbolic.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

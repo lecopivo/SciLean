@@ -1,8 +1,13 @@
-import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Measure.Prod
+module
 
-import SciLean.Meta.SimpAttr
-import SciLean.Util.SorryProof
+public import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
+public import Mathlib.MeasureTheory.Measure.Prod
+
+public import SciLean.Meta.SimpAttr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

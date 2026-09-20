@@ -1,11 +1,16 @@
-import SciLean.Analysis.AdjointSpace.HasAdjoint
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Data.Nat
+module
+
+public import SciLean.Analysis.AdjointSpace.HasAdjoint
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Data.Nat
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
 
-import SciLean.Util.RewriteBy
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,5 +1,10 @@
-import SciLean.Core
-import SciLean.Util.Limit
+module
+
+public import SciLean.Core
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 namespace SciLean
 

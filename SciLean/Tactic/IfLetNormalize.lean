@@ -1,8 +1,15 @@
-import Mathlib.Tactic.SplitIfs
+module
+
+public import Mathlib.Tactic.SplitIfs
+
+public meta import Mathlib.Tactic.SplitIfs
+
+@[expose] public meta section
+
 
 namespace SciLean
 
-private theorem let_ite_eq_ite_let {α β} {c : Prop} [Decidable c] (t e : α) (f : α → β) :
+theorem let_ite_eq_ite_let {α β} {c : Prop} [Decidable c] (t e : α) (f : α → β) :
     (let x := if c then t else e
     f x)
     =
@@ -14,7 +21,7 @@ private theorem let_ite_eq_ite_let {α β} {c : Prop} [Decidable c] (t e : α) (
       f x) := by
   split_ifs <;> rfl
 
-private theorem let_dite_eq_dite_let {α β} {c : Prop} [Decidable c]
+theorem let_dite_eq_dite_let {α β} {c : Prop} [Decidable c]
     (t : c → α) (e : ¬c → α) (f : α → β) :
     (let x := dite c t e
     f x)

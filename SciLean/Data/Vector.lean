@@ -1,8 +1,13 @@
-import Mathlib.Algebra.Group.Defs
-import Mathlib.Algebra.Module.Defs
+module
 
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Algebra.Module.Defs
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

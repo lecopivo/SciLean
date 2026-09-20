@@ -1,8 +1,13 @@
-import SciLean.Data.Idx
-import SciLean.Data.ArrayOperations.Basic
+module
 
-import Mathlib.Data.Fintype.Prod
-import Mathlib.Data.Fintype.Sum
+public import SciLean.Data.Idx
+public import SciLean.Data.ArrayOperations.Basic
+
+public import Mathlib.Data.Fintype.Prod
+public import Mathlib.Data.Fintype.Sum
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -177,6 +182,7 @@ instance {α β} [IndexType α m] [IndexType β n] : IndexType (α ⊕ β) (m + 
   right_inv := by intro; sorry_proof
 
 
+@[instance_reducible]
 def ofEquiv {J : Type*} (I : Type*) [Fintype J] [IndexType I n] (f : I ≃ J) : IndexType J n where
   toIdx y := toIdx (f.symm y)
   fromIdx i := f (fromIdx i)

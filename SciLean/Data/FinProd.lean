@@ -1,1 +1,6 @@
-import SciLean.Data.IndexType
+module
+
+public import SciLean.Data.IndexType
+
+@[expose] public section
+

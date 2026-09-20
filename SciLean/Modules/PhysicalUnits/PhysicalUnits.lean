@@ -1,9 +1,14 @@
-import Lean
-import Batteries
-import Qq
-import Mathlib.Data.Real.Basic
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Ring
+module
+
+public import Lean
+public import Batteries
+public import Qq
+public import Mathlib.Data.Real.Basic
+public import Mathlib.Tactic.NormNum
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -140,7 +145,7 @@ syntax term noWs "⟦" term "⟧ ": term
 macro_rules
 | `(term| $X:term⟦ $unit:term ⟧) => `(PhysicalQuantity $X $unit)
 
-@[app_unexpander PhysicalQuantity] def unexpandPhysicalQuantity : Lean.PrettyPrinter.Unexpander
+@[app_unexpander PhysicalQuantity] meta def unexpandPhysicalQuantity : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $α:term { scale := $a, mPower := $b, sPower := $c, kgPower := $d}) => do
     let zero ← `(0)

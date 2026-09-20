@@ -1,4 +1,11 @@
-import SciLean.Lean.Meta.Basic
+module
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -13,7 +20,7 @@ def ReplacePost.val (r : ReplacePost) : Expr :=
   | yield e  => e
   | done e => e
 
-private partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM ReplacePost :=
+partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM ReplacePost :=
   if ¬e.hasFVar then
     return .done e
   else
@@ -64,7 +71,7 @@ private partial def replaceFVarAndPostImpl (e : Expr) (id : FVarId) (val : Expr)
   | e => return .done e
 
 
-private partial def instantiate1AndPostImpl (e : Expr) (i : Nat) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM ReplacePost :=
+partial def instantiate1AndPostImpl (e : Expr) (i : Nat) (val : Expr) (post : Expr → MetaM ReplacePost) : MetaM ReplacePost :=
   if e.looseBVarRange < i then
     return .done e
   else

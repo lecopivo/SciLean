@@ -1,8 +1,13 @@
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Logic.Isomorph.RealToFloat.Basic
-import SciLean.Data.Float
+module
 
-import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Logic.Isomorph.RealToFloat.Basic
+public import SciLean.Data.Float
+
+public import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
+@[expose] public section
+
 
 namespace SciLean
 

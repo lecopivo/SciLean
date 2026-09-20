@@ -1,4 +1,9 @@
-import SciLean.AD.Rules.Common
+module
+
+public import SciLean.AD.Rules.Common
+
+@[expose] public section
+
 
 open ComplexConjugate
 

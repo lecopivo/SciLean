@@ -1,4 +1,9 @@
-import SciLean.Probability.Rand
+module
+
+public import SciLean.Probability.Rand
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

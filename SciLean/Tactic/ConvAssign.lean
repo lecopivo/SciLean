@@ -1,3 +1,7 @@
+module
+
+@[expose] public meta section
+
 namespace SciLean.Tactic
 
 /-- Assuming that the goal is a metavariable, `assign t` assigns term `t` to that metavariable. -/

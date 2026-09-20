@@ -1,6 +1,11 @@
-import SciLean.Core
-import SciLean.Functions.EpsNorm
-import SciLean.Functions.EpsPow
+module
+
+public import SciLean.Core
+public import SciLean.Functions.EpsNorm
+public import SciLean.Functions.EpsPow
+
+@[expose] public section
+
 
 namespace SciLean
 

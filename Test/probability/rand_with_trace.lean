@@ -1,5 +1,10 @@
-import SciLean.Probability.RandWithTrace
-import SciLean.Analysis.Scalar.FloatAsReal
+module
+
+public import SciLean.Probability.RandWithTrace
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 open SciLean Rand MeasureTheory
 

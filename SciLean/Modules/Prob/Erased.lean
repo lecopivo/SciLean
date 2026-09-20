@@ -1,4 +1,9 @@
-import Batteries
+module
+
+public import Batteries
+
+@[expose] public section
+
 
 structure Erased (α : Type) : Type where
   spec : α → Prop

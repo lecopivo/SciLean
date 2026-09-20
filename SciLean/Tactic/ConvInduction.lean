@@ -1,7 +1,17 @@
-import Lean
-import Qq
-import Mathlib.Util.CompileInductive
-import SciLean.Util.RewriteBy
+module
+
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+public import Mathlib.Util.CompileInductive
+public meta import Mathlib.Util.CompileInductive
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+
+@[expose] public meta section
+
 
 open Lean Meta Qq Elab Tactic Conv
 

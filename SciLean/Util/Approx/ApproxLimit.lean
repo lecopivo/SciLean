@@ -1,8 +1,17 @@
-import Lean
+module
 
-import SciLean.Util.Approx.Basic
-import SciLean.Tactic.PullLimitOut
-import SciLean.Lean.Meta.Basic
+public import Lean
+public import SciLean.Util.Approx.Basic
+public import SciLean.Tactic.PullLimitOut
+public import SciLean.Lean.Meta.Basic
+
+public meta import Lean
+public meta import SciLean.Util.Approx.Basic
+public meta import SciLean.Tactic.PullLimitOut
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 namespace SciLean
 

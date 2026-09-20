@@ -1,4 +1,9 @@
-import Lean
+module
+
+public import Lean
+
+@[expose] public section
+
 open Lean Elab Command Term
 
 namespace SciLean

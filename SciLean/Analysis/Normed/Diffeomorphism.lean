@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Logic.Function.Bijective
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Logic.Function.Bijective
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 open SciLean

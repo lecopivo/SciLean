@@ -1,4 +1,9 @@
-import SciLean.Modules.SolversAndOptimizers.NewtonSolver
+module
+
+public import SciLean.Modules.SolversAndOptimizers.NewtonSolver
+
+@[expose] public section
+
 
 open SciLean
 

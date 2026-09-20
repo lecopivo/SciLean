@@ -1,6 +1,11 @@
-import SciLean.Numerics.Optimization.ArgMin
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
-import SciLean.Util.Limit
+module
+
+public import SciLean.Numerics.Optimization.ArgMin
+public import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 /-! Port of Optim.jl, file src/multivariate/optimize/optimize.jl
 

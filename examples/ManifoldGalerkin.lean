@@ -1,4 +1,9 @@
-import SciLean
+module
+
+public import SciLean
+
+@[expose] public section
+
 -- import SciLean.Core.Complexify
 -- import SciLean.Meta.DerivingAlgebra
 -- import SciLean.Solver.Solver

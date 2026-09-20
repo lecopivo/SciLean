@@ -1,7 +1,12 @@
-import SciLean.Util.SorryProof
-import SciLean.Logic.Isomorph.IsomorphicType
+module
 
-import Mathlib.Data.Real.Basic
+public import SciLean.Util.SorryProof
+public import SciLean.Logic.Isomorph.IsomorphicType
+
+public import Mathlib.Data.Real.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

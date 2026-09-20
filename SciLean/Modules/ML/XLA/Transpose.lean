@@ -1,4 +1,9 @@
-import SciLean.Modules.ML.XLA.TensorIndex
+module
+
+public import SciLean.Modules.ML.XLA.TensorIndex
+
+@[expose] public section
+
 
 namespace SciLean
 >

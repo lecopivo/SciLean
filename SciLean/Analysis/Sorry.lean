@@ -1,7 +1,12 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.RCLike.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.RCLike.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,4 +1,9 @@
-import SciLean.Algebra.TensorProduct.Basic
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

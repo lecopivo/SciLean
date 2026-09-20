@@ -1,6 +1,11 @@
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Analysis.SpecialFunctions.Pow
-import SciLean.Meta.GenerateFunProp
+module
+
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Analysis.SpecialFunctions.Pow
+public import SciLean.Meta.GenerateFunProp
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -73,12 +78,11 @@ theorem norm₂.arg_x.fderiv_rule_at (x : U) (hx : x ≠ 0) :
     fderiv R (fun x : U => ‖x‖₂[R]) x
     =
     fun dx =>L[R] ⟪dx,x⟫[R] / ‖x‖₂[R] := by
-  unfold norm₂;
   have : ‖x‖₂²[R] ≠ 0 := sorry_proof
+  conv_lhs => unfold norm₂
   fun_trans (disch:=assumption)
-  ext dx; simp
-  rw [← AdjointSpace.inner_conj_symm]
-  simp; ring
+  ext dx; simp [norm₂]
+  rw [mul_div_mul_left _ _ two_ne_zero]
 
 @[fun_trans]
 theorem norm₂.arg_x.fderiv_rule (f : X → U) (hf : Differentiable R f) (hf' : ∀ x, f x ≠ 0) :

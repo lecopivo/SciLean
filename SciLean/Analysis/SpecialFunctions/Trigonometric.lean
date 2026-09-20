@@ -1,10 +1,15 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.ContDiff
+module
 
-import SciLean.Meta.GenerateFunProp
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Lean.ToSSA
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.ContDiff
+
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Lean.ToSSA
+
+@[expose] public section
+
 
 open ComplexConjugate
 

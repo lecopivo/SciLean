@@ -1,5 +1,10 @@
-import Mathlib.Algebra.Module.LinearMap.Basic
-import SciLean.Algebra.IsLinearMap
+module
+
+public import Mathlib.Algebra.Module.LinearMap.Basic
+public import SciLean.Algebra.IsLinearMap
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

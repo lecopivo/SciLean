@@ -1,7 +1,12 @@
-import Mathlib.Topology.Order
+module
 
-import SciLean.Util.SorryProof
-import SciLean.Data.IndexType.Init
+public import Mathlib.Topology.Order
+
+public import SciLean.Util.SorryProof
+public import SciLean.Data.IndexType.Init
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -137,7 +142,7 @@ The assumption `NeZero n` ensures that `Idx n` is nonempty.
 protected def ofUSize (n : Nat) [NeZero n] (a : USize) : Idx n :=
   ⟨a % n, by sorry_proof⟩
 
-private theorem mlt {b : Nat} : {a : Nat} → a < n → b % n < n
+theorem mlt {b : Nat} : {a : Nat} → a < n → b % n < n
   | 0,   h => Nat.mod_lt _ h
   | _+1, h =>
     have : n > 0 := Nat.lt_trans (Nat.zero_lt_succ _) h;

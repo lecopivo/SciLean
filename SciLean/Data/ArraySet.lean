@@ -1,8 +1,13 @@
-import Batteries.Data.Array.Merge
-import Batteries.Data.List.Basic
+module
 
-import SciLean.Lean.Array
-import SciLean.Util.SorryProof
+public import Batteries.Data.Array.Merge
+public import Batteries.Data.List.Basic
+
+public import SciLean.Lean.Array
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -89,7 +94,7 @@ namespace ArraySet
     else
       return isFalse sorry_proof
 
-  def lexOrd [Ord α] (a b : ArraySet α) : Ordering := a.data.lexOrd b.data
+  meta def lexOrd [Ord α] (a b : ArraySet α) : Ordering := a.data.lexOrd b.data
 
   -- def a := #[1,2,3,4].toArraySet
   -- def b := #[4,3,2].toArraySet

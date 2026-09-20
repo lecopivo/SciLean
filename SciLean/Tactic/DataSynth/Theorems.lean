@@ -1,8 +1,19 @@
-import Lean
-import Mathlib.Lean.Meta.RefinedDiscrTree
+module
 
-import SciLean.Tactic.DataSynth.Decl
-import SciLean.Lean.Meta.Basic
+public import Lean
+
+public meta import Lean
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+
+public import SciLean.Tactic.DataSynth.Decl
+
+public meta import SciLean.Tactic.DataSynth.Decl
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 open Lean Meta
 open Mathlib.Meta.FunProp

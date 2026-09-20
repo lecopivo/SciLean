@@ -1,6 +1,11 @@
-import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
-import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
-import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
+module
+
+public import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
+public import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
+public import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
+
+@[expose] public section
+
 
 namespace SciLean
 

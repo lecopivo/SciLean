@@ -1,4 +1,9 @@
-import Mathlib.Analysis.RCLike.Basic
+module
+
+public import Mathlib.Analysis.RCLike.Basic
+
+@[expose] public section
+
 -- import Mathlib.Data.Real.Basic
 -- import Mathlib.Data.Complex.Exponential
 -- import Mathlib.Analysis.Complex.Basic

@@ -1,8 +1,13 @@
-import SciLean.Analysis.ODE.OdeSolve
-import SciLean.Analysis.Calculus.Notation.Gradient
+module
 
-import SciLean.Util.SolveFun
-import SciLean.Tactic.LetEnter
+public import SciLean.Analysis.ODE.OdeSolve
+public import SciLean.Analysis.Calculus.Notation.Gradient
+
+public import SciLean.Util.SolveFun
+public import SciLean.Tactic.LetEnter
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

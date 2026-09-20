@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+
+@[expose] public section
+
 
 namespace SciLean
 

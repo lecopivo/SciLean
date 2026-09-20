@@ -1,10 +1,15 @@
-import Mathlib.Data.Real.Basic
+module
+
+public import Mathlib.Data.Real.Basic
 -- import Mathlib.AlgebraicGeometry.EllipticCurve.Weierstrass
 -- import Mathlib.AlgebraicGeometry.EllipticCurve.Projective
 
-import SciLean.Analysis.Scalar.FloatAsReal
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.Attr
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

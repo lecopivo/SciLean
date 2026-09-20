@@ -1,7 +1,12 @@
-import SciLean
+module
 
-import ProofWidgets.Data.Svg
-import ProofWidgets.Component.HtmlDisplay
+public import SciLean
+
+public import ProofWidgets.Data.Svg
+public import ProofWidgets.Component.HtmlDisplay
+
+@[expose] public section
+
 
 open Lean ProofWidgets
 
@@ -149,7 +154,7 @@ def generateData (m : ℕ) : Float^[2,2]^[m] := Id.run do
 
 open ProofWidgets Svg
 
-private def frame : Frame where
+def frame : Frame where
   xmin   := -2
   ymin   := -2
   xSize  := 4
@@ -170,7 +175,7 @@ instance {I} [IndexType I] : FromJson (Float^[I]) where
 
 instance (f : Frame) : Coe (Float^[2]) (Point f) := ⟨fun x => .abs x[0] x[1]⟩
 
-private def svg : Svg frame :=
+def svg : Svg frame :=
   let data := generateData 1000
 
   { elements :=

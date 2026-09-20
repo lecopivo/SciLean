@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.AdjointSpace.Adjoint
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option deprecated.oldSectionVars true

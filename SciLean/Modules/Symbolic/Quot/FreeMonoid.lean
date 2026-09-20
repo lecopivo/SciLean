@@ -1,6 +1,11 @@
-import Mathlib.Algebra.Module.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Module.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 inductive Comparison {X : Type u} [LT X] (x y : X) where
   | cpEq (h : x = y) : Comparison x y

@@ -1,18 +1,23 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Prod
-import Mathlib.Analysis.Calculus.FDeriv.Linear
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+module
 
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.Deriv.Inv
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.FDeriv.Prod
+public import Mathlib.Analysis.Calculus.FDeriv.Linear
+public import Mathlib.Analysis.Calculus.FDeriv.Add
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
 
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Meta.Notation.Let'
+public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Calculus.Deriv.Inv
 
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Meta.Notation.Let'
+
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 open SciLean
 
@@ -377,14 +382,16 @@ by
     simp; rfl
   case succ n hn =>
     ext dx
-    simp_rw[pow_succ]
-    rw[HMul.hMul.arg_a0a1.fderiv_rule_at x _ f (by fun_prop) (by fun_prop)]
-    rw[hn]
+    simp_rw [pow_succ]
+    rw [HMul.hMul.arg_a0a1.fderiv_rule_at x _ f (by fun_prop) (by fun_prop)]
+    simp only [ContinuousLinearMap.mk'_eval]
+    rw [hn]
+    simp only [ContinuousLinearMap.mk'_eval]
     induction n
     case zero => simp
     case succ =>
-      rw[show ∀ (n : Nat), n.succ - 1 = n by simp]
-      rw[pow_succ]
+      rw [show ∀ (n : Nat), n.succ - 1 = n by simp]
+      rw [pow_succ]
       simp; ring
 
 

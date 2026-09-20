@@ -1,1 +1,6 @@
-import SciLean.AD.HasFwdFDeriv
+module
+
+public import SciLean.AD.HasFwdFDeriv
+
+@[expose] public section
+

@@ -1,6 +1,11 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.TangentSpace
-import Mathlib.Logic.Lemmas
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.TangentSpace
+public import Mathlib.Logic.Lemmas
+
+@[expose] public section
+
 
 namespace SciLean
 

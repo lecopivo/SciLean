@@ -1,14 +1,31 @@
-import Mathlib.Algebra.Module.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.Algebra.Module.LinearMap.Defs
+module
 
-import SciLean.Algebra.IsAddGroupHom
+public import Mathlib.Algebra.Module.Basic
 
-import SciLean.Data.IndexType
-import SciLean.Meta.SimpAttr
+public meta import Mathlib.Algebra.Module.Basic
+public import Mathlib.Algebra.Module.Prod
+public meta import Mathlib.Algebra.Module.Prod
+public import Mathlib.Algebra.Module.LinearMap.Defs
+public meta import Mathlib.Algebra.Module.LinearMap.Defs
 
-import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Util.SorryProof
+public import SciLean.Algebra.IsAddGroupHom
+
+public meta import SciLean.Algebra.IsAddGroupHom
+
+public import SciLean.Data.IndexType
+
+public meta import SciLean.Data.IndexType
+public import SciLean.Meta.SimpAttr
+public meta import SciLean.Meta.SimpAttr
+
+public import SciLean.Tactic.AnalyzeConstLambda
+
+public meta import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Util.SorryProof
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace SciLean
 

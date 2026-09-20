@@ -1,5 +1,10 @@
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Adjoint
+module
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -4,11 +4,22 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
 
-import SciLean.Tactic.FunTrans.Decl
-import Mathlib.Tactic.FunProp.Theorems
-import Mathlib.Lean.Meta.RefinedDiscrTree
-import SciLean.Lean.Array
-import SciLean.Lean.Meta.RefinedDiscrTree
+module
+
+public import SciLean.Tactic.FunTrans.Decl
+
+public meta import SciLean.Tactic.FunTrans.Decl
+public import Mathlib.Tactic.FunProp.Theorems
+public meta import Mathlib.Tactic.FunProp.Theorems
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+public import SciLean.Lean.Array
+public meta import SciLean.Lean.Array
+public import SciLean.Lean.Meta.RefinedDiscrTree
+public meta import SciLean.Lean.Meta.RefinedDiscrTree
+
+@[expose] public meta section
+
 
 
 

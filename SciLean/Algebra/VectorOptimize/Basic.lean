@@ -1,6 +1,11 @@
-import SciLean.Algebra.VectorOptimize.Init
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.MatrixType.Basic
+module
+
+public import SciLean.Algebra.VectorOptimize.Init
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.MatrixType.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

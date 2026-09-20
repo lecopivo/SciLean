@@ -1,11 +1,16 @@
-import Probly.Normal
-import Probly.Tactic
+module
 
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+public import Probly.Normal
+public import Probly.Tactic
 
-import Batteries.Lean.Expr
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.FDeriv.Add
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+
+public import Batteries.Lean.Expr
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

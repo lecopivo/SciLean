@@ -1,5 +1,10 @@
-import SciLean.Data.IndexType.Range
-import SciLean.Data.Idx.Basic
+module
+
+public import SciLean.Data.IndexType.Range
+public import SciLean.Data.Idx.Basic
+
+@[expose] public section
+
 
 
 namespace SciLean

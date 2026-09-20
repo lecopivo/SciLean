@@ -1,7 +1,12 @@
-import Mathlib.Data.Erased
-import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+module
 
-import SciLean.Modules.Prob.SimpAttr
+public import Mathlib.Data.Erased
+public import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
+public import SciLean.Modules.Prob.SimpAttr
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

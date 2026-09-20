@@ -1,7 +1,12 @@
-import SciLean.Modules.Geometry.Shape
-import SciLean.Modules.Geometry.Shape.Sphere
-import SciLean.Modules.Geometry.Shape.AxisAlignedBox
-import SciLean.Tactic.InferVar
+module
+
+public import SciLean.Modules.Geometry.Shape
+public import SciLean.Modules.Geometry.Shape.Sphere
+public import SciLean.Modules.Geometry.Shape.AxisAlignedBox
+public import SciLean.Tactic.InferVar
+
+@[expose] public section
+
 
 open FiniteDimensional
 

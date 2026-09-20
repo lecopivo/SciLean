@@ -1,8 +1,13 @@
-import SciLean.Util.SorryProof
-import SciLean.Data.IndexType
-import SciLean.Data.ByteArray
-import SciLean.Data.Idx
-import SciLean.Data.IndexType.Fold
+module
+
+public import SciLean.Util.SorryProof
+public import SciLean.Data.IndexType
+public import SciLean.Data.ByteArray
+public import SciLean.Data.Idx
+public import SciLean.Data.IndexType.Fold
+
+@[expose] public section
+
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
@@ -101,6 +106,7 @@ def PlainDataType.toByteArray {α : Type*} (pd : PlainDataType α) (data : ByteA
   --   byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
 
 /-- Translate `PlainDataType X` along equivalence `f : X ≃ Y` to `PlainDataType Y` -/
+@[instance_reducible]
 def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : PlainDataType Y where
   btype := {
       bytes := pd.btype.bytes

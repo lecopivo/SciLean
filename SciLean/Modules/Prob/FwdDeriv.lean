@@ -1,5 +1,10 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Probly.SimpAttr
+module
+
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Probly.SimpAttr
+
+@[expose] public section
+
 
 
 variable {K : Type*} [NontriviallyNormedField K]

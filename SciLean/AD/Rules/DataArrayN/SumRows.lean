@@ -1,12 +1,17 @@
-import SciLean.Data.DataArray.TensorOperations
-import SciLean.Data.ArrayOperations.Operations.GetElem
+module
 
-import SciLean.AD.Rules.Common
+public import SciLean.Data.DataArray.TensorOperations
+public import SciLean.Data.ArrayOperations.Operations.GetElem
 
-import SciLean.AD.Rules.DataArrayN.ToRn
-import SciLean.AD.Rules.DataArrayN.FromRn
-import SciLean.AD.Rules.DataArrayN.Reshape
-import SciLean.AD.Rules.DataArrayN.SumMiddleR
+public import SciLean.AD.Rules.Common
+
+public import SciLean.AD.Rules.DataArrayN.ToRn
+public import SciLean.AD.Rules.DataArrayN.FromRn
+public import SciLean.AD.Rules.DataArrayN.Reshape
+public import SciLean.AD.Rules.DataArrayN.SumMiddleR
+
+@[expose] public section
+
 
 namespace SciLean
 

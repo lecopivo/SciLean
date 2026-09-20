@@ -1,13 +1,18 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.TangentSpace
-import SciLean.Analysis.Diffeology.VecDiffeology
-import SciLean.Analysis.Diffeology.Option
-import SciLean.Analysis.Diffeology.Pi
-import SciLean.Analysis.Diffeology.ArrayTangentSpace
+module
 
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Algebra.IsLinearMap
-import SciLean.Tactic.IfPull
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.TangentSpace
+public import SciLean.Analysis.Diffeology.VecDiffeology
+public import SciLean.Analysis.Diffeology.Option
+public import SciLean.Analysis.Diffeology.Pi
+public import SciLean.Analysis.Diffeology.ArrayTangentSpace
+
+public import SciLean.Analysis.Calculus.ContDiff
+public import SciLean.Algebra.IsLinearMap
+public import SciLean.Tactic.IfPull
+
+@[expose] public section
+
 
 namespace SciLean
 

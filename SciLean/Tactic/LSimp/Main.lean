@@ -6,14 +6,28 @@ Authors: Leonardo de Moura
 This is modified version of Lean.Meta.Tactic.Simp.Main
 
 -/
-import Lean.Meta.Transform
-import Lean.Meta.Tactic.Replace
-import Lean.Meta.Tactic.UnifyEq
-import Lean.Meta.Tactic.Simp.Rewrite
-import Lean.Meta.Match.Value
+module
 
-import SciLean.Tactic.LSimp.Types
-import SciLean.Util.HoldLet
+public import Lean.Meta.Transform
+
+public meta import Lean.Meta.Transform
+public import Lean.Meta.Tactic.Replace
+public meta import Lean.Meta.Tactic.Replace
+public import Lean.Meta.Tactic.UnifyEq
+public meta import Lean.Meta.Tactic.UnifyEq
+public import Lean.Meta.Tactic.Simp.Rewrite
+public meta import Lean.Meta.Tactic.Simp.Rewrite
+public import Lean.Meta.Match.Value
+public meta import Lean.Meta.Match.Value
+
+public import SciLean.Tactic.LSimp.Types
+
+public meta import SciLean.Tactic.LSimp.Types
+public import SciLean.Util.HoldLet
+public meta import SciLean.Util.HoldLet
+
+@[expose] public meta section
+
 
 open Lean Meta
 
@@ -128,7 +142,7 @@ def Result.maybeLetBind (r : Result) (name := `x) : LSimpM Result :=timeThis "le
   return ← r.mkEqTrans r'
 
 
-private def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
+def projectCore? (e : Expr) (i : Nat) : MetaM (Option Expr) := do
   let e := toCtorIfLit e
   matchConstCtor e.getAppFn (fun _ => pure none) fun ctorVal _ =>
     let numArgs := e.getAppNumArgs
@@ -170,7 +184,7 @@ def withSimpConfig (a : MetaM α) : SimpM α := do
      zetaDelta := cfg'.zetaDelta}) a
 
 
-private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
+def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
   matchConst e.getAppFn (fun _ => pure none) fun cinfo _ => do
     match (← getProjectionFnInfo? cinfo.name) with
     | none => return none
@@ -215,7 +229,7 @@ private def reduceProjFnAux? (e : Expr) : LSimpM (Option Expr) := do
         reduceProjCont? (← unfoldDefinition? e)
 
 
-private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := timeThis "proj" do
+def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := timeThis "proj" do
   match (← reduceProjFnAux? e) with
   | none => return none
   | some e' =>
@@ -223,7 +237,7 @@ private def reduceProjFn? (e : Expr) : LSimpM (Option Expr) := timeThis "proj" d
     return e'
 
 
-private def reduceFVar (cfg : Simp.Config) (thms : SimpTheoremsArray) (e : Expr) : LSimpM Expr := do
+def reduceFVar (cfg : Simp.Config) (thms : SimpTheoremsArray) (e : Expr) : LSimpM Expr := do
   let localDecl ← getFVarLocalDecl e
   if cfg.zetaDelta || thms.isLetDeclToUnfold e.fvarId! || localDecl.isImplementationDetail then
     if !cfg.zetaDelta && thms.isLetDeclToUnfold e.fvarId! then
@@ -234,7 +248,7 @@ private def reduceFVar (cfg : Simp.Config) (thms : SimpTheoremsArray) (e : Expr)
     return e
 
 
-private partial def isMatchDef (declName : Name) : CoreM Bool := do
+partial def isMatchDef (declName : Name) : CoreM Bool := do
   let .defnInfo info ← getConstInfo declName | return false
   return go (← getEnv) info.value
 where
@@ -248,7 +262,7 @@ where
 /--
 Try to unfold `e`.
 -/
-private def unfold? (e : Expr) : LSimpM (Option Expr) := do
+def unfold? (e : Expr) : LSimpM (Option Expr) := do
   let f := e.getAppFn
   if !f.isConst then
     return none

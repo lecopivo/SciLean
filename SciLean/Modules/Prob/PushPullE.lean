@@ -1,6 +1,11 @@
-import SciLean.Modules.Prob.Rand
-import SciLean.Modules.Prob.DRand
-import SciLean.Modules.Prob.FDRand
+module
+
+public import SciLean.Modules.Prob.Rand
+public import SciLean.Modules.Prob.DRand
+public import SciLean.Modules.Prob.FDRand
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

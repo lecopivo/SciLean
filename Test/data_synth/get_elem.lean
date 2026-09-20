@@ -1,6 +1,11 @@
-import SciLean.Data.ArrayOperations.Operations.GetElem
-import SciLean.Data.DataArray.Float
-import SciLean.Data.DataArray.Algebra
+module
+
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+public import SciLean.Data.DataArray.Float
+public import SciLean.Data.DataArray.Algebra
+
+@[expose] public section
+
 
 open SciLean
 

@@ -1,7 +1,12 @@
-import SciLean.Data.DataArray.TensorProduct
-import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Algebra.TensorProduct.Prod
-import SciLean.Data.DataArray.Float
+module
+
+public import SciLean.Data.DataArray.TensorProduct
+public import SciLean.Data.DataArray.DataArrayEquiv
+public import SciLean.Algebra.TensorProduct.Prod
+public import SciLean.Data.DataArray.Float
+
+@[expose] public section
+
 
 open SciLean
 

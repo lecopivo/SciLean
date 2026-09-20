@@ -1,4 +1,9 @@
-import SciLean.Meta.SimpCore
+module
+
+public import SciLean.Meta.SimpCore
+
+@[expose] public section
+
 
 @[simp,simp_core] theorem Function.HasUncurry.uncurry_apply_1 (f : α → β) (x : α) : (↿f) x = f x := by rfl
 @[simp,simp_core] theorem Function.HasUncurry.uncurry_apply_2 (f : α → β → γ) (x : α) (y : β) : (↿f) (x,y) = f x y := by rfl

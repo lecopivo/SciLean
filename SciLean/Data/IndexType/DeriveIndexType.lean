@@ -1,6 +1,11 @@
-import Mathlib.Tactic.ProxyType
+module
 
-import SciLean.Data.IndexType.Basic
+public import Mathlib.Tactic.ProxyType
+
+public import SciLean.Data.IndexType.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 namespace IndexType
