@@ -36,7 +36,9 @@ theorem id_rule : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinear
 @[fun_prop]
 theorem const_zero_rule
   : IsLinearMap R (fun _ : X => (0 : Y))
-  := by constructor <;> simp
+  := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem comp_rule {f : Y → Z} {g : X → Y}
@@ -44,7 +46,9 @@ theorem comp_rule {f : Y → Z} {g : X → Y}
   ((mk' _ hf).comp (mk' _ hg)).isLinear
 
 @[fun_prop]
-theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by constructor <;> simp
+theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem pi_rule (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
