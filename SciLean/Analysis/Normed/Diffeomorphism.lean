@@ -154,7 +154,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HMul.hMul.arg_a0.Diffeomorphism_rule
+theorem HMul.hMul.arg_a0.Diffeomorphism_rule
   (f : X → K) (y : K) (hf : Diffeomorphism K f) (hy : y≠0)
   : Diffeomorphism K (fun x => f x * y) :=
 by
@@ -165,7 +165,7 @@ by
   · fun_trans; fun_prop (disch:=assumption)
 
 @[fun_prop]
-def HMul.hMul.arg_a1.Diffeomorphism_rule
+theorem HMul.hMul.arg_a1.Diffeomorphism_rule
   (y : K) (f : X → K) (hy : y≠0) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => y * f x) :=
 by
@@ -180,7 +180,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HSMul.hSMul.arg_a1.Diffeomorphism_rule
+theorem HSMul.hSMul.arg_a1.Diffeomorphism_rule
   (r : K) (f : X → Y) (hr : r≠0) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => r • f x) :=
 by
@@ -195,7 +195,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HDiv.hDiv.arg_a0.Diffeomorphism_rule
+theorem HDiv.hDiv.arg_a0.Diffeomorphism_rule
   (f : X → K) (r : K)
   (hf : Diffeomorphism K f) (hr : r ≠ 0)
   : Diffeomorphism K (fun x => f x / r) :=
@@ -211,7 +211,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def Nat.iterate.arg_a1.Diffeomorphism_rule
+theorem Nat.iterate.arg_a1.Diffeomorphism_rule
   (n : Nat) (f : X → X) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => f^[n] x) := by
   induction n

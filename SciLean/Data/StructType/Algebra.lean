@@ -12,6 +12,7 @@ public import SciLean.Meta.GenerateFunProp
 public import SciLean.Meta.GenerateAddGroupHomSimp
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 set_option linter.unusedVariables false

@@ -183,6 +183,7 @@ instance {𝕜} [RCLike 𝕜]
   dualProj_linear := sorry_proof
 
 
+@[instance_reducible]
 def CanonicalBasis.ofEquiv
     {J : Type*} (I : Type*) {Y : Type*} (X : Type*)
     {𝕜 : Type*} [RCLike 𝕜]

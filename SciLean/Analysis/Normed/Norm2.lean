@@ -5,6 +5,7 @@ public import Mathlib.Analysis.InnerProductSpace.Basic
 public import SciLean.Analysis.Scalar.Basic
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 namespace SciLean

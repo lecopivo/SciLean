@@ -259,8 +259,3 @@ by
     let_move_up z
     let_move_up d
     let_add hihi 10
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a

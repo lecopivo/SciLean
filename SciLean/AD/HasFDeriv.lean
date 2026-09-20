@@ -10,6 +10,7 @@ public import SciLean.Analysis.Calculus.FDeriv
 public import SciLean.Analysis.Normed.IsContinuousLinearMap
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 open SciLean

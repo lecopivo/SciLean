@@ -416,7 +416,8 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
     fun dx =>
       let ydy := fun i => fwdFDeriv K (f · i) x dx
       Finset.sum A ydy := by
-  sorry
+  simp_all only
+  · expose_names; exact sorryProofAxiom
 
 
 

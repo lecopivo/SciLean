@@ -9,6 +9,7 @@ public import SciLean.Tactic.FunTrans.Elab
 public import SciLean.Tactic.FunTrans.Attr
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 set_option linter.unusedVariables false

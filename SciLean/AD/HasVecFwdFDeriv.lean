@@ -419,6 +419,7 @@ theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
   sorry_proof
 
 
+set_option linter.overlappingInstances false in
 @[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasVecFwdFDeriv_comp_rule
     [SMul (𝕜ᵐᵒᵖ) W] [Star W]

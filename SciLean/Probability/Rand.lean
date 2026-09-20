@@ -15,6 +15,7 @@ public import SciLean.Probability.SimpAttr
 public import SciLean.Util.Limit
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 -- import Mathlib.Control.Random

@@ -171,7 +171,7 @@ by
     rw[fwdFDerivM_bind f' (fun x => pure (g' x)) hf (DifferentiableM_pure g' hg')]
     simp[fwdFDerivM_pure (K:=K) g' hg']
     fun_trans
-    simp
+    skip
 
 
 end fwdFDerivM

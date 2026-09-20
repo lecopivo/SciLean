@@ -67,6 +67,7 @@ instance : Random Id Float where
     let x := 2*x - 1
     return x
 
+set_option linter.checkUnivs false in
 instance [Random Id α] [Random Id β] : Random Id (α × β) where
   random := do
     let a ← rand α

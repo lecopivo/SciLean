@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Order.Notation
-public import Batteries.Lean.Float
+public import Batteries.Data.Float.Basic
 public import SciLean.FFI.Float
 
 @[expose] public section

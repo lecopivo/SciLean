@@ -42,7 +42,7 @@ data_array_data_synth_abbrev uncurry X R in x : HasRevFDeriv R by
     (df' := fun (_ : X^[J]^[I]) (dy : X^[I,J]) => dy.curry))
   case deriv => intros; data_synth
   case adjoint =>
-    intro x
+    intro _
     change HasAdjoint R (fun dx : X^[J]^[I] => dx.uncurry) (fun dy : X^[I,J] => dy.curry)
     data_synth
   case simp => rfl
@@ -52,7 +52,7 @@ data_array_data_synth_abbrev uncurry X R in x : HasRevFDerivUpdate R by
     (df' := fun (_ : X^[J]^[I]) (dy : X^[I,J]) (dx : X^[J]^[I]) => dx + dy.curry))
   case deriv => intros; data_synth
   case adjoint =>
-    intro x
+    intro _
     change HasAdjointUpdate R (fun dx : X^[J]^[I] => dx.uncurry)
       (fun dy : X^[I,J] => fun dx : X^[J]^[I] => dx + dy.curry)
     data_synth

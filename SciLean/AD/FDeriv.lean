@@ -141,6 +141,7 @@ theorem fderiv.let_rule
 by
   funext x; fun_trans
 
+omit [Fintype ι] in
 @[fun_trans]
 theorem fderiv.pi_rule_at
     (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x) :
@@ -149,6 +150,7 @@ theorem fderiv.pi_rule_at
     fun dx =>L[K] fun i =>
       fderiv K (f · i) x dx := fderiv_pi hf
 
+omit [Fintype ι] in
 @[fun_trans]
 theorem fderiv.pi_rule
     (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i)) :
@@ -357,7 +359,7 @@ theorem HInv.hInv.arg_a0a1.fderiv_rule_at
       let dy := fderiv K f x dx
       (-dy) / y^2 := by
   ext dx
-  rw[fderiv_comp']
+  rw[fderiv_fun_comp]
   rw[fderiv_inv]
   simp; ring
   apply differentiableAt_inv hx

@@ -124,6 +124,7 @@ by
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.ambiguousOpen false
 open ContinuousLinearMap IsContinuousLinearMap
 
 @[fun_prop]
@@ -236,7 +237,7 @@ theorem Neg.neg.arg_a0.IsContinuousLinearMap_rule
     IsContinuousLinearMap R fun x => - f x
 :=
   by_morphism (ContinuousLinearMap.neg.neg (mk' R f hf))
-  (by simp[ContinuousLinearMap.neg])
+  (by simp)
 
 
 
@@ -341,7 +342,7 @@ def ContinuousLinearMap.smulLeft
 
 
 @[simp]
-def ContinuousLinearMap.smul_left
+theorem ContinuousLinearMap.smul_left
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y] [ContinuousConstSMul R Y]
@@ -394,7 +395,7 @@ def ContinuousLinearMap.divRight
 
 
 @[simp]
-def ContinuousLinearMap.div_right
+theorem ContinuousLinearMap.div_right
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]

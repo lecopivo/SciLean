@@ -9,8 +9,8 @@ public import Mathlib.GroupTheory.GroupAction.Basic
 public meta import Mathlib.GroupTheory.GroupAction.Basic
 public import Mathlib.Algebra.GroupWithZero.Action.Defs
 public meta import Mathlib.Algebra.GroupWithZero.Action.Defs
-public import Mathlib.Data.Complex.Basic
-public meta import Mathlib.Data.Complex.Basic
+public import Mathlib.Basic.Complex.Basic
+public meta import Mathlib.Basic.Complex.Basic
 public import Mathlib.LinearAlgebra.Dimension.Constructions
 public meta import Mathlib.LinearAlgebra.Dimension.Constructions
 

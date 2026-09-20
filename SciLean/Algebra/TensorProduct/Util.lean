@@ -3,6 +3,7 @@ module
 public import SciLean.Algebra.TensorProduct.Basic
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 set_option linter.unusedSectionVars false

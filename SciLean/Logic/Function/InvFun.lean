@@ -189,7 +189,7 @@ theorem HSub.hSub.arg_a1.invFun_rule
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HMul.hMul.arg_a0.invFun_rule_group
+theorem HMul.hMul.arg_a0.invFun_rule_group
   [Group Y]
   (f : X → Y) (y : Y) (hf : Bijective f)
   : invFun (fun x => f x * y)
@@ -199,7 +199,7 @@ def HMul.hMul.arg_a0.invFun_rule_group
   := by sorry_proof
 
 @[fun_trans]
-def HMul.hMul.arg_a1.invFun_rule_group
+theorem HMul.hMul.arg_a1.invFun_rule_group
   [Group Y]
   (y : Y) (f : X → Y) (hf : Bijective f)
   : invFun (fun x => y * f x)
@@ -209,7 +209,7 @@ def HMul.hMul.arg_a1.invFun_rule_group
   := by sorry_proof
 
 @[fun_trans]
-def HMul.hMul.arg_a0.invFun_rule_field
+theorem HMul.hMul.arg_a0.invFun_rule_field
   [Field Y]
   (f : X → Y) (y : Y) (hf : Bijective f) (hy : y ≠ 0)
   : invFun (fun x => f x * y)
@@ -219,7 +219,7 @@ def HMul.hMul.arg_a0.invFun_rule_field
   := by sorry_proof
 
 @[fun_trans]
-def HMul.hMul.arg_a1.invFun_rule_field
+theorem HMul.hMul.arg_a1.invFun_rule_field
   [Field Y]
   (y : Y) (f : X → Y) (hf : Bijective f) (hy : y ≠ 0)
   : invFun (fun x => y * f x)
@@ -234,7 +234,7 @@ def HMul.hMul.arg_a1.invFun_rule_field
 
 
 @[fun_trans]
-def HSMul.hSMul.arg_a1.invFun_rule_group
+theorem HSMul.hSMul.arg_a1.invFun_rule_group
   [Group G] [MulAction G Y]
   (g : G) (f : X → Y) (hf : Bijective f)
   : invFun (fun x => g • f x)
@@ -245,7 +245,7 @@ def HSMul.hSMul.arg_a1.invFun_rule_group
 
 
 @[fun_trans]
-def HSMul.hSMul.arg_a1.invFun_rule_field
+theorem HSMul.hSMul.arg_a1.invFun_rule_field
   [Field R] [MulAction R Y]
   (r : R) (f : X → Y) (hf : Bijective f) (hr : r ≠ 0)
   : invFun (fun x => r • f x)
@@ -260,7 +260,7 @@ def HSMul.hSMul.arg_a1.invFun_rule_field
 
 
 @[fun_trans]
-def HVAdd.hVAdd.arg_a1.invFun_rule_group
+theorem HVAdd.hVAdd.arg_a1.invFun_rule_group
   [AddGroup G] [AddAction G Y]
   (g : G) (f : X → Y) (hf : Bijective f)
   : invFun (fun x => g +ᵥ f x)

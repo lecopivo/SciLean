@@ -56,36 +56,47 @@ instance {R X Y : Type*} [Add R] [Inner R X] [Inner R Y] : Inner R ((_ : X) × Y
   inner := fun ⟨a,b⟩ ⟨c,d⟩ => Inner.inner (𝕜:=R) a c + Inner.inner (𝕜:=R) b d
 
 
+@[instance_reducible]
 def Add.ofEquiv {X Y : Type*} [Add X] (f : X ≃ Y) : Add Y where
   add a b := f (f.symm a + f.symm b)
 
+@[instance_reducible]
 def Sub.ofEquiv {X Y : Type*} [Sub X] (f : X ≃ Y) : Sub Y where
   sub a b := f (f.symm a - f.symm b)
 
+@[instance_reducible]
 def Mul.ofEquiv {X Y : Type*} [Mul X] (f : X ≃ Y) : Mul Y where
   mul a b := f (f.symm a * f.symm b)
 
+@[instance_reducible]
 def Div.ofEquiv {X Y : Type*} [Div X] (f : X ≃ Y) : Div Y where
   div a b := f (f.symm a / f.symm b)
 
+@[instance_reducible]
 def Neg.ofEquiv {X Y : Type*} [Neg X] (f : X ≃ Y) : Neg Y where
   neg a := f (- f.symm a)
 
+@[instance_reducible]
 def Inv.ofEquiv {X Y : Type*} [Inv X] (f : X ≃ Y) : Inv Y where
   inv a := f (f.symm a)⁻¹
 
+@[instance_reducible]
 def Zero.ofEquiv {X Y : Type*} [Zero X] (f : X ≃ Y) : Zero Y where
   zero := f 0
 
+@[instance_reducible]
 def One.ofEquiv {X Y : Type*} [One X] (f : X ≃ Y) : One Y where
   one := f 1
 
+@[instance_reducible]
 def SMul.ofEquiv (R : Type*) {X Y : Type*} [SMul R X] (f : X ≃ Y) : SMul R Y where
   smul r a := f (r • f.symm a)
 
+@[instance_reducible]
 def Norm.ofEquiv {X Y : Type*} [Norm X] (f : X ≃ Y) : Norm Y where
   norm := fun y => ‖f.symm y‖
 
+@[instance_reducible]
 def Inner.ofEquiv {R X Y : Type*} [Inner R X] (f : X ≃ Y) : Inner R Y where
   inner := fun y y' => Inner.inner (𝕜:=R) (f.symm y) (f.symm y')
 
@@ -121,6 +132,7 @@ instance {R X Y : Type*} [Semiring R] [AddCommGroup X] [AddCommGroup Y] [Module 
   add_smul := sorry_proof
   zero_smul := sorry_proof
 
+@[instance_reducible]
 def AddCommGroup.ofEquiv {X Y : Type*} [AddCommGroup X] (f : X ≃ Y) : AddCommGroup Y where
   add := fun y y' => f (f.symm y + f.symm y')
   zero := f 0
@@ -140,6 +152,7 @@ def AddCommGroup.ofEquiv {X Y : Type*} [AddCommGroup X] (f : X ≃ Y) : AddCommG
   neg_add_cancel := sorry_proof
   add_comm := sorry_proof
 
+@[instance_reducible]
 def Module.ofEquiv  {R X Y : Type*} [Semiring R] [AddCommGroup X] [Module R X] [AddCommGroup Y]
     (f : X ≃ Y) : Module R Y where
   smul := fun r y => f (r•f.symm y)
@@ -168,6 +181,7 @@ instance {X Y : Type*} [MetricSpace X] [MetricSpace Y] : MetricSpace ((_ : X) ×
   dist_triangle := sorry_proof
   eq_of_dist_eq_zero := sorry_proof
 
+@[instance_reducible]
 def TopologicalSpace.ofEquiv {X Y : Type*} [TopologicalSpace X] (f : X ≃ Y) :
     TopologicalSpace Y where
   IsOpen A := IsOpen (f⁻¹' A)
@@ -175,6 +189,7 @@ def TopologicalSpace.ofEquiv {X Y : Type*} [TopologicalSpace X] (f : X ≃ Y) :
   isOpen_inter := sorry_proof
   isOpen_sUnion := sorry_proof
 
+@[instance_reducible]
 def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f : X ≃ Y) :
     UniformSpace Y where
   uniformity := default -- TODO: fix this !!!!
@@ -182,11 +197,13 @@ def UniformSpace.ofEquiv {X Y : Type*} [UniformSpace X] [TopologicalSpace Y] (f 
   comp := sorry_proof
   nhds_eq_comap_uniformity := sorry_proof
 
+@[instance_reducible]
 def UniformSpace.ofEquiv' {X Y : Type*} [UniformSpace X] (f : X ≃ Y) :
     UniformSpace Y := by
   have : TopologicalSpace Y := TopologicalSpace.ofEquiv f
   apply UniformSpace.ofEquiv f
 
+@[instance_reducible]
 def MetricSpace.ofEquiv {X Y : Type*} [MetricSpace X] (f : X ≃ Y) :
     MetricSpace Y where
   dist := fun y y' => (dist (f.symm y) (f.symm y'))
@@ -225,25 +242,30 @@ instance {R X Y : Type*} [RCLike R]
   smul_left := sorry_proof
 
 
+@[instance_reducible]
 def NormedAddCommGroup.ofEquiv {X Y : Type*} [NormedAddCommGroup X]
     [Norm Y] [AddCommGroup Y] [MetricSpace Y] (f : X ≃ Y) : NormedAddCommGroup Y where
   dist_eq := sorry_proof
 
+@[instance_reducible]
 def NormedAddCommGroup.ofEquiv' {X Y : Type*} [NormedAddCommGroup X] (f : X ≃ Y) : NormedAddCommGroup Y := by
   have : Norm Y := Norm.ofEquiv f
   have : AddCommGroup Y := AddCommGroup.ofEquiv f
   have : MetricSpace Y := MetricSpace.ofEquiv f
   apply NormedAddCommGroup.ofEquiv f
 
+@[instance_reducible]
 def NormedSpace.ofEquiv {R X Y : Type*} [RCLike R] [NormedAddCommGroup X] [NormedSpace R X]
     [NormedAddCommGroup Y] [Module R Y] (f : X ≃ Y) : NormedSpace R Y where
   norm_smul_le := sorry_proof
 
+@[instance_reducible]
 def NormedSpace.ofEquiv' {R X Y : Type*} [RCLike R] [NormedAddCommGroup X] [NormedSpace R X]
     [NormedAddCommGroup Y] (f : X ≃ Y) : NormedSpace R Y := by
   have : Module R Y := Module.ofEquiv f
   apply NormedSpace.ofEquiv f
 
+@[instance_reducible]
 def AdjointSpace.ofEquiv {R X Y : Type*} [RCLike R] [NormedAddCommGroup X] [AdjointSpace R X]
     [NormedAddCommGroup Y] [Inner R Y] [NormedSpace R Y] (f : X ≃ Y) : AdjointSpace R Y where
   inner_top_equiv_norm := sorry_proof
@@ -251,6 +273,7 @@ def AdjointSpace.ofEquiv {R X Y : Type*} [RCLike R] [NormedAddCommGroup X] [Adjo
   add_left := sorry_proof
   smul_left := sorry_proof
 
+@[instance_reducible]
 def AdjointSpace.ofEquiv' {R X Y : Type*} [RCLike R] [NormedAddCommGroup X] [AdjointSpace R X]
     [NormedAddCommGroup Y] (f : X ≃ Y) : AdjointSpace R Y := by
   have : NormedSpace R Y := NormedSpace.ofEquiv' f

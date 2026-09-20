@@ -15,6 +15,7 @@ public import SciLean.AD.Rules.Exp
 public import Mathlib.Probability.Distributions.Gaussian.Real
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 namespace SciLean

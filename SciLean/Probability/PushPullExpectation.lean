@@ -3,6 +3,7 @@ module
 public import SciLean.Probability.Rand
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 -- import SciLean.Core.FunctionPropositions
 -- import Mathlib
@@ -59,6 +60,7 @@ theorem ite_pull_mean_f {c} [Decidable c] (t : X) (e : Rand X) :
   if h : c then simp[h] else simp[h]
 
 -- this has messed up universes
+set_option warning.simp.otherHead false in
 @[rand_pull_E]
 theorem pull_E_lambda (r : Rand Y) (f : X → Y → Z) :
     (fun x => r.E (fun y => f x y))

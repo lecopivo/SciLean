@@ -7,6 +7,7 @@ public import SciLean.Analysis.Calculus.Notation.Deriv
 public import SciLean.Analysis.Calculus.Notation.FwdDeriv
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 namespace SciLean.Optimjl

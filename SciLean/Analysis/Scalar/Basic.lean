@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Analysis.RCLike.Basic
-public import Mathlib.Data.Real.Basic
+public import Mathlib.Basic.Real.Basic
 public import Mathlib.Analysis.Complex.Exponential
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.SpecialFunctions.Pow.Complex

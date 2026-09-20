@@ -105,7 +105,7 @@ partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Option (Syste
   for i in [0:fVals.size] do
 
     -- find the yVal with the minimal number of xVals in it
-    let (j,yVal,varSet) := eqs.minI
+    let (j,yVal,varSet) := eqs.rangeMinI
 
     let yType ← inferType yVal
 

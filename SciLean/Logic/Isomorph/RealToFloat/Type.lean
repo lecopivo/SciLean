@@ -3,9 +3,10 @@ module
 public import SciLean.Util.SorryProof
 public import SciLean.Logic.Isomorph.IsomorphicType
 
-public import Mathlib.Data.Real.Basic
+public import Mathlib.Basic.Real.Basic
 
 @[expose] public section
+set_option linter.overlappingInstances false
 
 
 namespace SciLean
