@@ -1,5 +1,5 @@
 import Lean
-import Mathlib.Logic.Nonempty
+import Mathlib.Basic.Nonempty
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Logic.Function.Basic
 import Mathlib.Algebra.Group.Int.Defs

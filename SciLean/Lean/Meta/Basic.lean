@@ -3,6 +3,7 @@ import Batteries.Lean.Expr
 
 import SciLean.Lean.Expr
 import SciLean.Lean.Array
+import SciLean.Lean.ExceptToEmoji
 
 namespace Lean
 

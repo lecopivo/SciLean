@@ -1,7 +1,6 @@
 import Lean
 import Qq
 import Batteries.Lean.Expr
-import Mathlib.Lean.Expr
 import Mathlib.Tactic.FunProp.ToBatteries
 
 namespace Lean.Expr

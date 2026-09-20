@@ -390,7 +390,7 @@ theorem HInv.hInv.arg_a0a1.fwdFDeriv_rule_at
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
+theorem HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
     fwdFDeriv K (fun x : K => x ^ n)
     =
     fun x dx : K =>
@@ -411,8 +411,7 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
     fun dx =>
       let ydy := fun i => fwdFDeriv K (f · i) x dx
       Finset.sum A ydy := by
-  unfold fwdFDeriv; fun_trans
-  sorry_proof
+  sorry
 
 
 

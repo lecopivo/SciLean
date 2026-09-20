@@ -198,12 +198,16 @@ def MetricSpace.ofEquiv {X Y : Type*} [MetricSpace X] (f : X ≃ Y) :
 
 instance {X Y : Type*} [NormedAddCommGroup X] [NormedAddCommGroup Y] :
     NormedAddCommGroup ((_ : X) × Y) where
-  dist_eq : ∀ x y, dist x y = ‖x - y‖ := sorry_proof
+  dist_eq := sorry_proof
 
 instance {R X Y : Type*} [RCLike R]
     [NormedAddCommGroup X] [NormedSpace R X]
     [NormedAddCommGroup Y] [NormedSpace R Y] :
     NormedSpace R ((_ : X) × Y) where
+  smul_zero := sorry_proof
+  smul_add := sorry_proof
+  add_smul := sorry_proof
+  zero_smul := sorry_proof
   norm_smul_le := sorry_proof
 
 instance {R X Y : Type*} [RCLike R]

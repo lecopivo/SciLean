@@ -106,7 +106,7 @@ structure State where
   /-- Cache storing lsimp results. -/
   cache : IO.Ref Cache
   simpState : IO.Ref Simp.State
-  timings : Batteries.RBMap String Aesop.Nanos compare := {}
+  timings : Lean.RBMap String Aesop.Nanos compare := {}
 
 abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM
 
@@ -139,7 +139,7 @@ instance : Inhabited (LSimpM α) where
 
 def timeThis (key : String) (x : LSimpM α) : LSimpM α := do
   let (a, t) ← Aesop.time x
-  modifyThe State fun s => {s with timings := s.timings.alter key (fun t' => .some (t'.getD 0 + t))}
+  modifyThe State fun s => {s with timings := s.timings.insert key (s.timings.findD key 0 + t)}
   return a
 
 def _root_.Aesop.Nanos.print (n : Aesop.Nanos) : String :=

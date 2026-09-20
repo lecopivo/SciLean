@@ -64,7 +64,7 @@ theorem hasFDerivAt_comp {g : E → F} {f : F → G} {g' : E →L[𝕜] F} {f'  
         let dy := g' dx
         let dz := f' dy
         dz) x :=
-  HasFDerivAtFilter.comp x hf hg hg.continuousAt
+  HasFDerivAt.comp x hf hg
 
 theorem hasFDerivAt_let {g : E → F} {f : F → E → G} {g' : E →L[𝕜] F} {f'  : F×E →L[𝕜] G} (x : E)
     (hg : HasFDerivAt g g' x) (hf : HasFDerivAt ↿f f' (g x,x)) :

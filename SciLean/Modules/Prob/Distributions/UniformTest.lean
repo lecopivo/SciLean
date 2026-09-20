@@ -3,7 +3,7 @@ import SciLean.Modules.Prob.Distributions.Uniform
 
 import Mathlib.Tactic.FieldSimp
 
-import Mathlib.Lean.Expr
+import Batteries.Lean.Expr
 
 open MeasureTheory ENNReal BigOperators Finset
 

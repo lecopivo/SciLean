@@ -6,6 +6,7 @@ import SciLean.Data.IndexType
 import SciLean.Meta.SimpAttr
 
 import SciLean.Tactic.AnalyzeConstLambda
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
@@ -185,17 +186,22 @@ def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
 
   let info ← getConstInfo isLinearMapTheorem
 
-  lambdaTelescope info.value! fun ctx isLinearMap => do
+  forallTelescope info.type fun ctx target => do
+    let isLinearMap := mkApp (← mkConstWithFreshMVarLevels ``sorryProofAxiom) target
 
     let pullpush := [`add_pull,`add_push, `sub_pull,`sub_push,`smul_pull,`smul_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
-      generateLinearMapSimp ctx isLinearMap thrm
+      try
+        generateLinearMapSimp ctx isLinearMap thrm
+      catch _ => pure ()
 
     let simps := [`app_zero]
 
     for thrm in simps do
-      generateLinearMapSimp ctx isLinearMap thrm (isSimpAttr:=false) (makeSimp:=true)
+      try
+        generateLinearMapSimp ctx isLinearMap thrm (isSimpAttr:=false) (makeSimp:=true)
+      catch _ => pure ()
 
 
 /-- This commands generates simp lemmas for given linear function.

@@ -38,7 +38,7 @@ theorem setElem.arg_xsv.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
     [AddCommGroup Y] [Module 𝕜 Y] [TopologicalSpace Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) :
     IsContinuousLinearMap 𝕜 (fun xy : X×Y => setElem xy.1 i xy.2 .intro) := by
-  constructor; fun_prop; dsimp[autoParam]; fun_prop
+  constructor <;> fun_prop
 
 @[data_synth]
 theorem setElem.arg_xsv.HasFDerivAt_rule {𝕜 X I Y : Type*}

@@ -20,7 +20,7 @@ theorem getElem.arg_xs.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
     [AddCommGroup Y] [Module 𝕜 Y] [TopologicalSpace Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) :
     IsContinuousLinearMap 𝕜 (fun x : X => x[i]) := by
-  constructor; fun_prop; dsimp[autoParam]; fun_prop
+  constructor <;> fun_prop
 
 @[data_synth]
 theorem getElem.arg_xs.HasFDerivAt_rule {𝕜 X I Y : Type*}

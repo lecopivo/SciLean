@@ -14,11 +14,10 @@ def getMatchWithExtra (d : RefinedDiscrTree α) (e : Expr) (unify : Bool) :
   let mut numExtraArgs := 0
   while true do
     let (matchResult, _) ← d.getMatch e' unify (matchRootStar := true)
-    if let .ok matchResult := matchResult then
-      -- MatchResult.elts is TreeMap Nat (Array (Array α))
-      for (score, arrs) in matchResult.elts do
-        for thms in arrs do
-          results := results.push (thms, (score, numExtraArgs))
+    -- MatchResult.elts is TreeMap Nat (Array (Array α))
+    for (score, arrs) in matchResult.elts do
+      for thms in arrs do
+        results := results.push (thms, (score, numExtraArgs))
     if e'.isApp then
       e' := e'.appFn!
       numExtraArgs := numExtraArgs + 1

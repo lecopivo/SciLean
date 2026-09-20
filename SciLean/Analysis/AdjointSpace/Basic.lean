@@ -137,7 +137,7 @@ theorem real_inner_self_nonneg {x : F} : 0 ≤ ⟪x, x⟫_ℝ :=
 
 @[simp mid+1, simp_core mid+1]
 theorem inner_self_ofReal_re (x : E) : (re ⟪x, x⟫ : 𝕜) = ⟪x, x⟫ :=
-  ((RCLike.is_real_TFAE (⟪x, x⟫ : 𝕜)).out 2 3).2 (inner_self_im _)
+  ((RCLike.is_real_TFAE (⟪x, x⟫ : 𝕜)).out 3 4).2 (inner_self_im _)
 
 @[simp mid+1, simp_core mid+1]
 theorem inner_self_nonpos {x : E} : re ⟪x, x⟫ ≤ 0 ↔ x = 0 := by

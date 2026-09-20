@@ -5,6 +5,7 @@ import SciLean.Data.Instances.Sigma
 
 import SciLean.Tactic.SimpleProxyType
 import SciLean.Tactic.LSimp
+import Mathlib.Data.Fintype.Sum
 
 namespace SciLean
 
@@ -21,8 +22,8 @@ namespace Float2
     size := 2
 
   inductive Index | x | y
-    deriving Fintype
 
+  instance : Fintype Index := Fintype.ofEquiv _ (simple_proxy_equiv% Index)
   instance : IndexType Index 2 := IndexType.ofEquiv _ (simple_proxy_equiv% Index)
 
   -- Array Operations with `Index` ---
@@ -112,22 +113,22 @@ namespace Float2
   instance : DefaultIndexOfRank Float2 1 Index where
   instance {I n} [IndexType I n] : HasRnEquiv (Float2^[I]) (I × Index) Float where
 
-  instance : Add Float2 := (Add.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Sub Float2 := (Sub.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Neg Float2 := (Neg.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Mul Float2 := (Mul.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Div Float2 := (Div.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : SMul Float Float2 := (SMul.ofEquiv Float (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Zero Float2 := (Zero.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Norm Float2 := (Norm.ofEquiv (proxy_equiv% Float2)) rewrite_by reduce
-  instance : Inner Float Float2 := (Inner.ofEquiv (R:=Float) (proxy_equiv% Float2)) rewrite_by reduce
+  instance : Add Float2 := Add.ofEquiv (proxy_equiv% Float2)
+  instance : Sub Float2 := Sub.ofEquiv (proxy_equiv% Float2)
+  instance : Neg Float2 := Neg.ofEquiv (proxy_equiv% Float2)
+  instance : Mul Float2 := Mul.ofEquiv (proxy_equiv% Float2)
+  instance : Div Float2 := Div.ofEquiv (proxy_equiv% Float2)
+  instance : SMul Float Float2 := SMul.ofEquiv Float (proxy_equiv% Float2)
+  instance : Zero Float2 := Zero.ofEquiv (proxy_equiv% Float2)
+  instance : Norm Float2 := Norm.ofEquiv (proxy_equiv% Float2)
+  instance : Inner Float Float2 := Inner.ofEquiv (R:=Float) (proxy_equiv% Float2)
 
   instance : AddCommGroup Float2 := AddCommGroup.ofEquiv (proxy_equiv% Float2)
   instance : Module Float Float2 := Module.ofEquiv (proxy_equiv% Float2)
 
   instance : MetricSpace Float2 := MetricSpace.ofEquiv (proxy_equiv% Float2)
   instance : NormedAddCommGroup Float2 := NormedAddCommGroup.ofEquiv (proxy_equiv% Float2)
-  instance : NormedSpace Float Float2 := NormedSpace.ofEquiv (proxy_equiv% Float2)
+  instance : NormedSpace Float Float2 := NormedSpace.ofEquiv' (proxy_equiv% Float2)
   instance : AdjointSpace Float Float2 := AdjointSpace.ofEquiv (proxy_equiv% Float2)
 
 end Float2
@@ -203,22 +204,22 @@ namespace Float3
 
   instance {I n} [IndexType I n] : HasRnEquiv (Float3^[I]) (I × Idx 3) Float where
 
-  instance : Add Float3 := (Add.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Sub Float3 := (Sub.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Neg Float3 := (Neg.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Mul Float3 := (Mul.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Div Float3 := (Div.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : SMul Float Float3 := (SMul.ofEquiv Float (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Zero Float3 := (Zero.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Norm Float3 := (Norm.ofEquiv (proxy_equiv% Float3)) rewrite_by reduce
-  instance : Inner Float Float3 := (Inner.ofEquiv (R:=Float) (proxy_equiv% Float3)) rewrite_by reduce
+  instance : Add Float3 := Add.ofEquiv (proxy_equiv% Float3)
+  instance : Sub Float3 := Sub.ofEquiv (proxy_equiv% Float3)
+  instance : Neg Float3 := Neg.ofEquiv (proxy_equiv% Float3)
+  instance : Mul Float3 := Mul.ofEquiv (proxy_equiv% Float3)
+  instance : Div Float3 := Div.ofEquiv (proxy_equiv% Float3)
+  instance : SMul Float Float3 := SMul.ofEquiv Float (proxy_equiv% Float3)
+  instance : Zero Float3 := Zero.ofEquiv (proxy_equiv% Float3)
+  instance : Norm Float3 := Norm.ofEquiv (proxy_equiv% Float3)
+  instance : Inner Float Float3 := Inner.ofEquiv (R:=Float) (proxy_equiv% Float3)
 
   instance : AddCommGroup Float3 := AddCommGroup.ofEquiv (proxy_equiv% Float3)
   instance : Module Float Float3 := Module.ofEquiv (proxy_equiv% Float3)
 
   instance : MetricSpace Float3 := MetricSpace.ofEquiv (proxy_equiv% Float3)
   instance : NormedAddCommGroup Float3 := NormedAddCommGroup.ofEquiv (proxy_equiv% Float3)
-  instance : NormedSpace Float Float3 := NormedSpace.ofEquiv (proxy_equiv% Float3)
+  instance : NormedSpace Float Float3 := NormedSpace.ofEquiv' (proxy_equiv% Float3)
   instance : AdjointSpace Float Float3 := AdjointSpace.ofEquiv (proxy_equiv% Float3)
 
   def cross (u v : Float3) : Float3 :=
@@ -304,8 +305,10 @@ namespace Float4
 
   instance {I n} [IndexType I n] : HasRnEquiv (Float4^[I]) (I × Idx 4) Float where
 
-  instance : Add Float4 := (Add.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
-  instance : Sub Float4 := (Sub.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
-  instance : Neg Float4 := (Neg.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
-  instance : Mul Float4 := (Mul.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
-  instance : Div Float4 := (Div.ofEquiv (proxy_equiv% Float4)) rewrite_by reduce
+  instance : Add Float4 := Add.ofEquiv (proxy_equiv% Float4)
+  instance : Sub Float4 := Sub.ofEquiv (proxy_equiv% Float4)
+  instance : Neg Float4 := Neg.ofEquiv (proxy_equiv% Float4)
+  instance : Mul Float4 := Mul.ofEquiv (proxy_equiv% Float4)
+  instance : Div Float4 := Div.ofEquiv (proxy_equiv% Float4)
+
+end Float4

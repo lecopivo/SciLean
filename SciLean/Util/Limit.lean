@@ -4,7 +4,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 
 noncomputable
 def _root_.Filter.limit {β} [TopologicalSpace β] [Nonempty β]
-  (l : Filter α) (f : α → β) : β := lim (l.map f)
+  (l : Filter α) (f : α → β) : β := Filter.lim (l.map f)
 
 @[simp]
 theorem Filter.limit_of_const {β} [TopologicalSpace β] [Nonempty β]

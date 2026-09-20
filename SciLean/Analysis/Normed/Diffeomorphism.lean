@@ -243,7 +243,7 @@ by
   ext x dx
   have H : (fun dx => (fderiv K (f ∘ invFun f) (g x)) dx)
            =
-           id := by simp[show (f ∘ Function.invFun f) = id from sorry_proof]; unfold id; fun_trans
+           id := by simp [show (f ∘ Function.invFun f) = id from sorry_proof]; rfl
   have q : fderiv K f (invFun f (g x)) (fderiv K (fun x => invFun f (g x)) x dx) = fderiv K g x dx := sorry_proof
   sorry_proof
 

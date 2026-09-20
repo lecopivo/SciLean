@@ -12,6 +12,7 @@ import SciLean.Tactic.FunTrans.Types
 import Mathlib.Tactic.FunProp.Core
 import Mathlib.Tactic.FunProp.Types
 import SciLean.Lean.Meta.RefinedDiscrTree
+import SciLean.Lean.ExceptToEmoji
 
 /-!
 ## `funTrans` core tactic algorithm
@@ -262,7 +263,7 @@ def applyMorTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.F
   | .underApplied =>
     applyPiRule funTransDecl e (← fData.toExpr)
   | .overApplied =>
-    let .some (f,g) ← fData.peeloffArgDecomposition | return none
+    let .comp f g ← fData.peeloffArgDecomposition | return none
     applyCompRule funTransDecl e f g
   | .exact =>
     let ext := (morTheoremsExt.getState (← getEnv))
@@ -316,7 +317,7 @@ def getLocalTheorems (funTransDecl : FunTransDecl) (funOrigin : FunProp.Origin)
 
       unless FunProp.isOrderedSubsetOf mainArgs fData.mainArgs do return none
 
-      let dec? ← fData.nontrivialDecomposition
+      let dec ← fData.decomposition
 
       let thm : FunctionTheorem := {
         funTransName := funTransDecl.funTransName
@@ -326,7 +327,7 @@ def getLocalTheorems (funTransDecl : FunTransDecl) (funOrigin : FunProp.Origin)
         mainArgs := fData.mainArgs
         appliedArgs := fData.args.size
         priority := eval_prio default
-        form := if dec?.isSome then .comp else .uncurried
+        form := dec.toTheoremForm
       }
 
       return .some thm
@@ -351,7 +352,7 @@ def tryTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
   -- none - decomposition not tried
   -- some none - decomposition failed
   -- some some (f, g) - succesfull decomposition
-  let mut dec? : Option (Option (Expr × Expr)) := none
+  let mut dec? : Option FunProp.DecompositionResult := none
 
   for thm in thms do
 
@@ -377,17 +378,17 @@ def tryTheorems (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
 
         if thm.mainArgs.size == fData.mainArgs.size then
           if dec?.isNone then
-            dec? := .some (← fData.nontrivialDecomposition)
+            dec? := .some (← fData.decomposition)
           match dec? with
-          | .some .none =>
-            if let .some r ← tryTheorem? e thm.thmOrigin then
-              return r
-          | .some (.some (f,g)) =>
+          | .some (.comp f g) =>
             trace[Meta.Tactic.fun_trans.step]
               s!"decomposing to later use {←ppOrigin' thm.thmOrigin}, {← ppExpr (←fData.toExpr)} = {← ppExpr f}∘{← ppExpr g}"
             if let .some r ← applyCompRule funTransDecl e f g then
               return r
-          | _ => continue
+          | .some _ =>
+            if let .some r ← tryTheorem? e thm.thmOrigin then
+              return r
+          | none => continue
         else
           trace[Meta.Tactic.fun_trans.step]
             s!"decomposing in args {thm.mainArgs} to later use {←ppOrigin' thm.thmOrigin}"
@@ -444,7 +445,7 @@ def bvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
   if (← fData.isMorApplication) != .none then
     applyMorTheorems funTransDecl e fData
   else
-    if let .some (f, g) ← fData.nontrivialDecomposition then
+    if let .comp f g ← fData.decomposition then
       applyCompRule funTransDecl e f g
     else
       applyApplyRule funTransDecl e
@@ -476,7 +477,7 @@ def bvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Functi
 
 def fvarAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.FunctionData) : SimpM (Option Simp.Result) := do
   trace[Meta.Tactic.fun_trans.step] "fvar app case"
-  if let .some (f,g) ← fData.nontrivialDecomposition then
+  if let .comp f g ← fData.decomposition then
     if let .some r ← applyMorTheorems funTransDecl e fData then
       return r
 
@@ -556,7 +557,7 @@ def constAppCase (funTransDecl : FunTransDecl) (e : Expr) (fData : FunProp.Funct
   if let .some r ← applyMorTheorems funTransDecl e fData then
     return r
 
-  if let .some (f,g) ← fData.nontrivialDecomposition then
+  if let .comp f g ← fData.decomposition then
     -- if ← morphismGuard fData then
       if let .some r ← applyCompRule funTransDecl e f g then
         return r

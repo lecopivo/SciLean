@@ -244,7 +244,7 @@ theorem HAdd.hAdd.arg_a0a1.IsContinuousLinearMap_rule [ContinuousAdd Y]
   : IsContinuousLinearMap R fun x => f x + g x
 :=
   by_morphism (ContinuousLinearMap.add.add (mk' R f hf) (mk' R g hg))
-  (by simp[ContinuousLinearMap.add])
+  (by intros; rfl)
 
 
 
@@ -260,7 +260,7 @@ theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule
   : IsContinuousLinearMap R fun x => f x - g x
 :=
   by_morphism (ContinuousLinearMap.sub.sub (mk' R f hf) (mk' R g hg))
-  (by simp[ContinuousLinearMap.sub])
+  (by intros; rfl)
 
 
 
@@ -501,7 +501,7 @@ theorem ContinuousLinearMap.mk'.arg_f.IsContinuousLinearMap
   · constructor
     · intro x x'; ext y; apply (hfx y).1 x x'
     · intro k x; ext y; apply (hfx y).2 k x
-  · dsimp[autoParam]; sorry_proof
+  · sorry_proof
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :

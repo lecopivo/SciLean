@@ -6,7 +6,7 @@ import Mathlib.Tactic.FieldSimp
 
 import SciLean.Core.FunctionPropositions
 
-import Mathlib.Lean.Expr
+import Batteries.Lean.Expr
 
 open MeasureTheory ENNReal BigOperators Finset Measure
 

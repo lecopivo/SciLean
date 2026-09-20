@@ -16,7 +16,7 @@ structure _root_.Lean.Meta.ContextCfg where
   configKey         : UInt64               := config.toKey
   defEqCtx?         : Option DefEqContext  := none
   synthPendingDepth : Nat                  := 0
-  canUnfold?        : Option (Meta.Config → ConstantInfo → CoreM Bool) := none
+  customCanUnfoldPredicate? : Option (Meta.Config → ConstantInfo → CoreM Bool) := none
   univApprox        : Bool := false
   inTypeClassResolution : Bool := false
 
@@ -34,7 +34,7 @@ def Lean.Meta.Context.toCfg (ctx : Meta.Context) : CoreM ContextCfg := do return
   config := ← ctx.getConfig
   defEqCtx? := ctx.defEqCtx?
   synthPendingDepth := ctx.synthPendingDepth
-  canUnfold? := ctx.canUnfold?
+  customCanUnfoldPredicate? := ctx.customCanUnfoldPredicate?
   univApprox := ctx.univApprox
   inTypeClassResolution := ctx.inTypeClassResolution
 }
@@ -48,7 +48,7 @@ def _root_.Lean.Meta.Context.mkCtxCfg (ctx : ContextCtx) (cfg : ContextCfg) : Me
     localInstances := ctx.localInstances
     defEqCtx? := cfg.defEqCtx?
     synthPendingDepth := cfg.synthPendingDepth
-    canUnfold? := cfg.canUnfold?
+    customCanUnfoldPredicate? := cfg.customCanUnfoldPredicate?
     univApprox := cfg.univApprox
     inTypeClassResolution := cfg.inTypeClassResolution
     cacheInferType := true }
@@ -82,7 +82,7 @@ abbrev MetaLCtxM  := ReaderT Meta.ContextCfg $ StateT Meta.ContextCtx $ StateRef
 
 
 @[always_inline]
-instance : Monad MetaLCtxM := let i := inferInstanceAs (Monad MetaLCtxM); { pure := i.pure, bind := i.bind }
+instance : Monad MetaLCtxM := inferInstance
 
 instance {α} [Inhabited α] : Inhabited (MetaLCtxM α) where
   default := fun _ ctx => do pure (default,ctx)

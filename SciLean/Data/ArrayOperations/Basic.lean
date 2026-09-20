@@ -213,11 +213,6 @@ instance [OfFn α ι γ] [OfFn β κ γ] :
     OfFn (α×β) (ι⊕κ) γ where
   ofFn f := (ofFn (fun i => f (.inl i)), ofFn (fun j => f (.inr j)))
 
-instance [GetElem' α ι γ] [GetElem' β κ γ]
-    [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
-    LawfulOfFn (α×β) (ι⊕κ) where
-  getElem_ofFn := by intro f i; cases i <;> simp[getElem]
-
 @[simp, simp_core]
 theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (i : ι) : (x,y)[Sum.inl (β:=κ) i] = x[i] := by rfl
@@ -225,6 +220,15 @@ theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
 @[simp, simp_core]
 theorem getElem_prod_inr [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (j : κ) : (x,y)[Sum.inr (α:=ι) j] = y[j] := by rfl
+
+instance [GetElem' α ι γ] [GetElem' β κ γ]
+    [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
+    LawfulOfFn (α×β) (ι⊕κ) where
+  getElem_ofFn := by
+    intro f i
+    cases i
+    · simp [ofFn, getElem_ofFn]
+    · simp [ofFn, getElem_ofFn]
 
 
 ----------------------------------------------------------------------------------------------------

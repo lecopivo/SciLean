@@ -8,6 +8,7 @@ import SciLean.Lean.Meta.RefinedDiscrTree
 import SciLean.Tactic.LetNormalize2
 
 import SciLean.Lean.ToSSA
+import SciLean.Lean.ExceptToEmoji
 
 open Lean Meta Qq
 open Mathlib.Meta.FunProp

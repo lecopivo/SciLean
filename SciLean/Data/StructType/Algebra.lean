@@ -128,7 +128,7 @@ instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J)
 @[reducible]
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] (i : I ⊕ J) :
     NormedAddCommGroup (Sum.rec EI FJ i) where
-  dist_eq : ∀ x y, dist x y = ‖x - y‖ := by sorry_proof
+  dist_eq := sorry_proof
 
 
 @[reducible]
@@ -149,6 +149,10 @@ instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
          [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] (i : I ⊕ J)
   : AdjointSpace K (Sum.rec EI FJ i) where
+  smul_zero := sorry_proof
+  smul_add := sorry_proof
+  add_smul := sorry_proof
+  zero_smul := sorry_proof
   norm_smul_le := sorry_proof
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof

@@ -75,13 +75,7 @@ def RandWithTrace.bind (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
     pure (tx,ty)
   map  := fun (wx,wy) => (f (x.map wx)).map wy
   hmap := by simp; sorry_proof
-  htype := by
-    simp[Trace.type]
-    rw[← x.htype]
-    -- how do I get element of `X` in this proof to invoke `(f x).htype`?
-    -- I can probably do case on `Nonempty X`
-    -- rw[← (f sorry).htype]
-    sorry_proof
+  htype := sorry_proof
 
 def sample {X} (x : Rand X) (tag : Name) :
     RandWithTrace X (.single tag X) X where

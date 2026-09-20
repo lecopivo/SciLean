@@ -274,7 +274,7 @@ theorem HMul.hMul.arg_a0a1.fderiv_rule_at
       let dz := fderiv K g x dx
       y * dz + z * dy := by
   ext dx
-  simpa [mul_comm] using congrArg (fun F => F dx) (fderiv_mul hf hg)
+  simpa [mul_comm, Pi.mul_def] using congrArg (fun F => F dx) (fderiv_mul hf hg)
 
 
 
@@ -363,7 +363,7 @@ theorem HInv.hInv.arg_a0a1.fderiv_rule_at
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.fderiv_rule_at (n : Nat) (x : X)
+theorem HPow.hPow.arg_a0.fderiv_rule_at (n : Nat) (x : X)
     (f : X → K) (hf : DifferentiableAt K f x) :
     fderiv K (fun x => f x ^ n) x
     =

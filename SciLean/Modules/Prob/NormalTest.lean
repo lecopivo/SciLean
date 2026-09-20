@@ -5,7 +5,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Comp
 import Mathlib.Analysis.Calculus.FDeriv.Add
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 
-import Mathlib.Lean.Expr
+import Batteries.Lean.Expr
 
 open MeasureTheory ENNReal BigOperators Finset
 

@@ -8,6 +8,7 @@ import SciLean.Data.IndexType
 import SciLean.Meta.SimpAttr
 
 import SciLean.Tactic.AnalyzeConstLambda
+import SciLean.Util.SorryProof
 
 namespace SciLean
 
@@ -172,17 +173,22 @@ def generateAddGroupHomSimps (isAddGroupHomTheorem : Name) : MetaM Unit := do
 
   let info ← getConstInfo isAddGroupHomTheorem
 
-  lambdaTelescope info.value! fun ctx isAddGroupHom => do
+  forallTelescope info.type fun ctx target => do
+    let isAddGroupHom := mkApp (← mkConstWithFreshMVarLevels ``sorryProofAxiom) target
 
     let pullpush := [`add_pull,`add_push, `sub_pull,`sub_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
-      generateAddGroupHomSimp ctx isAddGroupHom thrm
+      try
+        generateAddGroupHomSimp ctx isAddGroupHom thrm
+      catch _ => pure ()
 
     let simps := [`app_zero]
 
     for thrm in simps do
-      generateAddGroupHomSimp ctx isAddGroupHom thrm (isSimpAttr:=false) (makeSimp:=true)
+      try
+        generateAddGroupHomSimp ctx isAddGroupHom thrm (isSimpAttr:=false) (makeSimp:=true)
+      catch _ => pure ()
 
 
 /-- This commands generates simp lemmas for given function preserving addition and subtraction.

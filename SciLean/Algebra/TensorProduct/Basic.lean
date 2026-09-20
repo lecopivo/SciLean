@@ -21,7 +21,7 @@ TODO: TensorProductType should accept this as an input
 inductive TansorProductTag where
   | dense
   | sparse
-  | custom (name : Name)
+  | custom (name : Lean.Name)
 
 open TensorProduct  in
 /-- `TensorProductType R Y X YX` says that `YX` is mathematical tensor product `Y ⊗ X`.

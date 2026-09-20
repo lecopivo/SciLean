@@ -186,7 +186,9 @@ theorem matVecMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
 theorem matVecMul_eq_matVecMulAdd
     {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R Y X M] [MatrixMulNotation M]
     (A : M) (x : X) :
-    A * x = matVecMulAdd (1:R) A x (0:R) (0:Y) := by simp[matVecMulAdd_spec]
+    A * x =
+      have : TensorProductType R Y X M := MatrixType.toTensorProductType
+      matVecMulAdd (1:R) A x (0:R) (0:Y) := rfl
 
 variable [Axpby R Y]
 
@@ -223,7 +225,9 @@ theorem vecMatMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
 theorem vecMatMul_eq_vecMatMulAdd
     {M : Type*} [AddCommGroup M] [Module R M] [MatrixType R Y X M] [MatrixMulNotation M]
     (A : M) (y : Y) :
-    y * A = vecMatMulAdd (1:R) y A (0:R) (0:X) := by simp[vecMatMulAdd_spec]
+    y * A =
+      have : TensorProductType R Y X M := MatrixType.toTensorProductType
+      vecMatMulAdd (1:R) y A (0:R) (0:X) := rfl
 
 variable [Axpby R X]
 
