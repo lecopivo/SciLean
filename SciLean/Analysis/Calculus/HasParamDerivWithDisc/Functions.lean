@@ -1,11 +1,16 @@
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
+module
 
-import SciLean.Analysis.SpecialFunctions.Norm2
-import SciLean.Analysis.SpecialFunctions.Exp
-import SciLean.Analysis.SpecialFunctions.Trigonometric
-import SciLean.Analysis.SpecialFunctions.Gaussian
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
+
+public import SciLean.Analysis.SpecialFunctions.Norm2
+public import SciLean.Analysis.SpecialFunctions.Exp
+public import SciLean.Analysis.SpecialFunctions.Trigonometric
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+
+@[expose] public section
+
 
 
 

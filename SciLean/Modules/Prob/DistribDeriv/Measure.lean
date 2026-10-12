@@ -1,9 +1,14 @@
-import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+module
 
-import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
-import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
-import SciLean.Modules.Prob.DerivUnderIntegralSign
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+
+public import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
+public import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
+public import SciLean.Modules.Prob.DerivUnderIntegralSign
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

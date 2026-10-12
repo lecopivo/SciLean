@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
+module
 
-import SciLean.Meta.GenerateFunProp
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+
+public import SciLean.Meta.GenerateFunProp
+
+@[expose] public section
+
 
 open ComplexConjugate
 

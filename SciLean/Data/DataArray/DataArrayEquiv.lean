@@ -1,5 +1,10 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.ArrayOperations.Algebra
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.ArrayOperations.Algebra
+
+@[expose] public section
+
 
 namespace SciLean
 

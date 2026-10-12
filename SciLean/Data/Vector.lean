@@ -1,8 +1,13 @@
-import Mathlib.Algebra.Group.Defs
-import Mathlib.Algebra.Module.Defs
+module
 
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Algebra.Module.Defs
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -49,11 +54,11 @@ instance [Zero X] : Zero (Vector X n) := ⟨⟨Array.replicate n (0:X), by simp�
 
 @[simp, simp_core]
 theorem Vector.getElem_add [Add X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x + y)[i] = x[i] + y[i] := by
-  simp[getElem,HAdd.hAdd,Add.add]; unfold Vector.get; simp
+  simp [HAdd.hAdd, Add.add, Vector.getElem_mapFinIdx]
 
 @[simp, simp_core]
 theorem Vector.getElem_sub [Sub X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x - y)[i] = x[i] - y[i] := by
-  simp[getElem,HSub.hSub,Sub.sub]; unfold Vector.get; simp
+  simp [HSub.hSub, Sub.sub, Vector.getElem_mapFinIdx]
 
 @[simp, simp_core]
 theorem Vector.getElem_neg [Neg X] (x : Vector X n) (i : ℕ) (h : i < n) : (-x)[i] = -x[i] := by

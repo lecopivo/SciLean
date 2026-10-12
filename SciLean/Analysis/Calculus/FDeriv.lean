@@ -1,1 +1,6 @@
-import SciLean.AD.FDeriv
+module
+
+public import SciLean.AD.FDeriv
+
+@[expose] public section
+

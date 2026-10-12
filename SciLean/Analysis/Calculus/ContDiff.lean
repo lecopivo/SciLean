@@ -1,5 +1,10 @@
-import Mathlib.Analysis.Calculus.ContDiff.Basic
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 namespace SciLean
 

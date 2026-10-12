@@ -1,16 +1,35 @@
-import Lean
-import Lean.Util.Trace
+module
 
-import Aesop.Nanos
-import Aesop.Util.Basic
-import Batteries.Data.List.Basic
+public import Lean
 
-import SciLean.Lean.Meta.Basic
+public meta import Lean
+public import Lean.Util.Trace
+public meta import Lean.Util.Trace
 
-import SciLean.Tactic.GTrans.MetaLCtxM
+public import Aesop.Nanos
 
-import SciLean.Tactic.FunTrans.Core
-import SciLean.Tactic.FunTrans.Elab
+public meta import Aesop.Nanos
+public import Aesop.Util.Basic
+public meta import Aesop.Util.Basic
+public import Batteries.Data.List.Basic
+public meta import Batteries.Data.List.Basic
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+
+public import SciLean.Tactic.GTrans.MetaLCtxM
+
+public meta import SciLean.Tactic.GTrans.MetaLCtxM
+
+public import SciLean.Tactic.FunTrans.Core
+
+public meta import SciLean.Tactic.FunTrans.Core
+public import SciLean.Tactic.FunTrans.Elab
+public meta import SciLean.Tactic.FunTrans.Elab
+
+@[expose] public meta section
+
 
 open Lean Meta
 
@@ -106,7 +125,7 @@ structure State where
   /-- Cache storing lsimp results. -/
   cache : IO.Ref Cache
   simpState : IO.Ref Simp.State
-  timings : Batteries.RBMap String Aesop.Nanos compare := {}
+  timings : Lean.RBMap String Aesop.Nanos compare := {}
 
 abbrev LSimpM := ReaderT Simp.Methods $ ReaderT Simp.Context $ StateT State MetaLCtxM
 
@@ -139,7 +158,7 @@ instance : Inhabited (LSimpM α) where
 
 def timeThis (key : String) (x : LSimpM α) : LSimpM α := do
   let (a, t) ← Aesop.time x
-  modifyThe State fun s => {s with timings := s.timings.alter key (fun t' => .some (t'.getD 0 + t))}
+  modifyThe State fun s => {s with timings := s.timings.insert key (s.timings.findD key 0 + t)}
   return a
 
 def _root_.Aesop.Nanos.print (n : Aesop.Nanos) : String :=

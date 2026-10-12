@@ -1,11 +1,16 @@
-import Mathlib.MeasureTheory.Integral.Bochner
-import Mathlib.MeasureTheory.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Measure.Hausdorff
+module
 
-import SciLean.Analysis.Calculus.RevFDeriv
+public import Mathlib.MeasureTheory.Integral.Bochner
+public import Mathlib.MeasureTheory.Decomposition.Lebesgue
+public import Mathlib.MeasureTheory.Measure.Hausdorff
 
-import SciLean.Tactic.Autodiff
-import SciLean.Tactic.GTrans
+public import SciLean.Analysis.Calculus.RevFDeriv
+
+public import SciLean.Tactic.Autodiff
+public import SciLean.Tactic.GTrans
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

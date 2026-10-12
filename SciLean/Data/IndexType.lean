@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 -- import SciLean.Data.IndexType.Basic
 -- import SciLean.Data.IndexType.DeriveIndexType
 -- import SciLean.Data.IndexType.Init

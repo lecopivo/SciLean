@@ -1,9 +1,14 @@
-import SciLean.Core.Rand.Distributions.WalkOnSpheres
-import SciLean.Core.Rand.RandGen
+module
 
-import SciLean.Util.DefOptimize
+public import SciLean.Core.Rand.Distributions.WalkOnSpheres
+public import SciLean.Core.Rand.RandGen
 
-import Mathlib.Tactic.LiftLets
+public import SciLean.Util.DefOptimize
+
+public import Mathlib.Tactic.LiftLets
+
+@[expose] public section
+
 
 -- namespace SciLean
 open SciLean Prob

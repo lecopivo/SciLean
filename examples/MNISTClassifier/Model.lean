@@ -1,10 +1,15 @@
- import Lean
+module
+
+ public import Lean
 -- import SciLean
-import SciLean.Core.FloatAsReal
-import SciLean.Modules.ML.Dense
-import SciLean.Modules.ML.Convolution
-import SciLean.Modules.ML.Pool
-import SciLean.Modules.ML.Activation
+public import SciLean.Core.FloatAsReal
+public import SciLean.Modules.ML.Dense
+public import SciLean.Modules.ML.Convolution
+public import SciLean.Modules.ML.Pool
+public import SciLean.Modules.ML.Activation
+
+@[expose] public section
+
 
 open SciLean
 open IO FS System

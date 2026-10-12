@@ -1,6 +1,15 @@
-import Lean
-import Lean.Parser.Do
-import Lean.Parser.Term
+module
+
+public import Lean
+
+public meta import Lean
+public import Lean.Parser.Do
+public meta import Lean.Parser.Do
+public import Lean.Parser.Term
+public meta import Lean.Parser.Term
+
+@[expose] public meta section
+
 
 open Lean Parser
 

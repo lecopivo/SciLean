@@ -1,6 +1,11 @@
-import Mathlib.Data.Int.Interval
+module
 
-import SciLean.Meta.SimpAttr
+public import Mathlib.Data.Int.Interval
+
+public import SciLean.Meta.SimpAttr
+
+@[expose] public section
+
 
 namespace SciLean
 

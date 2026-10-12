@@ -1,13 +1,18 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.RnEquiv
-import SciLean.Data.DataArray.Algebra
-import SciLean.Data.DataArray.Float
-import SciLean.Data.DataArray.FloatN
-import SciLean.Data.DataArray.Operations
-import SciLean.Meta.Notation.Let'
-import SciLean.Data.ArrayOperations.Operations
+module
 
-import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.RnEquiv
+public import SciLean.Data.DataArray.Algebra
+public import SciLean.Data.DataArray.Float
+public import SciLean.Data.DataArray.FloatN
+public import SciLean.Data.DataArray.Operations
+public import SciLean.Meta.Notation.Let'
+public import SciLean.Data.ArrayOperations.Operations
+
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 namespace SciLean.DataArrayN
 

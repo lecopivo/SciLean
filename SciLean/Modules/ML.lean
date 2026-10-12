@@ -1,8 +1,13 @@
-import SciLean.Modules.ML.Activation
-import SciLean.Modules.ML.Convolution
-import SciLean.Modules.ML.Dense
-import SciLean.Modules.ML.Loss
-import SciLean.Modules.ML.SoftMax
-import SciLean.Modules.ML.Pool
+module
 
-import SciLean.Modules.ML.MNIST
+public import SciLean.Modules.ML.Activation
+public import SciLean.Modules.ML.Convolution
+public import SciLean.Modules.ML.Dense
+public import SciLean.Modules.ML.Loss
+public import SciLean.Modules.ML.SoftMax
+public import SciLean.Modules.ML.Pool
+
+public import SciLean.Modules.ML.MNIST
+
+@[expose] public section
+

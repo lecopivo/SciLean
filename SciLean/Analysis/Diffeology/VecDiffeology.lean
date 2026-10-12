@@ -1,5 +1,10 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.Prod
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.Prod
+
+@[expose] public section
+
 
 
 namespace SciLean

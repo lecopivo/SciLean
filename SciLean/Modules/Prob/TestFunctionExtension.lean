@@ -1,4 +1,9 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
+module
+
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

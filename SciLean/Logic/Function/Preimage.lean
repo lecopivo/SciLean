@@ -1,11 +1,16 @@
-import Mathlib.Data.Set.Defs
-import Mathlib.Data.Set.Image
+module
 
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Elab
+public import Mathlib.Data.Set.Defs
+public import Mathlib.Data.Set.Image
 
-import SciLean.Analysis.Scalar
-import SciLean.Util.SorryProof
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Elab
+
+public import SciLean.Analysis.Scalar
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 variable {α β γ : Type _}
 

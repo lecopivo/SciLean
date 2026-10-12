@@ -1,11 +1,16 @@
-import Mathlib.Topology.Algebra.Module.Basic
-import Mathlib.Topology.UniformSpace.Pi
-import Mathlib.Analysis.Normed.Module.Basic
-import Mathlib.Analysis.InnerProductSpace.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+module
 
-import SciLean.Algebra.IsLinearMap
+public import Mathlib.Topology.Algebra.Module.Basic
+public import Mathlib.Topology.UniformSpace.Pi
+public import Mathlib.Analysis.Normed.Module.Basic
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+
+public import SciLean.Algebra.IsLinearMap
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -68,7 +73,7 @@ macro "fun " x:ident " : " X:term " =>L[" R:term "] " b:term : term =>
 macro "fun " "(" x:ident " : " X:term ")" " =>L[" R:term "] " b:term : term =>
   `(ContinuousLinearMap.mk' $R (fun ($x : $X) => $b) (by fun_prop))
 
-@[app_unexpander ContinuousLinearMap.mk'] def unexpandContinuousLinearMapMk : Lean.PrettyPrinter.Unexpander
+@[app_unexpander ContinuousLinearMap.mk'] meta def unexpandContinuousLinearMapMk : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $R $f:term $_:term) =>
     match f with
@@ -119,6 +124,7 @@ by
 -- Basic lambda calculus rules -------------------------------------------------
 --------------------------------------------------------------------------------
 
+set_option linter.ambiguousOpen false
 open ContinuousLinearMap IsContinuousLinearMap
 
 @[fun_prop]
@@ -231,7 +237,7 @@ theorem Neg.neg.arg_a0.IsContinuousLinearMap_rule
     IsContinuousLinearMap R fun x => - f x
 :=
   by_morphism (ContinuousLinearMap.neg.neg (mk' R f hf))
-  (by simp[ContinuousLinearMap.neg])
+  (by simp)
 
 
 
@@ -244,7 +250,7 @@ theorem HAdd.hAdd.arg_a0a1.IsContinuousLinearMap_rule [ContinuousAdd Y]
   : IsContinuousLinearMap R fun x => f x + g x
 :=
   by_morphism (ContinuousLinearMap.add.add (mk' R f hf) (mk' R g hg))
-  (by simp[ContinuousLinearMap.add])
+  (by intros; rfl)
 
 
 
@@ -260,7 +266,7 @@ theorem HSub.hSub.arg_a0a1.IsContinuousLinearMap_rule
   : IsContinuousLinearMap R fun x => f x - g x
 :=
   by_morphism (ContinuousLinearMap.sub.sub (mk' R f hf) (mk' R g hg))
-  (by simp[ContinuousLinearMap.sub])
+  (by intros; rfl)
 
 
 
@@ -336,7 +342,7 @@ def ContinuousLinearMap.smulLeft
 
 
 @[simp]
-def ContinuousLinearMap.smul_left
+theorem ContinuousLinearMap.smul_left
   {R : Type _} [CommSemiring R]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
   {Y : Type _} [TopologicalSpace Y] [AddCommMonoid Y] [Module R Y] [ContinuousConstSMul R Y]
@@ -389,7 +395,7 @@ def ContinuousLinearMap.divRight
 
 
 @[simp]
-def ContinuousLinearMap.div_right
+theorem ContinuousLinearMap.div_right
   {R : Type _} [NontriviallyNormedField R]
   {K : Type _} [NontriviallyNormedField K] [NormedAlgebra R K]
   {X : Type _} [TopologicalSpace X] [AddCommMonoid X] [Module R X]
@@ -501,7 +507,7 @@ theorem ContinuousLinearMap.mk'.arg_f.IsContinuousLinearMap
   · constructor
     · intro x x'; ext y; apply (hfx y).1 x x'
     · intro k x; ext y; apply (hfx y).2 k x
-  · dsimp[autoParam]; sorry_proof
+  · sorry_proof
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :

@@ -1,5 +1,10 @@
-import SciLean.Basic
-import SciLean.Mechanics
+module
+
+public import SciLean.Basic
+public import SciLean.Mechanics
+
+@[expose] public section
+
 
 set_option synthInstance.maxHeartbeats 500000
 set_option synthInstance.maxSize 2048

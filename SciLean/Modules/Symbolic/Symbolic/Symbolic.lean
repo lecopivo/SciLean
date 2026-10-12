@@ -1,5 +1,10 @@
-import Mathlib
-import SciLean.Mathlib.Algebra.Module.Basic
+module
+
+public import Mathlib
+public import SciLean.Mathlib.Algebra.Module.Basic
+
+@[expose] public section
+
 
 class Symbolic {Repr : Type} (R : Repr → Repr → Prop) where
   RedForm  : Repr → Prop

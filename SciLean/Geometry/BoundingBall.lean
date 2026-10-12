@@ -1,12 +1,17 @@
-import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Analysis.Scalar
-import SciLean.Logic.Function.Preimage
+public import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
-import SciLean.Tactic.GTrans
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Geometry
+public import SciLean.Analysis.Scalar
+public import SciLean.Logic.Function.Preimage
+
+public import SciLean.Tactic.GTrans
+
+@[expose] public section
+
 
 open SciLean Set MeasureTheory
 

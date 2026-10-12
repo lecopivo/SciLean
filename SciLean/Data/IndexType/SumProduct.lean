@@ -1,6 +1,11 @@
-import SciLean.Data.IndexType.Operations
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+module
+
+public import SciLean.Data.IndexType.Operations
+public import Mathlib.Data.Fintype.Basic
+public import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -14,7 +19,7 @@ namespace SciLean
 -- macro (priority:=high) " ∑ " xs:Lean.explicitBinders ", " b:term:66 : term =>
 --   Lean.expandExplicitBinders ``sum xs b
 
--- @[app_unexpander sum] def unexpandSum : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander sum] meta def unexpandSum : Lean.PrettyPrinter.Unexpander
 --   | `($(_) fun $x:ident => $b) =>
 --     `(∑ $x:ident, $b)
 --   | `($(_) fun $x:ident $xs:ident* => $b) =>
@@ -31,7 +36,7 @@ namespace SciLean
 -- macro (priority:=high) " ∏ " xs:Lean.explicitBinders ", " b:term:66 : term =>
 --   Lean.expandExplicitBinders ``product xs b
 
--- @[app_unexpander product] def unexpandProduct : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander product] meta def unexpandProduct : Lean.PrettyPrinter.Unexpander
 --   | `($(_) fun $x:ident => $b) =>
 --     `(∏ $x:ident, $b)
 --   | `($(_) fun $x:ident $xs:ident* => $b) =>

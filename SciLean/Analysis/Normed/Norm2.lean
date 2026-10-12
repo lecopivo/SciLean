@@ -1,6 +1,12 @@
-import Mathlib.Analysis.InnerProductSpace.Basic
+module
 
-import SciLean.Analysis.Scalar.Basic
+public import Mathlib.Analysis.InnerProductSpace.Basic
+
+public import SciLean.Analysis.Scalar.Basic
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 namespace SciLean
 
@@ -17,7 +23,7 @@ instance [Inner K X] : Norm2 K X where
 macro "‖" x:term "‖₂²[" K:term "]" : term => `(@Norm2.norm2 $K _ _ $x)
 macro "‖" x:term "‖₂²" : term => `(@Norm2.norm2 defaultScalar% _ _ $x)
 
-@[app_unexpander Norm2.norm2] def unexpandNorm2 : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Norm2.norm2] meta def unexpandNorm2 : Lean.PrettyPrinter.Unexpander
   | `($(_) $x) => `(‖ $x ‖₂²)
   | _ => throw ()
 
@@ -29,7 +35,7 @@ def norm₂ (K : Type _) {R X : Type _} [Scalar R K] [Norm2 K X] (x : X) : K := 
 macro "‖" x:term "‖₂[" K:term "]" : term => `(norm₂ $K $x)
 macro "‖" x:term "‖₂" : term => `(norm₂ defaultScalar% $x)
 
-@[app_unexpander norm₂] def unexpandNorm₂ : Lean.PrettyPrinter.Unexpander
+@[app_unexpander norm₂] meta def unexpandNorm₂ : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $x) => `(‖ $x ‖₂)
   | _ => throw ()
 
@@ -49,7 +55,7 @@ section Inner
 macro "⟪" x:term ", " y:term "⟫[" K:term "]" : term => `(@Inner.inner $K _ _ $x $y)
 macro "⟪" x:term ", " y:term "⟫" : term => `(@Inner.inner defaultScalar% _ _ $x $y)
 
-@[app_unexpander Inner.inner] def unexpandInner : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Inner.inner] meta def unexpandInner : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $x $y) => `(⟪$x, $y⟫)
   | _ => throw ()
 

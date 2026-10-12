@@ -1,4 +1,11 @@
-import SciLean.Tactic.MetaFunction.Decl
+module
+
+public import SciLean.Tactic.MetaFunction.Decl
+
+public meta import SciLean.Tactic.MetaFunction.Decl
+
+@[expose] public meta section
+
 
 open Lean Meta Elab Command
 

@@ -1,4 +1,11 @@
-import SciLean.Util.SorryProof
+module
+
+public import SciLean.Util.SorryProof
+
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace Array
 

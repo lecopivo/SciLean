@@ -1,5 +1,10 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Meta.Notation.Do
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Meta.Notation.Do
+
+@[expose] public section
+
 -- import Mathlib
 
 namespace SciLean

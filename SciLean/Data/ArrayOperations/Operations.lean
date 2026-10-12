@@ -1,7 +1,12 @@
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
+module
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Data.IndexType
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+
+@[expose] public section
+
 
 namespace SciLean
 

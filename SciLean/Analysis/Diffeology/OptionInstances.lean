@@ -1,6 +1,11 @@
-import Mathlib.Algebra.Module.Prod
-import Mathlib.Algebra.PUnitInstances.Module
-import Mathlib.Analysis.Normed.Module.Basic
+module
+
+public import Mathlib.Algebra.Module.Prod
+public import Mathlib.Algebra.PUnitInstances.Module
+public import Mathlib.Analysis.Normed.Module.Basic
+
+@[expose] public section
+
 
 @[reducible]
 instance {α} {β : α → Type*} [∀ a, Zero (β a)] (a? : Option α) : Zero (Option.rec PUnit β a?) :=

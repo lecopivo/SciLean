@@ -1,9 +1,14 @@
 -- import SciLean.Basic
-import SciLean.Core
-import SciLean.Data.PowType
-import SciLean.Functions.EpsNorm
-import SciLean.Functions.Convolution
-import SciLean.Tactic.Basic
+module
+
+public import SciLean.Core
+public import SciLean.Data.PowType
+public import SciLean.Functions.EpsNorm
+public import SciLean.Functions.Convolution
+public import SciLean.Tactic.Basic
+
+@[expose] public section
+
 
 set_option synthInstance.maxSize 2048
 -- set_option synthInstance.maxHeartbeats 20000

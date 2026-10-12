@@ -1,5 +1,13 @@
-import SciLean.Core.Objects.Vec
-import Lean.Elab.Deriving.Basic
+module
+
+public import SciLean.Core.Objects.Vec
+
+public meta import SciLean.Core.Objects.Vec
+public import Lean.Elab.Deriving.Basic
+public meta import Lean.Elab.Deriving.Basic
+
+@[expose] public meta section
+
 
 open Lean Elab Command
 

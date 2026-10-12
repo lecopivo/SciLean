@@ -1,8 +1,13 @@
-import Mathlib.Analysis.InnerProductSpace.Adjoint
+module
 
-import SciLean.Algebra.TensorProduct.Prod
-import SciLean.Algebra.TensorProduct.Pi
-import SciLean.Analysis.Calculus.HasRevFDeriv
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+
+public import SciLean.Algebra.TensorProduct.Prod
+public import SciLean.Algebra.TensorProduct.Pi
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false

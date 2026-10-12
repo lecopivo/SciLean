@@ -1,6 +1,11 @@
-import SciLean.Data.DataArray.RnEquiv
-import SciLean.Data.ArrayOperations.Algebra
-import SciLean.Algebra.VectorOptimize.Basic
+module
+
+public import SciLean.Data.DataArray.RnEquiv
+public import SciLean.Data.ArrayOperations.Algebra
+public import SciLean.Algebra.VectorOptimize.Basic
+
+@[expose] public section
+
 
 /-! Algebraic structure in `X^[I]`
 

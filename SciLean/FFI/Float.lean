@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 namespace Float
 /-- The gamma function. -/
 @[extern "scilean_float_tgamma"]

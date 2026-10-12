@@ -1,8 +1,13 @@
-import Mathlib.Logic.Equiv.Defs
-import Mathlib.Order.Defs.LinearOrder
-import Mathlib.Order.Nat
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Logic.Equiv.Defs
+public import Mathlib.Order.Defs.LinearOrder
+public import Mathlib.Order.Nat
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 

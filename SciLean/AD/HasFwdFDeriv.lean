@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Logic.Function.Constant
-import SciLean.Data.Nat
+module
+
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Logic.Function.Constant
+public import SciLean.Data.Nat
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,6 +1,11 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Meta.GenerateFunProp
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Meta.GenerateFunProp
+
+@[expose] public section
+
 -- import SciLean.Meta.GenerateFunTrans
 
 namespace SciLean

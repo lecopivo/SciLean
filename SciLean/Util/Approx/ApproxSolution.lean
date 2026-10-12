@@ -1,7 +1,12 @@
-import Mathlib.Topology.Basic
-import Mathlib.Order.Filter.Basic
+module
 
-import SciLean.Util.Limit
+public import Mathlib.Topology.Basic
+public import Mathlib.Order.Filter.Basic
+
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 
@@ -56,7 +61,7 @@ by
   case approx specₙ lN lM consistent convergence impl hn =>
     simp[ApproxSolution.val]
     -- intro h
-    let aₙ := λ n => lim (lM.map λ m => (impl n).val m)
+    let aₙ := λ n => Filter.lim (lM.map λ m => (impl n).val m)
     sorry_proof
     -- have haₙ : ∀ n, specₙ n (aₙ n) := λ n => hn n ((hasLimit_split h).1 n)
     -- simp[limit_split h]

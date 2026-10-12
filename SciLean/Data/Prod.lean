@@ -15,6 +15,10 @@
 
 ----------------------------------------------------------------------
 
+module
+
+@[expose] public section
+
 class Prod.Size (α : Type) where
   size : Nat
 

@@ -1,17 +1,22 @@
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Data.Real.Basic
-import Mathlib.Analysis.Complex.Exponential
-import Mathlib.Analysis.Complex.Basic
-import Mathlib.Analysis.SpecialFunctions.Pow.Complex
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
-import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
-import Mathlib.Analysis.Normed.Lp.WithLp
-import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Scalar.Notation
+public import Mathlib.Analysis.RCLike.Basic
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Analysis.Complex.Basic
+public import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+public import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
+public import Mathlib.Analysis.Normed.Lp.WithLp
+public import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Scalar.Notation
+
+@[expose] public section
+
 -- import SciLean.Util.SorryProof
 
 namespace SciLean
@@ -136,7 +141,7 @@ def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
 
 scoped notation "π" => @RealScalar.pi defaultScalar% inferInstance
 
-@[app_unexpander RealScalar.pi] def unexpandPi : Lean.PrettyPrinter.Unexpander
+@[app_unexpander RealScalar.pi] meta def unexpandPi : Lean.PrettyPrinter.Unexpander
   | `($_) => `(π)
 
 
@@ -336,7 +341,8 @@ theorem scalar_abs_zero : Scalar.abs (0 : R) = 0 := by sorry_proof
 theorem scalar_abs_neg (r : R) : Scalar.abs (- r) = Scalar.abs r := by sorry_proof
 
 @[simp, simp_core]
-theorem scalar_div_one (x : R) : x / 1 = x := by sorry_proof
+theorem scalar_div_one (x : R) : x / 1 = x := by
+  simp
 
 @[simp, simp_core]
 theorem scalar_sqrt_one  : Scalar.sqrt (1 : R) = 1 := by sorry_proof
@@ -348,13 +354,17 @@ theorem scalar_sqrt_zero  : Scalar.sqrt (0 : R) = 0 := by sorry_proof
 theorem scalar_max_one_zero  : max (1 : R) (0 : R) = 1 := by sorry_proof
 
 @[simp, simp_core]
-theorem scalar_max_zero_one  : max (0 : R) (1 : R) = 1 := by sorry_proof
+theorem scalar_max_zero_one  : max (0 : R) (1 : R) = 1 := by
+  rw [max_comm]
+  simp
 
 @[simp, simp_core]
 theorem scalar_min_one_zero  : min (1 : R) (0 : R) = 0 := by sorry_proof
 
 @[simp, simp_core]
-theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by sorry_proof
+theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by
+  rw [min_comm]
+  simp
 
 
 ----------------------------------------------------------------------------------------------------

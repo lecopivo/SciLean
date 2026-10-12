@@ -1,4 +1,9 @@
-import Mathlib.Data.Nat.Notation
+module
+
+public import Mathlib.Data.Nat.Notation
+
+@[expose] public section
+
 
 
 @[inline, specialize]

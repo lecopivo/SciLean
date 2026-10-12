@@ -1,12 +1,17 @@
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Data.DataArray.TensorOperations
+module
 
-import SciLean.AD.Rules.Common
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Data.DataArray.TensorOperations
 
-import SciLean.AD.Rules.Log
-import SciLean.AD.Rules.Exp
+public import SciLean.AD.Rules.Common
 
-import SciLean.Tactic.UnsafeAD
+public import SciLean.AD.Rules.Log
+public import SciLean.AD.Rules.Exp
+
+public import SciLean.Tactic.UnsafeAD
+
+@[expose] public section
+
 
 namespace SciLean
 

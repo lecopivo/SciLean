@@ -1,10 +1,15 @@
-import SciLean.Modules.ML.XLA.TensorIndex
-import SciLean.Modules.ML.XLA.Slice
-import SciLean.Modules.ML.XLA.DotGeneral
-import SciLean.Modules.ML.XLA.Pad
-import SciLean.Modules.ML.XLA.Slice
-import SciLean.Modules.ML.XLA.Concatenate
-import SciLean.Modules.ML.XLA.Split
+module
+
+public import SciLean.Modules.ML.XLA.TensorIndex
+public import SciLean.Modules.ML.XLA.Slice
+public import SciLean.Modules.ML.XLA.DotGeneral
+public import SciLean.Modules.ML.XLA.Pad
+public import SciLean.Modules.ML.XLA.Slice
+public import SciLean.Modules.ML.XLA.Concatenate
+public import SciLean.Modules.ML.XLA.Split
+
+@[expose] public section
+
 
 namespace SciLean
 

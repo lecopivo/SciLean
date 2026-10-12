@@ -1,4 +1,9 @@
-import SciLean.Logic.Isomorph.IsomorphicType
+module
+
+public import SciLean.Logic.Isomorph.IsomorphicType
+
+@[expose] public section
+
 
 open Lean
 

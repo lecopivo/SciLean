@@ -1,4 +1,11 @@
-import SciLean.Tactic.LSimp.Main
+module
+
+public import SciLean.Tactic.LSimp.Main
+
+public meta import SciLean.Tactic.LSimp.Main
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic.LSimp
 

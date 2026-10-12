@@ -1,14 +1,19 @@
-import Mathlib.Analysis.InnerProductSpace.PiL2
-import Mathlib.Analysis.Normed.Lp.PiLp
-import Mathlib.Analysis.Normed.Lp.WithLp
-import Mathlib.Data.Matrix.Basic
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Scalar
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.ArrayOperations.Algebra
+public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.Normed.Lp.PiLp
+public import Mathlib.Analysis.Normed.Lp.WithLp
+public import Mathlib.Data.Matrix.Basic
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Scalar
+public import SciLean.Data.IndexType
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.ArrayOperations.Algebra
+
+@[expose] public section
+
 
 namespace SciLean
 

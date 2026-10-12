@@ -1,6 +1,11 @@
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Algebra.Determinant
+module
+
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Algebra.Determinant
+
+@[expose] public section
+
 
 open Module
 

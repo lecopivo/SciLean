@@ -1,6 +1,11 @@
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Normed.Norm2
-import SciLean.Analysis.Scalar
+module
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Normed.Norm2
+public import SciLean.Analysis.Scalar
+
+@[expose] public section
+
 
 namespace SciLean
 

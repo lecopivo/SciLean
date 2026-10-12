@@ -1,6 +1,11 @@
-import Mathlib.Topology.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Topology.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 @[fun_prop]
 theorem _root_.dite.arg_te.Continuous_rule {X Y} [TopologicalSpace X] [TopologicalSpace Y]

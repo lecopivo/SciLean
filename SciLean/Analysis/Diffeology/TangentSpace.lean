@@ -1,5 +1,10 @@
-import SciLean.Tactic.Autodiff
-import SciLean.Analysis.Diffeology.Basic
+module
+
+public import SciLean.Tactic.Autodiff
+public import SciLean.Analysis.Diffeology.Basic
+
+@[expose] public section
+
 
 
 /-!

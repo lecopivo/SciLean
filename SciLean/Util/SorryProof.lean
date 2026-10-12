@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 namespace SciLean
 
 axiom sorryProofAxiom {P : Prop} : P

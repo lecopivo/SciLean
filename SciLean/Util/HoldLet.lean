@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 namespace SciLean
 
 /-- `holdLet` is just identity function with a special support from some tactics.

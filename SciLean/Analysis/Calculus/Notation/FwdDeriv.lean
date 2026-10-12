@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.Notation.Deriv
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.Notation.Deriv
+
+@[expose] public section
+
 
 
 --------------------------------------------------------------------------------
@@ -50,7 +55,7 @@ macro_rules
 | `(∂>! ($x:term := $val:term; $dir:term), $b) => `(∂>! (fun $x => $b) $val $dir)
 
 
-@[app_unexpander fwdFDeriv] def unexpandfwdFDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander fwdFDeriv] meta def unexpandfwdFDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x $dx) =>
     match f with

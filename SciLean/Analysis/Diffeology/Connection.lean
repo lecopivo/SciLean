@@ -1,6 +1,11 @@
-import SciLean.Analysis.Diffeology.PlotHomotopy
-import SciLean.Analysis.Diffeology.Prod
-import SciLean.Analysis.Diffeology.NormedSpace
+module
+
+public import SciLean.Analysis.Diffeology.PlotHomotopy
+public import SciLean.Analysis.Diffeology.Prod
+public import SciLean.Analysis.Diffeology.NormedSpace
+
+@[expose] public section
+
 
 
 namespace SciLean

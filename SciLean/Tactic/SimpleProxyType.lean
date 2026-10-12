@@ -3,8 +3,16 @@ Copyright (c) 2023 Kyle Miller. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kyle Miller, Tomas Skrivan
 -/
-import Mathlib.Tactic.Core
-import Mathlib.Logic.Equiv.Defs
+module
+
+public import Mathlib.Tactic.Core
+
+public meta import Mathlib.Tactic.Core
+public import Mathlib.Logic.Equiv.Defs
+public meta import Mathlib.Logic.Equiv.Defs
+
+@[expose] public meta section
+
 
 /-!
 # Generating "simple proxy types"

@@ -1,8 +1,19 @@
-import Lean
+module
 
-import Qq
+public import Lean
 
-import SciLean.Util.Limit
+public meta import Lean
+
+public import Qq
+
+public meta import Qq
+
+public import SciLean.Util.Limit
+
+public meta import SciLean.Util.Limit
+
+@[expose] public meta section
+
 
 open Lean
 open Lean.Meta

@@ -1,9 +1,14 @@
-import Mathlib.Topology.Order
+module
 
-import SciLean.Util.SorryProof
-import SciLean.Data.IndexType.Init
-import SciLean.Data.Idx.Basic
-import SciLean.Data.Int64
+public import Mathlib.Topology.Order
+
+public import SciLean.Util.SorryProof
+public import SciLean.Data.IndexType.Init
+public import SciLean.Data.Idx.Basic
+public import SciLean.Data.Int64
+
+@[expose] public section
+
 
 namespace SciLean
 

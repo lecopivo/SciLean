@@ -1,4 +1,9 @@
-import SciLean.Data.Quotient.GradedSetoid
+module
+
+public import SciLean.Data.Quotient.GradedSetoid
+
+@[expose] public section
+
 
 namespace SciLean
 

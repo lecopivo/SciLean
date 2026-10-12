@@ -1,13 +1,19 @@
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Algebra.IsAffineMap
-import SciLean.Topology.Continuous
-import SciLean.Analysis.Sorry
+module
 
-import SciLean.Data.StructType.Basic
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Algebra.IsAffineMap
+public import SciLean.Topology.Continuous
+public import SciLean.Analysis.Sorry
 
-import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Meta.GenerateFunProp
-import SciLean.Meta.GenerateAddGroupHomSimp
+public import SciLean.Data.StructType.Basic
+
+public import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Meta.GenerateAddGroupHomSimp
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -128,7 +134,7 @@ instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J)
 @[reducible]
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] (i : I ⊕ J) :
     NormedAddCommGroup (Sum.rec EI FJ i) where
-  dist_eq : ∀ x y, dist x y = ‖x - y‖ := by sorry_proof
+  dist_eq := sorry_proof
 
 
 @[reducible]
@@ -149,6 +155,10 @@ instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
          [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] (i : I ⊕ J)
   : AdjointSpace K (Sum.rec EI FJ i) where
+  smul_zero := sorry_proof
+  smul_add := sorry_proof
+  add_smul := sorry_proof
+  zero_smul := sorry_proof
   norm_smul_le := sorry_proof
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof

@@ -3,9 +3,18 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import Lean.Meta.Tactic.Simp.Types
+module
 
-import Mathlib.Tactic.FunProp.Types
+public import Lean.Meta.Tactic.Simp.Types
+
+public meta import Lean.Meta.Tactic.Simp.Types
+
+public import Mathlib.Tactic.FunProp.Types
+
+public meta import Mathlib.Tactic.FunProp.Types
+
+@[expose] public meta section
+
 
 /-!
 ## `funTrans`

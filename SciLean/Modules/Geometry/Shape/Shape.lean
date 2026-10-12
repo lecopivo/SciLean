@@ -1,7 +1,12 @@
-import SciLean.Core
-import SciLean.Modules.Geometry.Shape.Rotation
+module
 
-import Mathlib.Data.Real.EReal
+public import SciLean.Core
+public import SciLean.Modules.Geometry.Shape.Rotation
+
+public import Mathlib.Data.Real.EReal
+
+@[expose] public section
+
 
 namespace SciLean
 

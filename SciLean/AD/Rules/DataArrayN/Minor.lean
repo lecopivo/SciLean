@@ -1,10 +1,15 @@
-import SciLean.Data.DataArray.Operations
+module
 
-import SciLean.AD.Rules.Common
+public import SciLean.Data.DataArray.Operations
 
-import SciLean.AD.Rules.IndexType.Fold
-import SciLean.Data.ArrayOperations.Operations.GetElem
-import SciLean.Data.ArrayOperations.Operations.OfFn
+public import SciLean.AD.Rules.Common
+
+public import SciLean.AD.Rules.IndexType.Fold
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+public import SciLean.Data.ArrayOperations.Operations.OfFn
+
+@[expose] public section
+
 
 namespace SciLean
 

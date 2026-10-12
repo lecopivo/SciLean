@@ -1,8 +1,17 @@
-import Lean
-import Qq
-import Batteries.Lean.Expr
-import Mathlib.Lean.Expr
-import Mathlib.Tactic.FunProp.ToBatteries
+module
+
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+public import Batteries.Lean.Expr
+public meta import Batteries.Lean.Expr
+public import Mathlib.Tactic.FunProp.ToBatteries
+public meta import Mathlib.Tactic.FunProp.ToBatteries
+
+@[expose] public meta section
+
 
 namespace Lean.Expr
 

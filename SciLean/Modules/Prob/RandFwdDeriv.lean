@@ -1,5 +1,10 @@
-import SciLean.Modules.Prob.RandDeriv
-import SciLean.Modules.Prob.FDRand
+module
+
+public import SciLean.Modules.Prob.RandDeriv
+public import SciLean.Modules.Prob.FDRand
+
+@[expose] public section
+
 
 
 open MeasureTheory ENNReal BigOperators Finset

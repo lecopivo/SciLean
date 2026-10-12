@@ -1,14 +1,19 @@
-import Mathlib.MeasureTheory.Measure.GiryMonad
-import Mathlib.MeasureTheory.Measure.VectorMeasure
-import Mathlib.MeasureTheory.Decomposition.Lebesgue
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.ContDiff.Basic
-import Mathlib.MeasureTheory.Integral.Bochner
+module
+
+public import Mathlib.MeasureTheory.Measure.GiryMonad
+public import Mathlib.MeasureTheory.Measure.VectorMeasure
+public import Mathlib.MeasureTheory.Decomposition.Lebesgue
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import Mathlib.MeasureTheory.Integral.Bochner
 
 -- import SciLean.Core
-import SciLean.Core.FunctionPropositions.Differentiable
+public import SciLean.Core.FunctionPropositions.Differentiable
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal
 

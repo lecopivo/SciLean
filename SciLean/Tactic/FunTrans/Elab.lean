@@ -3,9 +3,18 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import Lean
-import Mathlib.Tactic.FunProp.Core
-import SciLean.Tactic.FunTrans.Core
+module
+
+public import Lean
+
+public meta import Lean
+public import Mathlib.Tactic.FunProp.Core
+public meta import Mathlib.Tactic.FunProp.Core
+public import SciLean.Tactic.FunTrans.Core
+public meta import SciLean.Tactic.FunTrans.Core
+
+@[expose] public meta section
+
 
 /-!
 ## `funProp` tactic syntax
@@ -28,7 +37,7 @@ syntax (name := funTransConvStx) "fun_trans" optConfig (discharger)? (&" only")?
 
 simproc_decl fun_trans_simproc (_) := funTrans
 
-private def emptyDischarge : Expr → MetaM (Option Expr) :=
+def emptyDischarge : Expr → MetaM (Option Expr) :=
   fun e =>
     withTraceNode `Meta.Tactic.fun_trans
       (fun r => do pure s!"[{ExceptToEmoji.toEmoji r}] discharging: {← ppExpr e}") do

@@ -1,6 +1,11 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.AD.HasVecFwdFDeriv
-import SciLean.Analysis.Calculus.Notation.Deriv
+module
+
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.AD.HasVecFwdFDeriv
+public import SciLean.Analysis.Calculus.Notation.Deriv
+
+@[expose] public section
+
 
 namespace SciLean.Notation
 
@@ -65,7 +70,7 @@ macro_rules
 -- with brackets
 | `(∇! ($x:term := $val:term), $f) => `(∇! (fun $x => $f) $val)
 
-@[app_unexpander jacobianMat] def unexpandGradient : Lean.PrettyPrinter.Unexpander
+@[app_unexpander jacobianMat] meta def unexpandGradient : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x $dy $z $zs*) =>
     match f with
@@ -93,7 +98,7 @@ macro_rules
 
   | _  => throw ()
 
--- @[app_unexpander fgradient] def unexpandScalarGradient : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander fgradient] meta def unexpandScalarGradient : Lean.PrettyPrinter.Unexpander
 
 --   | `($(_) $f:term $x $y $ys*) =>
 --     match f with

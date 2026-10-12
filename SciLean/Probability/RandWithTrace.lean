@@ -1,12 +1,17 @@
-import SciLean.Tactic.InferVar
-import SciLean.Util.RewriteBy
+module
 
-import SciLean.Probability.Rand
-import SciLean.Probability.Distributions.Flip
-import SciLean.Probability.Distributions.Normal
-import SciLean.Probability.Distributions.Uniform
+public import SciLean.Tactic.InferVar
+public import SciLean.Util.RewriteBy
 
-import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Probability.Rand
+public import SciLean.Probability.Distributions.Flip
+public import SciLean.Probability.Distributions.Normal
+public import SciLean.Probability.Distributions.Uniform
+
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 open Lean
 
@@ -75,13 +80,7 @@ def RandWithTrace.bind (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
     pure (tx,ty)
   map  := fun (wx,wy) => (f (x.map wx)).map wy
   hmap := by simp; sorry_proof
-  htype := by
-    simp[Trace.type]
-    rw[← x.htype]
-    -- how do I get element of `X` in this proof to invoke `(f x).htype`?
-    -- I can probably do case on `Nonempty X`
-    -- rw[← (f sorry).htype]
-    sorry_proof
+  htype := sorry_proof
 
 def sample {X} (x : Rand X) (tag : Name) :
     RandWithTrace X (.single tag X) X where
@@ -100,7 +99,7 @@ syntax (name:=probStx) withPosition("let" funBinder " <~ " term (semicolonOrLine
 
 open Lean Elab Term Meta Qq
 
-unsafe def synthesizeAutoArg (e : Expr) : TermElabM Unit := do
+meta unsafe def synthesizeAutoArg (e : Expr) : TermElabM Unit := do
   unless e.isMVar do throwError "expecting mvar"
   let E ← e.mvarId!.getType
   unless E.isAppOfArity ``autoParam  2 do
@@ -114,7 +113,7 @@ unsafe def synthesizeAutoArg (e : Expr) : TermElabM Unit := do
 
 
 @[term_elab probStx]
-unsafe def probStxElab : TermElab := fun stx _ =>
+meta unsafe def probStxElab : TermElab := fun stx _ =>
   match stx with
   | `(let $x <~ $y; $b) => do
   let x' ← elabTermAndSynthesize y none

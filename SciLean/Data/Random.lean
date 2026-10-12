@@ -1,6 +1,11 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.Int64
-import Mathlib.Control.Random
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.Int64
+public import Mathlib.Control.Random
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -62,6 +67,7 @@ instance : Random Id Float where
     let x := 2*x - 1
     return x
 
+set_option linter.checkUnivs false in
 instance [Random Id α] [Random Id β] : Random Id (α × β) where
   random := do
     let a ← rand α

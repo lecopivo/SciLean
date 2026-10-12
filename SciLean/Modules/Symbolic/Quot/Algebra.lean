@@ -1,5 +1,10 @@
 -- import SciLean.Algebra
-import SciLean.Quot.Monomial
+module
+
+public import SciLean.Quot.Monomial
+
+@[expose] public section
+
 
 namespace SciLean
 

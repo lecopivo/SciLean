@@ -1,5 +1,10 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,10 +1,15 @@
-import SciLean.Core
-import SciLean.Core.Functions.Exp
-import SciLean.Core.Meta.GenerateRevDeriv
-import SciLean.Data.DataArray
-import SciLean.Data.ArrayType
-import SciLean.Data.Prod
-import Mathlib
+module
+
+public import SciLean.Core
+public import SciLean.Core.Functions.Exp
+public import SciLean.Core.Meta.GenerateRevDeriv
+public import SciLean.Data.DataArray
+public import SciLean.Data.ArrayType
+public import SciLean.Data.Prod
+public import Mathlib
+
+@[expose] public section
+
 
 namespace SciLean.ML
 

@@ -1,10 +1,15 @@
-import SciLean.Core.FloatAsReal
-import SciLean.Modules.ML.Dense
-import SciLean.Modules.ML.Convolution
-import SciLean.Modules.ML.Pool
-import SciLean.Modules.ML.Activation
-import SciLean.Modules.ML.SoftMax
-import SciLean.Data.Random
+module
+
+public import SciLean.Core.FloatAsReal
+public import SciLean.Modules.ML.Dense
+public import SciLean.Modules.ML.Convolution
+public import SciLean.Modules.ML.Pool
+public import SciLean.Modules.ML.Activation
+public import SciLean.Modules.ML.SoftMax
+public import SciLean.Data.Random
+
+@[expose] public section
+
 
 set_option synthInstance.maxSize 2000
 

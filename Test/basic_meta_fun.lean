@@ -1,16 +1,21 @@
-import SciLean.Tactic.MetaFunction.Decl
-import SciLean.Tactic.MetaFunction.Def
-import SciLean.Meta.Notation.Let'
+module
+
+public import SciLean.Tactic.MetaFunction.Decl
+public import SciLean.Tactic.MetaFunction.Def
+public import SciLean.Meta.Notation.Let'
 
 -- Mathlib.Topology.Instances.Real.Defs
-import Mathlib.Algebra.Ring.Defs
-import Mathlib.Algebra.Order.Ring.Int
-import Mathlib.Topology.Instances.Real.Lemmas
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.GCongr
-import Mathlib.Lean.Meta.RefinedDiscrTree
-import Mathlib.Analysis.Calculus.Deriv.Prod
-import Mathlib.Analysis.Calculus.Deriv.Add
+public import Mathlib.Algebra.Ring.Defs
+public import Mathlib.Algebra.Order.Ring.Int
+public import Mathlib.Topology.Instances.Real.Lemmas
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.GCongr
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public import Mathlib.Analysis.Calculus.Deriv.Prod
+public import Mathlib.Analysis.Calculus.Deriv.Add
+
+@[expose] public section
+
 
 open SciLean
 

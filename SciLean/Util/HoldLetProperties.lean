@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Util.HoldLet
+module
+
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Util.HoldLet
+
+@[expose] public section
+
 
 namespace SciLean
 

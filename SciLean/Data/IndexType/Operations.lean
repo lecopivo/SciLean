@@ -1,8 +1,13 @@
-import SciLean.Data.IndexType.Fold
+module
+
+public import SciLean.Data.IndexType.Fold
 
 
-import Mathlib.Data.Finset.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+public import Mathlib.Data.Finset.Basic
+public import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+
+@[expose] public section
+
 -- import SciLean.Data.IndexType.SumProduct
 
 namespace SciLean
@@ -25,7 +30,7 @@ There has to be an instance `IndexType I n` and `Fold I`. -/
 macro " ∑ᴵ " xs:Lean.explicitBinders ", " b:term:66 : term =>
   Lean.expandExplicitBinders ``IndexType.sum xs b
 
-@[app_unexpander sum] def unexpandIndexTypeSum : Lean.PrettyPrinter.Unexpander
+@[app_unexpander sum] meta def unexpandIndexTypeSum : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:ident => $b) =>
     `(∑ᴵ $x:ident, $b)
   | `($(_) fun $x:ident $xs:ident* => $b) =>
@@ -72,7 +77,7 @@ There has to be an instance `IndexType I n` and `Fold I`. -/
 macro "minᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.min fun $x => $b)
 
 open Lean.Parser.Term in
-@[app_unexpander min] def unexpandIndexTypeMin : Lean.PrettyPrinter.Unexpander
+@[app_unexpander min] meta def unexpandIndexTypeMin : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:funBinder => $b) =>
     `(minᴵ $x, $b)
   | _  => throw ()
@@ -83,7 +88,7 @@ open Lean.Parser.Term in
 macro "argMinᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.argMin fun $x => $b)
 
 open Lean.Parser.Term in
-@[app_unexpander argMin] def unexpandIndexTypeArgMin : Lean.PrettyPrinter.Unexpander
+@[app_unexpander argMin] meta def unexpandIndexTypeArgMin : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:funBinder => $b) =>
     `(argMinᴵ $x, $b)
   | _  => throw ()
@@ -125,7 +130,7 @@ There has to be an instance `IndexType I n` and `Fold I`. -/
 macro "maxᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.max fun $x => $b)
 
 open Lean.Parser.Term in
-@[app_unexpander max] def unexpandIndexTypeMax : Lean.PrettyPrinter.Unexpander
+@[app_unexpander max] meta def unexpandIndexTypeMax : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:funBinder => $b) =>
     `(maxᴵ $x, $b)
   | _  => throw ()
@@ -136,7 +141,7 @@ open Lean.Parser.Term in
 macro "argMaxᴵ " x:funBinder ", " b:term:66 : term => `(IndexType.argMax fun $x => $b)
 
 open Lean.Parser.Term in
-@[app_unexpander argMax] def unexpandIndexTypeArgMax : Lean.PrettyPrinter.Unexpander
+@[app_unexpander argMax] meta def unexpandIndexTypeArgMax : Lean.PrettyPrinter.Unexpander
   | `($(_) fun $x:funBinder => $b) =>
     `(argMaxᴵ $x, $b)
   | _  => throw ()

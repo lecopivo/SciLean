@@ -1,16 +1,24 @@
-import Lean.Elab.Tactic.Simp
-import Lean.Elab.Tactic.Conv.Basic
+module
+
+public import Lean.Elab.Tactic.Simp
+
+public meta import Lean.Elab.Tactic.Simp
+public import Lean.Elab.Tactic.Conv.Basic
+public meta import Lean.Elab.Tactic.Conv.Basic
+
+@[expose] public meta section
+
 
 namespace Lean.Elab.Tactic.Conv
 open Meta
 
-private def getContext : MetaM Simp.Context := do
+def getContext : MetaM Simp.Context := do
   Simp.mkContext
     (config        := Simp.neutralConfig)
     (simpTheorems  := {})
     (congrTheorems := (← getSimpCongrTheorems))
 
-private def pre (letName : Name) (state : IO.Ref (MVarId ⊕ Nat)) (e : Expr) : SimpM Simp.Step := do
+def pre (letName : Name) (state : IO.Ref (MVarId ⊕ Nat)) (e : Expr) : SimpM Simp.Step := do
   match ← state.get with
   | .inl _ => return Simp.Step.visit { expr := e }
   | .inr n =>

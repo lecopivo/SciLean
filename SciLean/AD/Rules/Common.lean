@@ -1,12 +1,17 @@
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Analysis.Calculus.ContDiff
+module
 
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Tactic.ConvAssign
-import SciLean.Lean.ToSSA
-import SciLean.Meta.GenerateFunProp
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Analysis.Calculus.ContDiff
+
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Tactic.ConvAssign
+public import SciLean.Lean.ToSSA
+public import SciLean.Meta.GenerateFunProp
+
+@[expose] public section
+
 
 
 open SciLean

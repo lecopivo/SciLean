@@ -1,11 +1,16 @@
-import SciLean.Mechanics
-import SciLean.Operators.ODE
-import SciLean.Solver 
-import SciLean.Tactic.LiftLimit
-import SciLean.Tactic.FinishImpl
-import SciLean.Data.DataArray
-import SciLean.Core.Extra
-import SciLean.Functions
+module
+
+public import SciLean.Mechanics
+public import SciLean.Operators.ODE
+public import SciLean.Solver
+public import SciLean.Tactic.LiftLimit
+public import SciLean.Tactic.FinishImpl
+public import SciLean.Data.DataArray
+public import SciLean.Core.Extra
+public import SciLean.Functions
+
+@[expose] public section
+
 
 open SciLean
 

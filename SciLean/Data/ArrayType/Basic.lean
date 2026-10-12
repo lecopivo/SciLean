@@ -1,9 +1,14 @@
-import SciLean.Util.SorryProof
-import SciLean.Data.ListN
-import SciLean.Data.StructType.Basic
-import SciLean.Data.IndexType
+module
 
-import SciLean.Meta.SimpAttr
+public import SciLean.Util.SorryProof
+public import SciLean.Data.ListN
+public import SciLean.Data.StructType.Basic
+public import SciLean.Data.IndexType
+
+public import SciLean.Meta.SimpAttr
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -97,9 +102,8 @@ theorem get_modify_neq (xs : Cont) (f : Elem → Elem) (i j : Idx) (h : i ≠ j)
   get (modify xs i f) j = get xs j := by rw[modify_set]; simp[get_set_neq,h]
 
 
-instance (priority:=low) [ArrayType Cont Idx Elem] [ToString Elem]
-    {n} [IndexType Idx n] [Fold Idx] :
-    ToString (Cont) := ⟨λ x => Id.run do
+instance (priority:=low) [ToString Elem] :
+    ToString Cont := ⟨λ x => Id.run do
   let mut fst := true
   let mut s := "⊞["
   for i in fullRange Idx do

@@ -1,5 +1,10 @@
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 -- import SciLean.Data
 
 open ComplexConjugate
@@ -178,6 +183,7 @@ instance {𝕜} [RCLike 𝕜]
   dualProj_linear := sorry_proof
 
 
+@[instance_reducible]
 def CanonicalBasis.ofEquiv
     {J : Type*} (I : Type*) {Y : Type*} (X : Type*)
     {𝕜 : Type*} [RCLike 𝕜]

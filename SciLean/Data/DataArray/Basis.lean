@@ -1,5 +1,10 @@
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Data.DataArray.Algebra
+module
+
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Data.DataArray.Algebra
+
+@[expose] public section
+
 
 namespace SciLean
 

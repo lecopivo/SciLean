@@ -1,4 +1,9 @@
-import SciLean.Data.IndexType.Basic
+module
+
+public import SciLean.Data.IndexType.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -144,6 +149,7 @@ theorem symm_comp_self (e : IndexEquiv I J) : e.symm ∘ e = id :=
 theorem self_comp_symm (e : IndexEquiv I J) : e ∘ e.symm = id :=
   funext e.apply_symm_apply
 
+set_option linter.deprecated false in
 theorem apply_eq_iff_symm_apply (e : IndexEquiv I J) {i : I} {j : J} : e i = j ↔ i = e.symm j :=
   e.toEquiv.apply_eq_iff_eq_symm_apply
 

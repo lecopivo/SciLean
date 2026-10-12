@@ -1,7 +1,12 @@
-import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
-import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
+module
 
-import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+public import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
+public import SciLean.Modules.Prob.DistribDeriv.DistribFwdDeriv
+
+public import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

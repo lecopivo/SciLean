@@ -1,4 +1,9 @@
-import SciLean.Analysis.Scalar
+module
+
+public import SciLean.Analysis.Scalar
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -14,7 +19,7 @@ def multiGamma (x : R) (p : ℕ) : R :=
 
 
 @[simp, simp_core]
-def toReal_multiGamma (x : R) (p : ℕ) :
+theorem toReal_multiGamma (x : R) (p : ℕ) :
   toReal R (multiGamma x p)
   =
   Real.pi ^ (p*(p-1)/(4:ℝ))
@@ -23,7 +28,7 @@ def toReal_multiGamma (x : R) (p : ℕ) :
 
 
 @[simp, simp_core]
-def multiGamma_one (x : R) :
+theorem multiGamma_one (x : R) :
     (multiGamma x 1)
     =
     tgamma x := by simp[multiGamma]; sorry_proof
@@ -36,11 +41,11 @@ def logMultiGamma (x : R) (p : ℕ) : R :=
 
 
 @[simp, simp_core]
-def log_abs_multiGamma_eq_logMultiGamma (x : R) (p : ℕ) :
+theorem log_abs_multiGamma_eq_logMultiGamma (x : R) (p : ℕ) :
     log (Scalar.abs (multiGamma x p)) = logMultiGamma x p := sorry_proof
 
 
 @[simp, simp_core]
-def logMultiGamma_one (x : R) :
+theorem logMultiGamma_one (x : R) :
     logMultiGamma x 1 = lgamma x := by
   simp[logMultiGamma]; sorry_proof

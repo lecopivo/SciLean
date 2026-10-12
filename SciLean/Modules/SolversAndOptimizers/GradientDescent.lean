@@ -1,6 +1,11 @@
-import SciLean.Core
-import SciLean.Core.Functions.ArgMinMax
-import SciLean.Util.Limit
+module
+
+public import SciLean.Core
+public import SciLean.Core.Functions.ArgMinMax
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 namespace SciLean
 

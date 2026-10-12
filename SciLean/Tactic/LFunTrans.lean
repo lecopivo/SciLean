@@ -3,8 +3,16 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Tactic.LSimp
+module
+
+public import SciLean.Tactic.FunTrans.Elab
+
+public meta import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Tactic.LSimp
+public meta import SciLean.Tactic.LSimp
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic
 open Lean Meta Elab Tactic Mathlib.Meta.FunTrans Lean.Parser.Tactic

@@ -1,4 +1,9 @@
-import SciLean
+module
+
+public import SciLean
+
+@[expose] public section
+
 
 /-! Simproc designed to simplify sums, `∑ i, f i`
 

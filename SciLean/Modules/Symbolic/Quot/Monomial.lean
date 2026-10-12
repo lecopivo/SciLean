@@ -1,5 +1,10 @@
-import SciLean.Modules.Symbolic.Quot.FreeMonoid
-import SciLean.Modules.Symbolic.Quot.QuotQ
+module
+
+public import SciLean.Modules.Symbolic.Quot.FreeMonoid
+public import SciLean.Modules.Symbolic.Quot.QuotQ
+
+@[expose] public section
+
 
 inductive List.Sorted {X : Type u} [LT X] : List X → Prop where
 | empty : Sorted []

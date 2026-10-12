@@ -1,11 +1,18 @@
-import SciLean.Meta.DerivingOp
+module
+
+public import SciLean.Meta.DerivingOp
+
+public meta import SciLean.Meta.DerivingOp
+
+@[expose] public meta section
+
 
 open Lean Elab Command
 
 namespace SciLean.Meta
 
 
-private def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Unit := do
+def mkAlgebraInstance (algName : Name) (declName : Name) : TermElabM Unit := do
   let env ← getEnv
   match getStructureInfo? env declName with
   | some info => do

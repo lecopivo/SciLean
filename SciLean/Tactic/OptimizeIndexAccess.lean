@@ -1,9 +1,21 @@
-import Lean
-import SciLean.Data.DataArray
-import SciLean.Data.IndexType
+module
 
-import SciLean.Tactic.RefinedSimp
-import SciLean.Tactic.OptimizeIndexAccessInit
+public import Lean
+
+public meta import Lean
+public import SciLean.Data.DataArray
+public meta import SciLean.Data.DataArray
+public import SciLean.Data.IndexType
+public meta import SciLean.Data.IndexType
+
+public import SciLean.Tactic.RefinedSimp
+
+public meta import SciLean.Tactic.RefinedSimp
+public import SciLean.Tactic.OptimizeIndexAccessInit
+public meta import SciLean.Tactic.OptimizeIndexAccessInit
+
+@[expose] public meta section
+
 
 namespace SciLean
 

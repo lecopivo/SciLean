@@ -1,7 +1,12 @@
-import Mathlib.MeasureTheory.Measure.VectorMeasure
-import Mathlib.Logic.Function.Basic
+module
 
-import SciLean.Modules.Prob.DRand
+public import Mathlib.MeasureTheory.Measure.VectorMeasure
+public import Mathlib.Logic.Function.Basic
+
+public import SciLean.Modules.Prob.DRand
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 
@@ -99,7 +104,7 @@ macro_rules
 
 
 open Lean Parser
-@[app_unexpander FDRand.bind] def unexpandFDRandBind : Lean.PrettyPrinter.Unexpander
+@[app_unexpander FDRand.bind] meta def unexpandFDRandBind : Lean.PrettyPrinter.Unexpander
 
 | `($(_) $y $f) =>
   match f.raw with

@@ -1,6 +1,11 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Tactic.Autodiff
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Tactic.Autodiff
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 --------------------------------------------------------------------------------
 -- Notation  -------------------------------------------------------------------
@@ -82,8 +87,8 @@ macro_rules
 | `(∂! ($x:term := $val:term;$dir:term), $b) => `(∂! $x:term := $val:term;$dir:term, $b)
 
 
--- @[app_unexpander cderiv] def unexpandCDeriv : Lean.PrettyPrinter.Unexpander
-@[app_unexpander fderiv] def unexpandFDeriv : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander cderiv] meta def unexpandCDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander fderiv] meta def unexpandFDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $_ $f:term $x $dx $y $ys*) =>
     match f with
@@ -111,8 +116,8 @@ macro_rules
 
   | _  => throw ()
 
--- @[app_unexpander scalarCDeriv] def unexpandScalarCDeriv : Lean.PrettyPrinter.Unexpander
-@[app_unexpander deriv] def unexpandDeriv : Lean.PrettyPrinter.Unexpander
+-- @[app_unexpander scalarCDeriv] meta def unexpandScalarCDeriv : Lean.PrettyPrinter.Unexpander
+@[app_unexpander deriv] meta def unexpandDeriv : Lean.PrettyPrinter.Unexpander
 
   | `($(_) $f:term $x $y $ys*) =>
     match f with

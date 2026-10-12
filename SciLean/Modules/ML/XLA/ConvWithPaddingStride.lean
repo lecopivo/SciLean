@@ -1,7 +1,12 @@
-import SciLean.Modules.ML.XLA.ConvWithPadding
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Tactic.LetUtils
-import SciLean.Tactic.CompiledTactics
+module
+
+public import SciLean.Modules.ML.XLA.ConvWithPadding
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Tactic.LetUtils
+public import SciLean.Tactic.CompiledTactics
+
+@[expose] public section
+
 
 namespace SciLean
 

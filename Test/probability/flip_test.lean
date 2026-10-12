@@ -1,6 +1,11 @@
-import SciLean.Probability.Distributions.Flip
-import SciLean.Probability.Tactic
-import SciLean.Analysis.Scalar.FloatAsReal
+module
+
+public import SciLean.Probability.Distributions.Flip
+public import SciLean.Probability.Tactic
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

@@ -1,4 +1,9 @@
-import SciLean.Analysis.Calculus.ContDiff
+module
+
+public import SciLean.Analysis.Calculus.ContDiff
+
+@[expose] public section
+
 
 namespace SciLean.Diffeology.Util
 

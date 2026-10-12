@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 @[extern "scilean_float_array_to_byte_array"]
 opaque FloatArray.toByteArray (x : FloatArray) : ByteArray
 

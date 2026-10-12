@@ -6,6 +6,10 @@
 
 -- import LeanBLAS
 
+module
+
+@[expose] public section
+
 namespace SciLean
 
 -- open BLAS

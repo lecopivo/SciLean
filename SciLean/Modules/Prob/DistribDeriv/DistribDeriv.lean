@@ -1,4 +1,9 @@
-import SciLean.Modules.Prob.DistribDeriv.Distribution
+module
+
+public import SciLean.Modules.Prob.DistribDeriv.Distribution
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

@@ -1,7 +1,12 @@
- import Lean
+module
+
+ public import Lean
 -- import SciLean
-import SciLean.Data.DataArray
-import SciLean.Core.FloatAsReal
+public import SciLean.Data.DataArray
+public import SciLean.Core.FloatAsReal
+
+@[expose] public section
+
 
 open SciLean
 open IO FS System

@@ -1,4 +1,9 @@
-import SciLean.Data.Mesh.PrismaticSet
+module
+
+public import SciLean.Data.Mesh.PrismaticSet
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -27,7 +32,7 @@ namespace SciLean
   abbrev closestPoint {X} [Vec X] (M : PrismaticMesh X) [ClosestPoint M] (x : X) := ClosestPoint.closestPoint (M:=M) x
 
   @[inline]
-  private def sort3 {α} (a b c : α) [LT α] [∀ x y : α, Decidable (x<y)] : α×α×α := Id.run do
+  def sort3 {α} (a b c : α) [LT α] [∀ x y : α, Decidable (x<y)] : α×α×α := Id.run do
     let mut a' := a
     let mut b' := b
     let mut c' := c

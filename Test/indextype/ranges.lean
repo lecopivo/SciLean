@@ -1,5 +1,10 @@
-import SciLean.Data.IndexType.Fold
-import SciLean.Tactic.SimpleProxyType
+module
+
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Tactic.SimpleProxyType
+
+@[expose] public section
+
 
 open SciLean
 

@@ -1,6 +1,11 @@
-import Mathlib.Order.Notation
-import Batteries.Lean.Float
-import SciLean.FFI.Float
+module
+
+public import Mathlib.Order.Notation
+public import Batteries.Data.Float.Basic
+public import SciLean.FFI.Float
+
+@[expose] public section
+
 
 namespace Float
 

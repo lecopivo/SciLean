@@ -1,9 +1,14 @@
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Data.ArrayOperations.Algebra
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.IfPull
+module
+
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Data.ArrayOperations.Algebra
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.IfPull
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -38,7 +43,7 @@ theorem setElem.arg_xsv.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
     [AddCommGroup Y] [Module 𝕜 Y] [TopologicalSpace Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] (i : I) :
     IsContinuousLinearMap 𝕜 (fun xy : X×Y => setElem xy.1 i xy.2 .intro) := by
-  constructor; fun_prop; dsimp[autoParam]; fun_prop
+  constructor <;> fun_prop
 
 @[data_synth]
 theorem setElem.arg_xsv.HasFDerivAt_rule {𝕜 X I Y : Type*}

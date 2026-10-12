@@ -1,5 +1,10 @@
-import SciLean.Math.Symbolic.Basic
-import SciLean.Math.Symbolic.Polynomial
+module
+
+public import SciLean.Math.Symbolic.Basic
+public import SciLean.Math.Symbolic.Polynomial
+
+@[expose] public section
+
 
 namespace SciLean.Symbolic
 

@@ -1,4 +1,9 @@
-import SciLean.Data.Mesh.Prism
+module
+
+public import SciLean.Data.Mesh.Prism
+
+@[expose] public section
+
 
 namespace SciLean
 

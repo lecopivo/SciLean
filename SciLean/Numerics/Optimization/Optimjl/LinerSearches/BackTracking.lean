@@ -1,8 +1,14 @@
-import SciLean.Data.DataArray
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
-import SciLean.Analysis.Calculus.Notation.Deriv
-import SciLean.Analysis.Calculus.Notation.FwdDeriv
+module
+
+public import SciLean.Data.DataArray
+public import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+public import SciLean.Analysis.Calculus.Notation.Deriv
+public import SciLean.Analysis.Calculus.Notation.FwdDeriv
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 namespace SciLean.Optimjl
 

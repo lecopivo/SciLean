@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

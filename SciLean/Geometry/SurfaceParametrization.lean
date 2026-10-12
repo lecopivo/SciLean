@@ -1,11 +1,16 @@
-import Mathlib.Data.Set.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.MeasureTheory.Measure.Hausdorff
+module
 
-import SciLean.Analysis.Scalar
+public import Mathlib.Data.Set.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import Mathlib.MeasureTheory.Measure.Hausdorff
+
+public import SciLean.Analysis.Scalar
 -- import SciLean.Analysis.Calculus.Jacobian
-import SciLean.Tactic.GTrans
+public import SciLean.Tactic.GTrans
+
+@[expose] public section
+
 
 open MeasureTheory
 

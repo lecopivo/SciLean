@@ -1,8 +1,13 @@
-import SciLean.Algebra.MatrixType.Basic
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Analysis.Calculus.ContDiff
+module
+
+public import SciLean.Algebra.MatrixType.Basic
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Analysis.Calculus.ContDiff
+
+@[expose] public section
+
 
 namespace SciLean
 

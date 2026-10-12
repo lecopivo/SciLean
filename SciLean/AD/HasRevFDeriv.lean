@@ -1,11 +1,16 @@
-import SciLean.Analysis.AdjointSpace.HasAdjoint
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Data.Nat
+module
+
+public import SciLean.Analysis.AdjointSpace.HasAdjoint
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Data.Nat
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
 
-import SciLean.Util.RewriteBy
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -82,7 +87,7 @@ theorem HasRevFDerivUpdate.toHasRevFDeriv {f : X → Y} {f' : X → Y×(Y→X→
         (y, fun dy => df' dy 0)) := sorry_proof
 
 set_option linter.unusedVariables false in
-def HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
+theorem HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
   (h : HasRevFDeriv K f f') :
   (∀ x, (f' x).1 = f x)
   ∧
@@ -92,7 +97,7 @@ def HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
     (∀ x, HasAdjoint K (df x) ((f' x).2)) := sorry_proof
 
 set_option linter.unusedVariables false in
-def HasRevFDerivUpdate.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X→X)}
+theorem HasRevFDerivUpdate.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X→X)}
   (h : HasRevFDerivUpdate K f f') :
   (∀ x, (f' x).1 = f x)
   ∧
@@ -105,7 +110,7 @@ def HasRevFDerivUpdate.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X→X)}
       (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy) := sorry_proof
 
 set_option linter.unusedVariables false in
-def HasRevFDerivUpdate.deriv_adjointUpdate {f : X → Y} {f' : X → Y×(Y→X→X)}
+theorem HasRevFDerivUpdate.deriv_adjointUpdate {f : X → Y} {f' : X → Y×(Y→X→X)}
   (h : HasRevFDerivUpdate K f f') :
   (∀ x, (f' x).1 = f x)
   ∧

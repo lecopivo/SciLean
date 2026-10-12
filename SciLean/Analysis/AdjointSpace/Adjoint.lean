@@ -1,10 +1,16 @@
-import SciLean.Analysis.AdjointSpace.Basic
+module
 
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Normed.Norm2
+public import SciLean.Analysis.AdjointSpace.Basic
 
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Normed.Norm2
+
+public import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Tactic.FunTrans.Attr
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 set_option linter.unusedVariables false
 

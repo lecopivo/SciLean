@@ -1,7 +1,12 @@
-import Mathlib.MeasureTheory.Measure.VectorMeasure
-import Mathlib.Logic.Function.Basic
+module
 
-import Probly.DRand
+public import Mathlib.MeasureTheory.Measure.VectorMeasure
+public import Mathlib.Logic.Function.Basic
+
+public import Probly.DRand
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

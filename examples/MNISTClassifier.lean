@@ -1,16 +1,21 @@
- import Lean
+module
+
+ public import Lean
 -- import SciLean
-import SciLean.Data.ArrayType.Algebra
-import SciLean.Data.DataArray
-import SciLean.Core.FloatAsReal
-import SciLean.Data.Random
+public import SciLean.Data.ArrayType.Algebra
+public import SciLean.Data.DataArray
+public import SciLean.Core.FloatAsReal
+public import SciLean.Data.Random
 
-import SciLean.Modules.ML.Dense
-import SciLean.Modules.ML.Convolution
-import SciLean.Modules.ML.Pool
-import SciLean.Modules.ML.MNIST
+public import SciLean.Modules.ML.Dense
+public import SciLean.Modules.ML.Convolution
+public import SciLean.Modules.ML.Pool
+public import SciLean.Modules.ML.MNIST
 
-import SciLean.Util.Profile
+public import SciLean.Util.Profile
+
+@[expose] public section
+
 
 
 open SciLean

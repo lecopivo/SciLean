@@ -1,4 +1,9 @@
-import Probly.RandFwdDeriv
+module
+
+public import Probly.RandFwdDeriv
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

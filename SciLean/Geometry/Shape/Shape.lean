@@ -1,7 +1,12 @@
 -- import SciLean.Core
 -- import SciLean.Modules.Geometry.Shape.Rotation
-import Mathlib.Topology.Basic
-import SciLean.Geometry.BoundingBall
+module
+
+public import Mathlib.Topology.Basic
+public import SciLean.Geometry.BoundingBall
+
+@[expose] public section
+
 -- import Mathlib.Data.Real.EReal
 
 namespace SciLean

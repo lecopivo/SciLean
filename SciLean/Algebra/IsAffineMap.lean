@@ -1,5 +1,10 @@
-import Mathlib.Algebra.Module.LinearMap.Basic
-import SciLean.Algebra.IsLinearMap
+module
+
+public import Mathlib.Algebra.Module.LinearMap.Basic
+public import SciLean.Algebra.IsLinearMap
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 
@@ -47,7 +52,11 @@ theorem comp_rule {f : Y → Z} {g : X → Y}
   sorry_proof
 
 @[fun_prop]
-theorem apply_rule (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by sorry_proof
+theorem apply_rule (i : ι) : IsAffineMap R (fun f : (i : ι) → E i ↦ f i) := by
+  constructor
+  constructor
+  simp
+  simp
 
 @[fun_prop]
 theorem IsAffineMap_pi (f : X → (i : ι) → E i) (hf : ∀ i, IsAffineMap R (f · i)) :

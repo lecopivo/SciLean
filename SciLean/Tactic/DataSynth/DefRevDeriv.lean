@@ -1,6 +1,13 @@
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.ArrayOperations
-import SciLean.Tactic.DataSynth.Elab
+module
+
+public import SciLean.Tactic.DataSynth.Elab
+
+public meta import SciLean.Tactic.DataSynth.Elab
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic.DataSynth
 
@@ -82,7 +89,7 @@ open Lean Elab Command Meta Qq
 --     let statement ← mkForallFVars args goal
 --     return (statement,args.size,lvlNames)
 
--- private partial def mkUnusedName (names : List Name) (baseName : Name) : Name :=
+-- partial def mkUnusedName (names : List Name) (baseName : Name) : Name :=
 --   if not (names.contains baseName) then
 --     baseName
 --   else

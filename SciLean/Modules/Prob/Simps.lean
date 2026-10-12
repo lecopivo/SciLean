@@ -1,8 +1,13 @@
-import Mathlib.Control.Random
-import Mathlib.MeasureTheory.Measure.Count
-import Mathlib.Probability.Density
+module
 
-import SciLean.Modules.Prob.SimpAttr
+public import Mathlib.Control.Random
+public import Mathlib.MeasureTheory.Measure.Count
+public import Mathlib.Probability.Density
+
+public import SciLean.Modules.Prob.SimpAttr
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

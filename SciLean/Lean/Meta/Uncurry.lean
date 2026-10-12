@@ -1,12 +1,27 @@
-import Lean
-import Batteries.Lean.Expr
+module
 
-import SciLean.Lean.Expr
-import SciLean.Lean.Array
-import SciLean.Lean.Meta.Basic
-import SciLean.Util.RewriteBy
+public import Lean
 
-import Mathlib.Logic.Function.Basic
+public meta import Lean
+public import Batteries.Lean.Expr
+public meta import Batteries.Lean.Expr
+
+public import SciLean.Lean.Expr
+
+public meta import SciLean.Lean.Expr
+public import SciLean.Lean.Array
+public meta import SciLean.Lean.Array
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+
+public import Mathlib.Logic.Function.Basic
+
+public meta import Mathlib.Logic.Function.Basic
+
+@[expose] public meta section
+
 
 set_option linter.unusedVariables false
 
@@ -79,7 +94,7 @@ def mkUncurryFun' (n : Nat) (f : Expr) (withLet := true) : MetaM Expr := do
       mkUncurryLambdaFVars xs b (withLet := withLet)
 
 
-private def _root_.Lean.Expr.isProjOf (x y : Expr) : Bool :=
+def _root_.Lean.Expr.isProjOf (x y : Expr) : Bool :=
   if (x == (.proj ``Prod 0 y)) ||
      (x == (.proj ``Prod 1 y)) then
     true
@@ -89,7 +104,7 @@ private def _root_.Lean.Expr.isProjOf (x y : Expr) : Bool :=
     | _ => false
 
 
-private partial def uncurryBodyTelescope (e : Expr) (x : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := do
+partial def uncurryBodyTelescope (e : Expr) (x : Expr) (k : Array Expr → Expr → MetaM α) : MetaM α := do
   go e x #[]
 where
   go (b : Expr) (x' : Expr) (fvars : Array Expr) := do

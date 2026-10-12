@@ -1,5 +1,10 @@
-import Lean
-import SciLean.Functions.FFT
+module
+
+public import Lean
+public import SciLean.Functions.FFT
+
+@[expose] public section
+
 
 open SciLean
 open Lean Widget

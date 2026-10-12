@@ -1,6 +1,15 @@
-import SciLean.Tactic.StructureDecomposition
-import SciLean.Tactic.LetNormalize
-import SciLean.Data.Function
+module
+
+public import SciLean.Tactic.StructureDecomposition
+
+public meta import SciLean.Tactic.StructureDecomposition
+public import SciLean.Tactic.LetNormalize
+public meta import SciLean.Tactic.LetNormalize
+public import SciLean.Data.Function
+public meta import SciLean.Data.Function
+
+@[expose] public meta section
+
 
 namespace SciLean.Meta
 
@@ -22,7 +31,7 @@ local instance : Ord (Nat×Expr×FVarIdSet) where
     | _, _ => compare x.size y.size
 
 
-private structure SystemInverse where
+structure SystemInverse where
   /-- context holding additional let fvars that have been introduced during solving -/
   lctx : LocalContext
   /-- array of new let fvars -/
@@ -35,13 +44,13 @@ private structure SystemInverse where
   xVals : Array Expr
 
 
-private def equationsToString (yVals fVals : Array Expr) : MetaM String :=
+def equationsToString (yVals fVals : Array Expr) : MetaM String :=
   yVals.zip fVals
     |>.joinlM (fun (y,val) => do pure s!"{← ppExpr y} = {← ppExpr val}")
               (fun s s' => pure (s ++ "\n" ++ s'))
 
 
-private def partiallyResolvedSystemToString
+def partiallyResolvedSystemToString
   (lctx : LocalContext) (xResVars' yVals : Array Expr)
   (eqs : Array (Nat × Expr × FVarIdSet)) : MetaM String := do
   withLCtx lctx (← getLocalInstances) do
@@ -51,7 +60,7 @@ private def partiallyResolvedSystemToString
          |>.unzip
     pure s!"{lets}\n{← equationsToString yVals' fVals'}"
 
-private def afterBackwardPassSystemToString
+def afterBackwardPassSystemToString
   (lctx : LocalContext) (xResVars' xVars'' xVars xVals : Array Expr) := do
   withLCtx lctx (← getLocalInstances) do
     let lets ← (xResVars' ++ xVars'').joinlM (fun var => do pure s!"let {← var.fvarId!.getUserName} := {← ppExpr (← var.fvarId!.getValue?).get!}")
@@ -71,7 +80,7 @@ Returns values of `xᵢ` in terms of `yⱼ`.
 
 If `n>m` then the values `xᵢ` can depend also on other `xₖ`. The set `n-m` xs
 -/
-private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Option (SystemInverse × Array MVarId)) := do
+partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Option (SystemInverse × Array MVarId)) := do
 
   trace[Meta.Tactic.structuralInverse.step] "inverting system in variables {← xVars.mapM ppExpr}\n{← equationsToString yVals fVals}"
 
@@ -96,7 +105,7 @@ private partial def invertValues (xVars yVals fVals : Array Expr) : MetaM (Optio
   for i in [0:fVals.size] do
 
     -- find the yVal with the minimal number of xVals in it
-    let (j,yVal,varSet) := eqs.minI
+    let (j,yVal,varSet) := eqs.rangeMinI
 
     let yType ← inferType yVal
 

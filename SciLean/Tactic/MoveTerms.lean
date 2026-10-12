@@ -1,10 +1,23 @@
-import Lean
+module
 
-import Mathlib.Algebra.Group.Defs
+public import Lean
 
-import SciLean.Lean.Expr
-import SciLean.Lean.Meta.Basic
-import SciLean.Util.SorryProof
+public meta import Lean
+
+public import Mathlib.Algebra.Group.Defs
+
+public meta import Mathlib.Algebra.Group.Defs
+
+public import SciLean.Lean.Expr
+
+public meta import SciLean.Lean.Expr
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Util.SorryProof
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -12,7 +25,7 @@ open  Lean Elab Tactic Conv Meta
 
 namespace MoveTermsTo
 
-private def splitAddOfTypeImpl (e E : Expr) (negate : Bool) : MetaM (Array Expr) := do
+def splitAddOfTypeImpl (e E : Expr) (negate : Bool) : MetaM (Array Expr) := do
   match e with
   | .mdata _ e' => return ← splitAddOfTypeImpl e' E negate
   | Expr.mkApp6 (.const name _) X Y Z _ x y =>

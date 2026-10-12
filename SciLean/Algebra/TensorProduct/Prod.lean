@@ -1,9 +1,14 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Self
+module
 
-import SciLean.Algebra.TensorProduct.ProdMatrixCol
-import SciLean.Algebra.TensorProduct.ProdMatrixRow
-import SciLean.Algebra.TensorProduct.ProdMatrix
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.TensorProduct.Self
+
+public import SciLean.Algebra.TensorProduct.ProdMatrixCol
+public import SciLean.Algebra.TensorProduct.ProdMatrixRow
+public import SciLean.Algebra.TensorProduct.ProdMatrix
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,10 +1,15 @@
-import SciLean.Core
-import SciLean.Data.GenericArray
-import SciLean.Data.FunRec
-import SciLean.Tactic.ConvIf
-import SciLean.Meta.DerivingOp
-import SciLean.Meta.DerivingAlgebra
-import SciLean.Solver.Solver
+module
+
+public import SciLean.Core
+public import SciLean.Data.GenericArray
+public import SciLean.Data.FunRec
+public import SciLean.Tactic.ConvIf
+public import SciLean.Meta.DerivingOp
+public import SciLean.Meta.DerivingAlgebra
+public import SciLean.Solver.Solver
+
+@[expose] public section
+
 
 namespace SciLean
 

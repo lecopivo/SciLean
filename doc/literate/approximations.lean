@@ -1,5 +1,10 @@
-import SciLean
-import SciLean.Tactic.ConvIf
+module
+
+public import SciLean
+public import SciLean.Tactic.ConvIf
+
+@[expose] public section
+
 open SciLean
 
 

@@ -1,5 +1,9 @@
 -- import SciLean.Categories
 
+module
+
+@[expose] public section
+
 namespace SciLean
 
 namespace Symbolic

@@ -1,4 +1,9 @@
-import SciLean.Geometry.Shape.Basic
+module
+
+public import SciLean.Geometry.Shape.Basic
+
+@[expose] public section
+
 
 
 namespace SciLean

@@ -1,8 +1,13 @@
-import Mathlib.MeasureTheory.Measure.Prod
+module
 
-import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Data.DataArray
-import SciLean.Probability.Rand
+public import Mathlib.MeasureTheory.Measure.Prod
+
+public import SciLean.Analysis.AdjointSpace.Geometry
+public import SciLean.Data.DataArray
+public import SciLean.Probability.Rand
+
+@[expose] public section
+
 
 open MeasureTheory Set
 

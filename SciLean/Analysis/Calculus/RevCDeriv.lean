@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 -- import SciLean.Analysis.Convenient.HasAdjDiff
 -- import SciLean.Analysis.Convenient.SemiAdjoint
 -- import SciLean.Analysis.FunctionSpaces.SmoothLinearMap

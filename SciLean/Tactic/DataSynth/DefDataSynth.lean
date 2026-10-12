@@ -1,5 +1,13 @@
-import SciLean.Analysis.Scalar
-import SciLean.Tactic.DataSynth.Elab
+module
+
+public import SciLean.Analysis.Scalar
+
+public meta import SciLean.Analysis.Scalar
+public import SciLean.Tactic.DataSynth.Elab
+public meta import SciLean.Tactic.DataSynth.Elab
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic.DataSynth
 

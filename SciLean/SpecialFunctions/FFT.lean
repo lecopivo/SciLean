@@ -1,5 +1,10 @@
-import SciLean.Core
-import SciLean.Data.DataArray
+module
+
+public import SciLean.Core
+public import SciLean.Data.DataArray
+
+@[expose] public section
+
 
 namespace SciLean
 

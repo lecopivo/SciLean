@@ -1,7 +1,12 @@
-import Mathlib.Algebra.Module.Defs
-import Mathlib.LinearAlgebra.Dimension.Finrank
-import SciLean.Analysis.Scalar
-import SciLean.Util.RewriteBy
+module
+
+public import Mathlib.Algebra.Module.Defs
+public import Mathlib.LinearAlgebra.Dimension.Finrank
+public import SciLean.Analysis.Scalar
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean
 

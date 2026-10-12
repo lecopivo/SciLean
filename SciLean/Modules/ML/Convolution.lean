@@ -1,7 +1,12 @@
-import SciLean.Core
-import SciLean.Data.DataArray
-import SciLean.Data.ArrayType
-import SciLean.Data.Prod
+module
+
+public import SciLean.Core
+public import SciLean.Data.DataArray
+public import SciLean.Data.ArrayType
+public import SciLean.Data.Prod
+
+@[expose] public section
+
 
 namespace SciLean.ML
 

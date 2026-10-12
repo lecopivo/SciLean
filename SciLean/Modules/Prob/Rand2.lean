@@ -1,10 +1,15 @@
-import SciLean.Core.Objects.Scalar
-import SciLean.Modules.Prob.Init
-import SciLean.Modules.Prob.Simps
-import SciLean.Modules.Prob.Tactic
-import SciLean.Modules.Prob.DistribDeriv.Distribution
+module
 
-import Mathlib.MeasureTheory.Measure.GiryMonad
+public import SciLean.Core.Objects.Scalar
+public import SciLean.Modules.Prob.Init
+public import SciLean.Modules.Prob.Simps
+public import SciLean.Modules.Prob.Tactic
+public import SciLean.Modules.Prob.DistribDeriv.Distribution
+
+public import Mathlib.MeasureTheory.Measure.GiryMonad
+
+@[expose] public section
+
 
 
 open MeasureTheory ENNReal BigOperators Finset
@@ -246,7 +251,7 @@ scoped macro x:term:65 " +[" θ:term "] " y:term:64 : term => `(term| combine $x
 
 
 open Lean Parser
-@[app_unexpander Rand2.combine] def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
+@[app_unexpander Rand2.combine] meta def unexpandRandCombine : Lean.PrettyPrinter.Unexpander
 | `($(_) $x $y $θ) => do Pure.pure (← `(term| $x +[$θ] $y)).raw
 | _ => throw ()
 

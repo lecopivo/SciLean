@@ -1,8 +1,19 @@
-import Lean
-import Batteries.Lean.Expr
+module
 
-import SciLean.Lean.Expr
-import SciLean.Lean.Array
+public import Lean
+public import Batteries.Lean.Expr
+
+public import SciLean.Lean.Expr
+public import SciLean.Lean.Array
+public import SciLean.Lean.ExceptToEmoji
+public meta import Lean
+public meta import Batteries.Lean.Expr
+public meta import SciLean.Lean.Expr
+public meta import SciLean.Lean.Array
+public meta import SciLean.Lean.ExceptToEmoji
+
+@[expose] public meta section
+
 
 namespace Lean
 
@@ -463,7 +474,7 @@ def withLocalDecls' [Inhabited α] [MonadControlT MetaM n] [Monad n]
   withLocalDecls (mkLocalDecls names bi types) k
 
 
-private partial def withLetDeclsImpl
+partial def withLetDeclsImpl
   (names : Array Name) (vals : Array Expr) (k : Array Expr → MetaM α) : MetaM α :=
   loop #[]
 where
@@ -486,14 +497,14 @@ def withLetDecls [MonadControlT MetaM n] [Monad n]
 --   {α} (k : β → γ → δ → m α) : m α :=
 --   controlAt MetaM fun runInBase => f (fun b c d => runInBase <| k b c d)
 
-@[inline] def map4MetaM [MonadControlT MetaM m] [Monad m]
+@[inline] def map4MetaM [MonadControlT MetaM m]
   (f : forall {α}, (β → γ → δ → ε → MetaM α) → MetaM α)
   {α} (k : β → γ → δ → ε → m α) : m α :=
   controlAt MetaM fun runInBase => f (fun b c d e => runInBase <| k b c d e)
 
 variable [MonadControlT MetaM n] [Monad n]
 
-private partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
+partial def flatLetTelescopeImpl {α} (fuel : Nat) (e : Expr) (k : Array Expr → Expr → MetaM α) (splitPairs := true) : MetaM α := do
   if fuel = 0 then
     k #[] e
   else
@@ -636,16 +647,16 @@ def reduceProjFn?' (e : Expr) : MetaM (Option Expr) := do
 
 namespace ReduceProjOfCtor
 
-private inductive Projection where
+inductive Projection where
 | proj (typeName : Name) (idx : Nat)
 | function (f : Expr) (idx : Nat)
 
-private def Projection.index (p : Projection) : Nat :=
+def Projection.index (p : Projection) : Nat :=
   match p with
   | .proj _ idx => idx
   | .function _ idx => idx
 
-private def peelOfProjections (e : Expr) (projections : List Projection := []) : MetaM (Expr × List Projection) :=
+def peelOfProjections (e : Expr) (projections : List Projection := []) : MetaM (Expr × List Projection) :=
   match e with
   | Expr.proj typeName idx e' => peelOfProjections e' ((.proj typeName idx) :: projections)
   | .app f x =>
@@ -661,12 +672,12 @@ private def peelOfProjections (e : Expr) (projections : List Projection := []) :
   | e' => pure (e',projections)
 
 
-private def applyProjections (e : Expr) : List Projection → Expr
+def applyProjections (e : Expr) : List Projection → Expr
   | [] => e
   | (.proj typeName idx) :: ps => applyProjections (.proj typeName idx e) ps
   | (.function f _) :: ps => applyProjections (f.app e) ps
 
-private def reduceProjections (e : Expr) (projections : List Projection) : CoreM Expr :=
+def reduceProjections (e : Expr) (projections : List Projection) : CoreM Expr :=
   match projections with
   | [] => pure e
   | p :: ps =>
@@ -679,7 +690,7 @@ private def reduceProjections (e : Expr) (projections : List Projection) : CoreM
 
 /-- Return none if no projections happen
 -/
-private def reduceProjections? (e : Expr) (projections : List Projection) : CoreM (Option Expr) :=
+def reduceProjections? (e : Expr) (projections : List Projection) : CoreM (Option Expr) :=
   match projections with
   | [] => pure none
   | p :: ps =>

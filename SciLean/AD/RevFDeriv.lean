@@ -1,12 +1,18 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.AdjointSpace.Adjoint
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option deprecated.oldSectionVars true
 
 namespace SciLean
 
-open ContinuousLinearMap
+set_option linter.ambiguousOpen false
+open _root_.ContinuousLinearMap
 
 @[fun_trans]
 noncomputable
@@ -525,7 +531,7 @@ theorem HInv.hInv.arg_a0a1.revFDeriv_rule_at
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.revFDeriv_rule_at
+theorem HPow.hPow.arg_a0.revFDeriv_rule_at
   (f : X → K) (x : X) (n : Nat) (hf : DifferentiableAt K f x)
   : revFDeriv K (fun x => f x ^ n) x
     =
@@ -536,7 +542,7 @@ by unfold revFDeriv; fun_trans
 
 
 @[fun_trans]
-def HPow.hPow.arg_a0.revFDeriv_rule
+theorem HPow.hPow.arg_a0.revFDeriv_rule
     (f : X → K) (n : Nat) (hf : Differentiable K f) :
     revFDeriv K (fun x => f x ^ n)
     =

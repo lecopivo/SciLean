@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Logic.Function.Bijective
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Logic.Function.Bijective
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 open SciLean
@@ -149,7 +154,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HMul.hMul.arg_a0.Diffeomorphism_rule
+theorem HMul.hMul.arg_a0.Diffeomorphism_rule
   (f : X → K) (y : K) (hf : Diffeomorphism K f) (hy : y≠0)
   : Diffeomorphism K (fun x => f x * y) :=
 by
@@ -160,7 +165,7 @@ by
   · fun_trans; fun_prop (disch:=assumption)
 
 @[fun_prop]
-def HMul.hMul.arg_a1.Diffeomorphism_rule
+theorem HMul.hMul.arg_a1.Diffeomorphism_rule
   (y : K) (f : X → K) (hy : y≠0) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => y * f x) :=
 by
@@ -175,7 +180,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HSMul.hSMul.arg_a1.Diffeomorphism_rule
+theorem HSMul.hSMul.arg_a1.Diffeomorphism_rule
   (r : K) (f : X → Y) (hr : r≠0) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => r • f x) :=
 by
@@ -190,7 +195,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def HDiv.hDiv.arg_a0.Diffeomorphism_rule
+theorem HDiv.hDiv.arg_a0.Diffeomorphism_rule
   (f : X → K) (r : K)
   (hf : Diffeomorphism K f) (hr : r ≠ 0)
   : Diffeomorphism K (fun x => f x / r) :=
@@ -206,7 +211,7 @@ by
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-def Nat.iterate.arg_a1.Diffeomorphism_rule
+theorem Nat.iterate.arg_a1.Diffeomorphism_rule
   (n : Nat) (f : X → X) (hf : Diffeomorphism K f)
   : Diffeomorphism K (fun x => f^[n] x) := by
   induction n
@@ -243,7 +248,7 @@ by
   ext x dx
   have H : (fun dx => (fderiv K (f ∘ invFun f) (g x)) dx)
            =
-           id := by simp[show (f ∘ Function.invFun f) = id from sorry_proof]; unfold id; fun_trans
+           id := by simp [show (f ∘ Function.invFun f) = id from sorry_proof]; rfl
   have q : fderiv K f (invFun f (g x)) (fderiv K (fun x => invFun f (g x)) x dx) = fderiv K g x dx := sorry_proof
   sorry_proof
 

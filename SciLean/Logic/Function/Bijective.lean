@@ -1,8 +1,13 @@
-import Mathlib.Algebra.Field.Defs
-import Mathlib.GroupTheory.GroupAction.Basic
-import Mathlib.Tactic.FunProp
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.GroupTheory.GroupAction.Basic
+public import Mathlib.Tactic.FunProp
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 
@@ -62,12 +67,16 @@ variable
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple
   : Bijective (fun xy : X×Y => (xy.1, xy.2))
-  := by sorry_proof
+  := by
+  simp
+  exact Function.bijective_id
 
 @[fun_prop]
 theorem Prod.mk.arg_fstsnd.Bijective_rule_simple'
   : Bijective (fun xy : X×Y => (xy.2, xy.1))
-  := by sorry_proof
+  := by
+  constructor <;> intro h
+  all_goals aesop
 
 
 @[fun_prop]

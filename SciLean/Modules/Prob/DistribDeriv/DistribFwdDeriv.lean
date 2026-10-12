@@ -1,5 +1,10 @@
-import SciLean.Core.FunctionTransformations
-import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
+module
+
+public import SciLean.Core.FunctionTransformations
+public import SciLean.Modules.Prob.DistribDeriv.DistribDeriv
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

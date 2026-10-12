@@ -1,6 +1,11 @@
-import SciLean.Prelude
-import SciLean.Data.Quotient.Lattice
-import SciLean.AutoImpl
+module
+
+public import SciLean.Prelude
+public import SciLean.Data.Quotient.Lattice
+public import SciLean.AutoImpl
+
+@[expose] public section
+
 
 /-- Function between Setoids
   Not sure about the name: Morphism, QFunction, QuotFun, QuotientFun, SetoidFun

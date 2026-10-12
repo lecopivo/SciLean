@@ -1,9 +1,14 @@
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Meta.Notation.Let'
-import SciLean.Lean.Meta.Basic
+module
+
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Meta.Notation.Let'
+public import SciLean.Lean.Meta.Basic
+
+@[expose] public section
+
 
 variable
   {K : Type u'} [RCLike K]

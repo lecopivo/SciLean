@@ -1,8 +1,13 @@
-import SciLean.Prelude
-import SciLean.Mathlib.Data.Enumtype
-import SciLean.Data.EnumType
+module
+
+public import SciLean.Prelude
+public import SciLean.Mathlib.Data.Enumtype
+public import SciLean.Data.EnumType
 -- import SciLean.Algebra
-import SciLean.Core.Vec
+public import SciLean.Core.Vec
+
+@[expose] public section
+
 
 def List.bubblesort [LT α] [DecidableRel (. < . : α → α → Prop)] (l : List α) : {l' : List α // l.length = l'.length} :=
   match l with
@@ -79,20 +84,20 @@ def PrismRepr.dim' (P : PrismRepr) : USize :=
 section PrismExamples
   open PrismRepr
 
-  private def segment  := cone point
-  private def triangle := cone segment
-  private def square   := prod segment segment
-  private def tet      := cone triangle
-  private def cube     := prod segment square
-  private def pyramid  := cone square
-  private def prism    := prod segment triangle
+  def segment  := cone point
+  def triangle := cone segment
+  def square   := prod segment segment
+  def tet      := cone triangle
+  def cube     := prod segment square
+  def pyramid  := cone square
+  def prism    := prod segment triangle
 
-  private def ncube : (dim : Nat) → PrismRepr
+  def ncube : (dim : Nat) → PrismRepr
   | 0 => point
   | 1 => segment
   | (n+1) => prod segment (ncube n)
 
-  private def ntet : (dim : Nat) → PrismRepr
+  def ntet : (dim : Nat) → PrismRepr
   | 0 => point
   | (n+1) => cone (ntet n)
 
@@ -935,7 +940,7 @@ def BasisIndex.degree (i : BasisIndex) : Nat :=
 
 
 -- Lagrangian basis functions implementation
-private def BasisIndex.evalImpl (idx : BasisIndex) (deg : Nat) (x : idx.ofPrism.Space) : ℝ :=
+def BasisIndex.evalImpl (idx : BasisIndex) (deg : Nat) (x : idx.ofPrism.Space) : ℝ :=
   match idx, x with
   | .point _, _ => 1
 
@@ -1132,7 +1137,7 @@ end PrismRepr
 
 
 
-private def testBarycentricCoord (P : PrismRepr) : IO Unit := do
+def testBarycentricCoord (P : PrismRepr) : IO Unit := do
   IO.println s!"Testing barycentric coordinates of {P}"
 
   for pi in P.points do

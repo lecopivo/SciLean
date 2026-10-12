@@ -1,9 +1,21 @@
-import SciLean.Meta.SimpAttr
-import Mathlib.Algebra.Group.Prod
-import Mathlib.GroupTheory.GroupAction.Basic
-import Mathlib.Algebra.GroupWithZero.Action.Defs
-import Mathlib.Data.Complex.Basic
-import Mathlib.LinearAlgebra.Dimension.Constructions
+module
+
+public import SciLean.Meta.SimpAttr
+
+public meta import SciLean.Meta.SimpAttr
+public import Mathlib.Algebra.Group.Prod
+public meta import Mathlib.Algebra.Group.Prod
+public import Mathlib.GroupTheory.GroupAction.Basic
+public meta import Mathlib.GroupTheory.GroupAction.Basic
+public import Mathlib.Algebra.GroupWithZero.Action.Defs
+public meta import Mathlib.Algebra.GroupWithZero.Action.Defs
+public import Mathlib.Basic.Complex.Basic
+public meta import Mathlib.Basic.Complex.Basic
+public import Mathlib.LinearAlgebra.Dimension.Constructions
+public meta import Mathlib.LinearAlgebra.Dimension.Constructions
+
+@[expose] public meta section
+
 
 namespace SciLean
 

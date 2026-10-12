@@ -1,6 +1,11 @@
-import Mathlib.Tactic.FunProp
-import SciLean.Meta.SimpAttr
-import SciLean.Util.SorryProof
+module
+
+public import Mathlib.Tactic.FunProp
+public import SciLean.Meta.SimpAttr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 noncomputable
 def Quot.repr {S : α → α → Prop} (a : Quot S) : α := Classical.choose a.exists_rep

@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.Notation.Deriv
-import SciLean.Analysis.Calculus.Notation.FwdDeriv
-import SciLean.Analysis.Calculus.Notation.RevDeriv
-import SciLean.Analysis.Calculus.Notation.Gradient
+module
+
+public import SciLean.Analysis.Calculus.Notation.Deriv
+public import SciLean.Analysis.Calculus.Notation.FwdDeriv
+public import SciLean.Analysis.Calculus.Notation.RevDeriv
+public import SciLean.Analysis.Calculus.Notation.Gradient
+
+@[expose] public section
+
 
 open SciLean
 

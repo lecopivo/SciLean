@@ -1,4 +1,9 @@
-import SciLean.Core
+module
+
+public import SciLean.Core
+
+@[expose] public section
+
 
 namespace SciLean
 

@@ -1,10 +1,15 @@
-import Lean.Meta.Transform
+module
 
-import Mathlib.Tactic.FunProp
+public import Lean.Meta.Transform
 
-import SciLean.Probability.Rand
-import SciLean.Probability.IsAffineRandMap
-import SciLean.Tactic.LSimp
+public import Mathlib.Tactic.FunProp
+
+public import SciLean.Probability.Rand
+public import SciLean.Probability.IsAffineRandMap
+public import SciLean.Tactic.LSimp
+
+@[expose] public section
+
 
 open Lean Meta Qq Mathlib.Meta
 
@@ -16,21 +21,21 @@ variable {Z} [AddCommGroup Z] [Module ℝ Z] [MeasurableSpace Z] [TopologicalSpa
 
 set_option linter.unusedVariables false
 
-private theorem let_mean_mean (x' : Rand X) (f : X → Rand Y) (hf : IsAffineRandMap f) :
+theorem let_mean_mean (x' : Rand X) (f : X → Rand Y) (hf : IsAffineRandMap f) :
   (let x := x'.mean; (f x).mean)
   =
   (Rand.mean do
     let x ← x'
     f x) := sorry_proof
 
-private theorem let_mean (x' : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
+theorem let_mean (x' : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
   (let x := x'.mean; f x)
   =
   (Rand.mean do
     let x ← x'
     return (f x)) := sorry_proof
 
-private def runFunProp (e : Expr) : MetaM (Option FunProp.Result) := do
+meta def runFunProp (e : Expr) : MetaM (Option FunProp.Result) := do
   let env ← getEnv
   let ctx : FunProp.Context := {}
   let state : FunProp.State := {

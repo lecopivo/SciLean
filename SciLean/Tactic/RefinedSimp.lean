@@ -1,10 +1,23 @@
-import Lean
-import Lean.Meta.Tactic.Simp
+module
 
-import Mathlib.Lean.Meta.RefinedDiscrTree
-import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
-import Mathlib.Tactic.FunProp
-import SciLean.Lean.Meta.RefinedDiscrTree
+public import Lean
+
+public meta import Lean
+public import Lean.Meta.Tactic.Simp
+public meta import Lean.Meta.Tactic.Simp
+
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+public import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree.Lookup
+public import Mathlib.Tactic.FunProp
+public meta import Mathlib.Tactic.FunProp
+public import SciLean.Lean.Meta.RefinedDiscrTree
+public meta import SciLean.Lean.Meta.RefinedDiscrTree
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -208,7 +221,7 @@ syntax (name := rsimp) "rsimp" (Tactic.simpPre <|> Tactic.simpPost)? (ppSpace pr
 
 
 
-private def argumentIndex (declName : Name) (argName : Name) : MetaM (Option Nat) := do
+def argumentIndex (declName : Name) (argName : Name) : MetaM (Option Nat) := do
 
   let info ← getConstInfo declName
 

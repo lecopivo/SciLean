@@ -1,8 +1,13 @@
-import LeanBLAS
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Analysis.AdjointSpace.Basic
+module
+
+public import LeanBLAS
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.DataArrayEquiv
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Analysis.AdjointSpace.Basic
+
+@[expose] public section
+
 
 /-! Class `HasRnEquiv X n R` states that `X` is canonically isomorphic to `R^[n]`
 
@@ -75,46 +80,46 @@ variable (X : Type*)
   [HasRnEquiv X I R]
 
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Add.ofRnEquiv : Add X := ⟨fun x y =>
   let data := BLAS.LevelOneData.axpy nI 1 (toRn x).1 0 1 (toRn y).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Sub.ofRnEquiv : Sub X := ⟨fun x y =>
   let data := BLAS.LevelOneDataExt.axpby nI 1 (toRn x).1 0 1 (-1) (toRn y).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Neg.ofRnEquiv : Neg X := ⟨fun x =>
   let data := BLAS.LevelOneData.scal nI (-1) (toRn x).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.SMul.ofRnEquiv : SMul R X := ⟨fun r x =>
   let data := BLAS.LevelOneData.scal nI r (toRn x).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Zero.ofRnEquiv : Zero X := ⟨
   let data := BLAS.LevelOneDataExt.const nI (0:R)
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Inner.ofRnEquiv : Inner R X := ⟨fun x y =>
   BLAS.LevelOneData.dot nI (toRn x).1 0 1 (toRn y).1 0 1⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.NSMul.ofRnEquiv : SMul ℕ X := ⟨fun m x =>
   let data := BLAS.LevelOneData.scal nI (m:R) (toRn x).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.ZSMul.ofRnEquiv : SMul ℤ X := ⟨fun z x =>
   let data := BLAS.LevelOneData.scal nI (z:R) (toRn x).1 0 1
   fromRn (⟨data,sorry_proof⟩ : R^[I])⟩
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.Norm.ofRnEquiv : Norm X := ⟨fun x =>
   let norm := BLAS.LevelOneData.nrm2 nI (toRn x).1 0 1
   Scalar.toReal R norm⟩
@@ -131,7 +136,7 @@ variable (X : Type*)
 
 
 /-- Transfers `AddCommGroup` structure from `R^[I]` to `X` together with all operations. -/
-@[inline]
+@[instance_reducible, inline]
 def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
   toAdd := Add.ofRnEquiv X
   toSub := Sub.ofRnEquiv X
@@ -159,7 +164,7 @@ def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
   eq_of_dist_eq_zero := sorry_proof
 }
 
-@[inline]
+@[instance_reducible, inline]
 def _root_.AdjointSpace.ofRnEquiv [NormedAddCommGroup X] : AdjointSpace R X := {
   toSMul := SMul.ofRnEquiv X
   toInner := Inner.ofRnEquiv X

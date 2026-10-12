@@ -1,10 +1,15 @@
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
-import SciLean.Data.DataArray
-import SciLean.Data.DataArray.Algebra
-import SciLean.Data.DataArray.TensorProduct
-import SciLean.Data.Vector
+module
+
+public import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
+public import SciLean.Data.DataArray
+public import SciLean.Data.DataArray.Algebra
+public import SciLean.Data.DataArray.TensorProduct
+public import SciLean.Data.Vector
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

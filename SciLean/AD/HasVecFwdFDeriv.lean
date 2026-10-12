@@ -1,8 +1,13 @@
-import SciLean.Algebra.TensorProduct.Prod
-import SciLean.Algebra.TensorProduct.Pi
-import SciLean.Algebra.TensorProduct.Self
-import SciLean.Algebra.TensorProduct.Util
-import SciLean.Analysis.Calculus.HasRevFDeriv
+module
+
+public import SciLean.Algebra.TensorProduct.Prod
+public import SciLean.Algebra.TensorProduct.Pi
+public import SciLean.Algebra.TensorProduct.Self
+public import SciLean.Algebra.TensorProduct.Util
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option linter.unusedSectionVars false
@@ -414,6 +419,7 @@ theorem SciLean.tmul.arg_yx.HasVecFwdFDeriv_comp_rule
   sorry_proof
 
 
+set_option linter.overlappingInstances false in
 @[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasVecFwdFDeriv_comp_rule
     [SMul (𝕜ᵐᵒᵖ) W] [Star W]

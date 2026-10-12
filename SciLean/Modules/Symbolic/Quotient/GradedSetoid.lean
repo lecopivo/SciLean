@@ -1,4 +1,9 @@
-import SciLean.Data.Quotient.Setoid
+module
+
+public import SciLean.Data.Quotient.Setoid
+
+@[expose] public section
+
 
 namespace SciLean
 

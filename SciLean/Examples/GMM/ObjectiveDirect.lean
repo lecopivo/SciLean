@@ -1,5 +1,10 @@
-import SciLean
-import SciLean.Analysis.SpecialFunctions.MultiGamma
+module
+
+public import SciLean
+public import SciLean.Analysis.SpecialFunctions.MultiGamma
+
+@[expose] public section
+
 
 open SciLean
 

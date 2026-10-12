@@ -1,6 +1,11 @@
-import SciLean
-import SciLean.Tactic.DataSynth.DefRevDeriv
-import SciLean.Data.DataArray.Operations.GaussianS
+module
+
+public import SciLean
+public import SciLean.Tactic.DataSynth.DefRevDeriv
+public import SciLean.Data.DataArray.Operations.GaussianS
+
+@[expose] public section
+
 
 open SciLean Scalar SciLean.Meta
 

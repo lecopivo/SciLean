@@ -1,5 +1,10 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Self
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.TensorProduct.Self
+
+@[expose] public section
+
 
 namespace SciLean
 

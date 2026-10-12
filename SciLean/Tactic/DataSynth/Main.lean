@@ -1,8 +1,19 @@
-import SciLean.Tactic.DataSynth.Types
-import SciLean.Tactic.DataSynth.Theorems
-import Batteries.Tactic.Exact
+module
 
-import Lean.Meta.Transform
+public import SciLean.Tactic.DataSynth.Types
+
+public meta import SciLean.Tactic.DataSynth.Types
+public import SciLean.Tactic.DataSynth.Theorems
+public meta import SciLean.Tactic.DataSynth.Theorems
+public import Batteries.Tactic.Exact
+public meta import Batteries.Tactic.Exact
+
+public import Lean.Meta.Transform
+
+public meta import Lean.Meta.Transform
+
+@[expose] public meta section
+
 
 set_option linter.unusedVariables false
 
@@ -11,10 +22,10 @@ namespace SciLean.Tactic.DataSynth
 open Lean Meta
 
 /-- Tracing node that does not do any pretty printing so it is usefull for profiling. -/
-private def withProfileTrace (msg : String) (x : DataSynthM α) : DataSynthM α :=
+def withProfileTrace (msg : String) (x : DataSynthM α) : DataSynthM α :=
   withTraceNode `Meta.Tactic.data_synth.profile (fun _ => return msg) x
 
-private def withMainTrace (msg : Except Exception α → DataSynthM MessageData) (x : DataSynthM α) :
+def withMainTrace (msg : Except Exception α → DataSynthM MessageData) (x : DataSynthM α) :
     DataSynthM α :=
   withTraceNode `Meta.Tactic.data_synth msg x
 

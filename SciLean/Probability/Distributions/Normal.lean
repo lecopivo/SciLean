@@ -1,6 +1,11 @@
-import SciLean.Probability.Rand
-import SciLean.Probability.Tactic
-import SciLean.Analysis.SpecialFunctions.Gaussian
+module
+
+public import SciLean.Probability.Rand
+public import SciLean.Probability.Tactic
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal Finset
 
@@ -26,7 +31,7 @@ def boxMuller (u v : R) : R×R :=
 
 variable (R)
 
-private def generateNormalV1 : Rand R := do
+def generateNormalV1 : Rand R := do
   return (← go 12 0) - 6
 where
   go (n : Nat) (sum : R) : Rand R := do
@@ -35,7 +40,7 @@ where
     | n+1 => go n (sum + (← uniformI R))
 
 open Scalar RealScalar in
-private def generateNormalV2 : Rand R := do
+def generateNormalV2 : Rand R := do
   let u ← uniformI R
   let v ← uniformI R
   return sqrt (-2*log u) * cos (2*(pi:R)*v)

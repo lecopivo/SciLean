@@ -1,4 +1,9 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+
+@[expose] public section
+
 
 namespace SciLean
 

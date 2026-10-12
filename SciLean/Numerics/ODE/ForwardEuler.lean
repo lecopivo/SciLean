@@ -1,7 +1,12 @@
-import SciLean.Numerics.ODE.Basic
-import SciLean.Numerics.ODE.Solvers
+module
 
-import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Numerics.ODE.Basic
+public import SciLean.Numerics.ODE.Solvers
+
+public import SciLean.Analysis.Calculus.FDeriv
+
+@[expose] public section
+
 
 
 namespace SciLean

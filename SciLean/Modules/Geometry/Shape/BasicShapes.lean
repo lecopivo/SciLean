@@ -1,12 +1,17 @@
-import SciLean.Core.Defs
-import SciLean.Core.Meta.RewriteBy
-import SciLean.Core.AdjDiff
-import SciLean.Core.Tactic.FunctionTransformation.Core
-import SciLean.Core.UnsafeAD
-import SciLean.Core.CoreFunctions
-import SciLean.Data.DataArray
+module
 
-import SciLean.Physics.Shape
+public import SciLean.Core.Defs
+public import SciLean.Core.Meta.RewriteBy
+public import SciLean.Core.AdjDiff
+public import SciLean.Core.Tactic.FunctionTransformation.Core
+public import SciLean.Core.UnsafeAD
+public import SciLean.Core.CoreFunctions
+public import SciLean.Data.DataArray
+
+public import SciLean.Physics.Shape
+
+@[expose] public section
+
 
 namespace SciLean
 

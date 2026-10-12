@@ -1,6 +1,11 @@
-import Lean
-import SciLean.Util.RewriteBy
-import Mathlib.Tactic.Ring
+module
+
+public import Lean
+public import SciLean.Util.RewriteBy
+public import Mathlib.Tactic.Ring
+
+@[expose] public section
+
 
 open Lean.Parser.Tactic.Conv
 open Lean.Elab.Tactic.Conv

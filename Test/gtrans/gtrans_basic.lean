@@ -1,6 +1,11 @@
-import Qq
+module
 
-import SciLean
+public import Qq
+
+public import SciLean
+
+@[expose] public section
+
 
 open SciLean
 

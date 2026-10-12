@@ -1,12 +1,23 @@
-import SciLean.Data.ArrayType.Basic
-import SciLean.Data.ListN
-import SciLean.Data.ArrayLike
-import SciLean.Lean.Meta.Basic
-import Batteries.Lean.Expr
+module
 
-import Mathlib.LinearAlgebra.Matrix.Notation
+public import SciLean.Data.ArrayType.Basic
+public import SciLean.Data.ListN
+public import SciLean.Data.ArrayLike
+public import SciLean.Lean.Meta.Basic
+public import Batteries.Lean.Expr
+public import Mathlib.LinearAlgebra.Matrix.Notation
+public import Qq
 
-import Qq
+public meta import SciLean.Data.ArrayType.Basic
+public meta import SciLean.Data.ListN
+public meta import SciLean.Data.ArrayLike
+public meta import SciLean.Lean.Meta.Basic
+public meta import Batteries.Lean.Expr
+public meta import Mathlib.LinearAlgebra.Matrix.Notation
+public meta import Qq
+
+@[expose] public meta section
+
 
 
 namespace SciLean
@@ -23,7 +34,7 @@ initialize registerTraceClass `getElem_notation
 
 
 /-- Turn an array of terms in into a tuple. -/
-private def mkTuple (xs : Array (TSyntax `term)) : MacroM (TSyntax `term) :=
+meta def mkTuple (xs : Array (TSyntax `term)) : MacroM (TSyntax `term) :=
   `(term| ($(xs[0]!), $(xs[1:]),*))
 
 /--
@@ -100,7 +111,7 @@ macro x:ident noWs "[" ids:term,* "]" " •= " xi:term : doElem => do
   `(doElem| $x:ident := let xi := $x[$i]; setElem $x $i ($xi • xi) (by get_elem_tactic))
 
 
-@[app_unexpander ArrayType.get] def unexpandArrayTypeGet : Lean.PrettyPrinter.Unexpander
+@[app_unexpander ArrayType.get] meta def unexpandArrayTypeGet : Lean.PrettyPrinter.Unexpander
   | `($(_) $x ($i, $is,*)) => `($x[$i:term,$[$is:term],*])
   | `($(_) $x $i) => `($x[$i:term])
   | _ => throw ()
@@ -230,7 +241,7 @@ def ofFnExplicitElab : TermElab := fun stx expectedType? =>
 
 
 @[app_unexpander ofFn]
-def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
+meta def unexpandArrayTypeOfFnNotation : Lean.PrettyPrinter.Unexpander
   | `($(_) $f) =>
     match f with
     | `(fun $_ => ![$xs,*] $_) =>

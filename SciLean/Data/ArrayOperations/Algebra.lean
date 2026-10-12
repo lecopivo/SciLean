@@ -1,9 +1,14 @@
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.Operations
+module
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.IndexType.Operations
+
+@[expose] public section
+
 
 namespace SciLean
 
