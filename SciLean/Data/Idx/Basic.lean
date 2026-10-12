@@ -44,6 +44,56 @@ structure Idx (n : ℕ) where
 
 attribute [coe] Idx.val
 
+/-- Reducing a `USize` modulo `n` always produces a value smaller than `n`.
+
+Note that this holds even when `n` does not fit into `USize` - then `n.toUSize` is `n % USize.size`
+and the result is bounded by `USize.size ≤ n`. -/
+theorem usize_mod_toNat_lt (x : USize) {n : Nat} (hn : 0 < n) :
+    (x % n.toUSize).toNat < n := by
+  have hx : x.toNat < USize.size := x.toNat_lt_size
+  rw [USize.toNat_mod, USize.toNat_ofNat']
+  rcases Nat.eq_zero_or_pos (n % USize.size) with h | h
+  · have hdvd : USize.size ∣ n := Nat.dvd_of_mod_eq_zero h
+    simpa [h] using lt_of_lt_of_le hx (Nat.le_of_dvd hn hdvd)
+  · exact Nat.lt_of_lt_of_le (Nat.mod_lt _ h) (Nat.mod_le _ _)
+
+/-- `toNat` of `x % n`, where `%` is the default `HMod USize Nat USize` instance, i.e.
+`USize.modn`. -/
+theorem usize_modn_toNat (x : USize) (n : Nat) : (x % n).toNat = x.toNat % n := by
+  show (USize.ofNat (x.toNat % n)).toNat = _
+  rw [USize.toNat_ofNat']
+  exact Nat.mod_eq_of_lt (Nat.lt_of_le_of_lt (Nat.mod_le _ _) x.toNat_lt_size)
+
+theorem usize_modn_toNat_lt (x : USize) {n : Nat} (hn : 0 < n) : (x % n).toNat < n := by
+  rw [usize_modn_toNat]
+  exact Nat.mod_lt _ hn
+
+/-- Addition of `USize` can only wrap around, hence it never exceeds the addition of `Nat`s. -/
+theorem usize_toNat_add_le (x y : USize) : (x + y).toNat ≤ x.toNat + y.toNat := by
+  rw [USize.toNat_add]; exact Nat.mod_le _ _
+
+/-- Converting `Nat` to `USize` can only decrease its value. -/
+theorem usize_toNat_ofNat_le (n : Nat) : n.toUSize.toNat ≤ n := by
+  rw [USize.toNat_ofNat']; exact Nat.mod_le _ _
+
+/-- Bound on a `Nat` is preserved when converting it to `USize`. -/
+theorem usize_toNat_ofNat_lt {i n : Nat} (h : i < n) : i.toUSize.toNat < n :=
+  Nat.lt_of_le_of_lt (usize_toNat_ofNat_le i) h
+
+/-- Conversion of `Nat` to `USize` is exact for numbers fitting into `USize`. -/
+theorem usize_toNat_ofNat_eq {n : Nat} (h : n < USize.size) : n.toUSize.toNat = n := by
+  rw [USize.toNat_ofNat']; exact Nat.mod_eq_of_lt h
+
+/-- Addition of `USize` does not wrap around if the result fits into `USize`. -/
+theorem usize_toNat_add_eq {x y : USize} (h : x.toNat + y.toNat < USize.size) :
+    (x + y).toNat = x.toNat + y.toNat := by
+  rw [USize.toNat_add]; exact Nat.mod_eq_of_lt h
+
+/-- Multiplication of `USize` does not wrap around if the result fits into `USize`. -/
+theorem usize_toNat_mul_eq {x y : USize} (h : x.toNat * y.toNat < USize.size) :
+    (x * y).toNat = x.toNat * y.toNat := by
+  rw [USize.toNat_mul]; exact Nat.mod_eq_of_lt h
+
 theorem Idx.eq_of_val_eq {n} : ∀ {i j : Idx n}, Eq i.val j.val → Eq i j
   | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
@@ -52,10 +102,10 @@ theorem Idx.val_eq_of_eq {n} {i j : Idx n} (h : Eq i j) : Eq i.val j.val :=
 
 instance (n : Nat) : DecidableEq (Idx n) :=
   fun i j =>
-    if i.val == j.val then
-      .isTrue sorry_proof
+    if h : i.val = j.val then
+      .isTrue (Idx.eq_of_val_eq h)
     else
-      .isFalse sorry_proof
+      .isFalse (fun h' => h (Idx.val_eq_of_eq h'))
     -- probably too slow
     -- match decEq i.val j.val with
     -- | isTrue h  => isTrue (Idx.eq_of_val_eq h)
@@ -68,15 +118,15 @@ instance {n} : LE (Idx n) where
   le a b := LE.le a.val b.val
 
 instance Idx.decLt {n} (a b : Idx n) : Decidable (LT.lt a b) := -- Nat.decLt .. -- too slow
-  if a.val < b.val then
-    .isTrue sorry_proof
+  if h : a.val < b.val then
+    .isTrue h
   else
-    .isFalse sorry_proof
+    .isFalse h
 instance Idx.decLe {n} (a b : Idx n) : Decidable (LE.le a b) :=  -- Nat.decLe .. -- too slow
-  if a.val ≤ b.val then
-    .isTrue sorry_proof
+  if h : a.val ≤ b.val then
+    .isTrue h
   else
-    .isFalse sorry_proof
+    .isFalse h
 
 
 /--
@@ -85,9 +135,10 @@ instance Idx.decLe {n} (a b : Idx n) : Decidable (LE.le a b) :=  -- Nat.decLe ..
 This is blatanly false but we treat `Idx n` as `Fin n`, see documentation of `Idx n`.
 -/
 def Idx.finEquiv (n : Nat) : Idx n ≃ Fin n where
-  toFun x := ⟨x.1.toNat, sorry_proof⟩
-  invFun x := ⟨x.1.toUSize, sorry_proof⟩
-  left_inv := sorry_proof
+  toFun x := ⟨x.1.toNat, x.2⟩
+  invFun x := ⟨x.1.toUSize, usize_toNat_ofNat_lt x.2⟩
+  left_inv := fun x => Idx.eq_of_val_eq (by simp)
+  -- this direction is false for `n > USize.size`, see the documentation of `Idx n`
   right_inv := sorry_proof
 
 -- The rest of the file is direct copy of `Init.Data.Fin.Basic`
@@ -99,8 +150,8 @@ instance coeToUSize : CoeOut (Idx n) USize :=
 instance coeToNat : CoeOut (Idx n) Nat :=
   ⟨fun v => v.val.toNat⟩
 
-def toFin (i : Idx n) : Fin n := ⟨i.1.toNat, sorry_proof⟩
-def _root_.Fin.toIdx (i : Fin n) : Idx n := ⟨i.1.toUSize, sorry_proof⟩
+def toFin (i : Idx n) : Fin n := ⟨i.1.toNat, i.2⟩
+def _root_.Fin.toIdx (i : Fin n) : Idx n := ⟨i.1.toUSize, usize_toNat_ofNat_lt i.2⟩
 
 /--
 From the empty type `Idx 0`, any desired result `α` can be derived. This is similar to `Empty.elim`.
@@ -121,7 +172,10 @@ This differs from addition, which wraps around:
 ```
 -/
 def succ : Idx n → Idx (n + 1)
-  | ⟨i, h⟩ => ⟨i+1, by sorry_proof⟩
+  | ⟨i, h⟩ => ⟨i+1, by
+    have h1 := usize_toNat_add_le i 1
+    have h2 : (1 : USize).toNat = 1 := USize.toNat_one
+    omega⟩
 
 variable {n : Nat}
 
@@ -132,7 +186,7 @@ Returns `a` modulo `n` as a `Idx n`.
 The assumption `NeZero n` ensures that `Idx n` is nonempty.
 -/
 protected def ofNat (n : Nat) [NeZero n] (a : Nat) : Idx n :=
-  ⟨a.toUSize % n, by sorry_proof⟩
+  ⟨a.toUSize % n, usize_modn_toNat_lt _ (Nat.pos_of_ne_zero (NeZero.ne n))⟩
 
 /--
 Returns `a` modulo `n` as a `Idx n`.
@@ -140,7 +194,7 @@ Returns `a` modulo `n` as a `Idx n`.
 The assumption `NeZero n` ensures that `Idx n` is nonempty.
 -/
 protected def ofUSize (n : Nat) [NeZero n] (a : USize) : Idx n :=
-  ⟨a % n, by sorry_proof⟩
+  ⟨a % n, usize_modn_toNat_lt _ (Nat.pos_of_ne_zero (NeZero.ne n))⟩
 
 theorem mlt {b : Nat} : {a : Nat} → a < n → b % n < n
   | 0,   h => Nat.mod_lt _ h
@@ -156,11 +210,11 @@ instance (priority:=high) instHModUSizeNatFast : HMod USize Nat USize := ⟨fun 
 
 /-- Addition modulo `n` -/
 @[inline] protected def add : Idx n → Idx n → Idx n
-  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a + b) % n, by sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a + b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 /-- Multiplication modulo `n` -/
 @[inline] protected def mul : Idx n → Idx n → Idx n
-  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a * b) % n.toUSize, by sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a * b) % n.toUSize, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 /-- Subtraction modulo `n` -/
 @[inline] protected def sub : Idx n → Idx n → Idx n
@@ -181,7 +235,7 @@ instance (priority:=high) instHModUSizeNatFast : HMod USize Nat USize := ⟨fun 
   using recursion on the second argument.
   See issue #4413.
   -/
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨((n.toUSize - b) + a) % n.toUSize, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨((n.toUSize - b) + a) % n.toUSize, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 /-!
 Remark: land/lor can be deidxed without using (% n), but
@@ -199,19 +253,19 @@ needed to bootstrap Lean.
   | ⟨a, h⟩, m => ⟨a % m, Nat.lt_of_le_of_lt (Nat.mod_le _ _) h⟩
 
 @[inline] def land : Idx n → Idx n → Idx n
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.land a b) % n, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(USize.land a b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 @[inline] def lor : Idx n → Idx n → Idx n
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.lor a b) % n, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(USize.lor a b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 @[inline] def xor : Idx n → Idx n → Idx n
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨(USize.xor a b) % n, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(USize.xor a b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 @[inline] def shiftLeft : Idx n → Idx n → Idx n
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨(a <<< b) % n, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a <<< b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 @[inline] def shiftRight : Idx n → Idx n → Idx n
-  | ⟨a, _⟩, ⟨b, _⟩ => ⟨(a >>> b) % n, sorry_proof⟩
+  | ⟨a, h⟩, ⟨b, _⟩ => ⟨(a >>> b) % n, usize_mod_toNat_lt _ (Nat.zero_lt_of_lt h)⟩
 
 instance : Add (Idx n) where
   add := Idx.add
@@ -247,6 +301,31 @@ instance instInhabited {n : Nat} [NeZero n] : Inhabited (Idx n) where
 
 @[simp] theorem zero_eta : (⟨0, Nat.zero_lt_succ _⟩ : Idx (n + 1)) = 0 := rfl
 
+/-- Every number smaller then `2^32` fits into `USize`. -/
+theorem _root_.SciLean.usize_size_gt (k : ℕ) (h : k < 4294967296) : k < USize.size :=
+  Nat.lt_of_lt_of_le h USize.le_size
+
+/-- Value of the numeral `k : Idx n` is `k` provided that `k < n` and `n` fits into `USize`. -/
+theorem toNat_ofNat {n : ℕ} [NeZero n] (k : ℕ) (hk : k < n) (hn : n < USize.size) :
+    ((OfNat.ofNat k : Idx n) : USize).toNat = k := by
+  show (Idx.ofNat n k).val.toNat = k
+  simp only [Idx.ofNat]
+  rw [usize_modn_toNat, usize_toNat_ofNat_eq (Nat.lt_trans hk hn)]
+  exact Nat.mod_eq_of_lt hk
+
+theorem eq_of_toNat {n : ℕ} [NeZero n] {i : Idx n} (k : ℕ) (hk : k < n) (hn : n < USize.size)
+    (h : i.1.toNat = k) : i = OfNat.ofNat k :=
+  Idx.eq_of_val_eq (USize.toNat_inj.mp (by rw [h, Idx.toNat_ofNat k hk hn]))
+
+theorem ofNat_ne_ofNat {n : ℕ} [NeZero n] (k l : ℕ) (hk : k < n := by omega)
+    (hl : l < n := by omega) (hn : n < 4294967296 := by omega) (hkl : k ≠ l := by omega) :
+    (OfNat.ofNat k : Idx n) ≠ OfNat.ofNat l := by
+  intro h
+  have h' := congrArg (fun i : Idx n => i.1.toNat) h
+  rw [Idx.toNat_ofNat k hk (SciLean.usize_size_gt n hn),
+      Idx.toNat_ofNat l hl (SciLean.usize_size_gt n hn)] at h'
+  exact hkl h'
+
 theorem ne_of_val_ne {i j : Idx n} (h : val i ≠ val j) : i ≠ j :=
   fun h' => absurd (val_eq_of_eq h') h
 
@@ -264,7 +343,7 @@ protected theorem pos (i : Idx n) : 0 < n :=
   Nat.lt_of_le_of_lt (Nat.zero_le _) i.2
 
 /-- The greatest value of `Idx (n+1)`. -/
-@[inline] def last (n : USize) : Idx (n.toNat + 1) := ⟨n, sorry_proof⟩
+@[inline] def last (n : USize) : Idx (n.toNat + 1) := ⟨n, Nat.lt_succ_self _⟩
 
 /-- `castLT i h` embeds `i` into a `Idx` where `h` proves it belongs into.  -/
 @[inline] def castLT (i : Idx m) (h : i.1.toNat < n) : Idx n := ⟨i.1, h⟩
@@ -283,22 +362,53 @@ protected theorem pos (i : Idx n) : 0 < n :=
 @[inline] def castSucc : Idx n → Idx (n + 1) := castAdd 1
 
 /-- `addNat m i` adds `m` to `i`, generalizes `Idx.succ`. -/
-def addNat (i : Idx n) (m) : Idx (n + m) := ⟨i + m.toUSize, sorry_proof⟩
+def addNat (i : Idx n) (m) : Idx (n + m) := ⟨i + m.toUSize, by
+  have h1 := usize_toNat_add_le i.1 m.toUSize
+  have h2 := usize_toNat_ofNat_le m
+  have h3 := i.2
+  omega⟩
 
 /-- `natAdd n i` adds `n` to `i` "on the left". -/
-def natAdd (n) (i : Idx m) : Idx (n + m) := ⟨n.toUSize + i, sorry_proof⟩
+def natAdd (n) (i : Idx m) : Idx (n + m) := ⟨n.toUSize + i, by
+  have h1 := usize_toNat_add_le n.toUSize i.1
+  have h2 := usize_toNat_ofNat_le n
+  have h3 := i.2
+  omega⟩
 
 /-- Maps `0` to `n-1`, `1` to `n-2`, ..., `n-1` to `0`. -/
-@[inline] def rev (i : Idx n) : Idx n := ⟨n.toUSize - (i + 1), sorry_proof⟩
+@[inline] def rev (i : Idx n) : Idx n := ⟨n.toUSize - (i + 1), by
+  rcases Nat.lt_or_ge n USize.size with hn | hn
+  · have hi := i.2
+    have hnn : n.toUSize.toNat = n := by rw [USize.toNat_ofNat']; exact Nat.mod_eq_of_lt hn
+    have h1 : (i.1 + 1).toNat = i.1.toNat + 1 := by
+      rw [USize.toNat_add, USize.toNat_one]
+      exact Nat.mod_eq_of_lt (by simp only [USize.size] at hn ⊢; omega)
+    have hle : (i.1 + 1) ≤ n.toUSize := by
+      rw [USize.le_iff_toNat_le, h1, hnn]; omega
+    rw [USize.toNat_sub_of_le _ _ hle, hnn, h1]
+    omega
+  · exact Nat.lt_of_lt_of_le (USize.toNat_lt_size _) hn⟩
 
-set_option linter.unusedVariables false in
 /-- `subNat i h` subtracts `m` from `i`, generalizes `Idx.pred`. -/
 @[inline] def subNat (m) (i : Idx (n + m)) (h : m ≤ i.1.toNat) : Idx n :=
-  ⟨i - m.toUSize, sorry_proof⟩
+  ⟨i - m.toUSize, by
+    have hi := i.2
+    have hm : m < USize.size := Nat.lt_of_le_of_lt h (USize.toNat_lt_size _)
+    have hmm : m.toUSize.toNat = m := by rw [USize.toNat_ofNat']; exact Nat.mod_eq_of_lt hm
+    have hle : m.toUSize ≤ i.1 := by rw [USize.le_iff_toNat_le, hmm]; exact h
+    rw [USize.toNat_sub_of_le _ _ hle, hmm]
+    omega⟩
 
 /-- Predecessor of a nonzero element of `Idx (n+1)`. -/
 @[inline] def pred {n : Nat} (i : Idx (n + 1)) (h : i ≠ 0) : Idx n :=
-  subNat 1 i (by apply Nat.pos_of_ne_zero; apply mt (by sorry_proof) h)
+  subNat 1 i (by
+    apply Nat.pos_of_ne_zero
+    refine mt (fun hi => ?_) h
+    apply Idx.eq_of_val_eq
+    show i.1 = (Idx.ofNat (n+1) 0).1
+    simp [Idx.ofNat]
+    apply USize.toNat_inj.mp
+    simp [usize_modn_toNat, hi])
 
 theorem val_inj {a b : Idx n} : a.1 = b.1 ↔ a = b := ⟨Idx.eq_of_val_eq, Idx.val_eq_of_eq⟩
 
@@ -319,6 +429,27 @@ theorem exists_iff {p : Idx n → Prop} : (Exists fun i => p i) ↔ Exists fun i
 
 ----------------------------------------------------------------------------------------------------
 
+private theorem usize_pred_toNat (x : USize) (h : 0 < x.toNat) : (x - 1).toNat = x.toNat - 1 := by
+  have hx : x.toNat < 2^System.Platform.numBits := by
+    have := USize.toNat_lt_size x; simpa [USize.size] using this
+  have hpos : 0 < 2^System.Platform.numBits := Nat.two_pow_pos _
+  have h1 : (1:USize).toNat = 1 := by simp
+  rw [USize.toNat_sub, h1]
+  have he : 2^System.Platform.numBits - 1 + x.toNat
+            = 2^System.Platform.numBits + (x.toNat - 1) := by omega
+  rw [he, Nat.add_mod_left, Nat.mod_eq_of_lt (by omega)]
+
+/-- The largest value of `USize` that fits into `Idx n`, i.e. `n-1`, is smaller than `n`. -/
+theorem last_toNat_lt {n : Nat} (hn : n ≠ 0) : (n.toUSize - 1).toNat < n := by
+  have h0 : 0 < n := Nat.pos_of_ne_zero hn
+  have hlt : (n.toUSize - 1).toNat < USize.size := USize.toNat_lt_size _
+  rcases Nat.lt_or_ge n USize.size with h | h
+  · have hm : n.toUSize.toNat = n := by rw [USize.toNat_ofNat']; exact Nat.mod_eq_of_lt h
+    have hpos : 0 < n.toUSize.toNat := by rw [hm]; exact h0
+    rw [usize_pred_toNat _ hpos, hm]
+    omega
+  · omega
+
 instance : ToString (Idx n) := ⟨fun i => toString i.1⟩
 
 instance : Fintype (Idx n) := Fintype.ofEquiv _ (Idx.finEquiv n).symm
@@ -330,8 +461,8 @@ instance : Size' (Idx n) n where
 
 instance : FirstLast (Idx n) (Idx n) where
   firstLast? :=
-    if n ≠ 0 then
-      some (⟨0,sorry_proof⟩, ⟨n.toUSize-1, sorry_proof⟩)
+    if h : n ≠ 0 then
+      some (⟨0, Nat.pos_of_ne_zero h⟩, ⟨n.toUSize-1, last_toNat_lt h⟩)
     else
       none
 

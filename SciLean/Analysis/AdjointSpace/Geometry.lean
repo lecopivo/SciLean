@@ -37,9 +37,6 @@ def sphere₂ (x : X) (r : R) := {y | ‖y - x‖₂²[R] = r^2}
 
 
 @[simp,simp_core]
-theorem frontier_ball₂ (x : X) (r : R) : frontier (ball₂ x r) = sphere₂ x r := sorry_proof
-
-@[simp,simp_core]
 theorem frontier_closedBall₂ (x : X) (r : R) : frontier (closedBall₂ x r) = sphere₂ x r := sorry_proof
 
 @[simp,simp_core]
@@ -53,3 +50,9 @@ theorem closure_ball₂ (x : X) (r : R) : closure (ball₂ x r) = closedBall₂ 
 
 @[simp,simp_core]
 theorem closure_closedBall₂ (x : X) (r : R) : closure (closedBall₂ x r) = closedBall₂ x r := sorry_proof
+
+@[simp,simp_core]
+theorem frontier_ball₂ (x : X) (r : R) : frontier (ball₂ x r) = sphere₂ x r := by
+  rw [frontier, closure_ball₂, interior_ball₂]
+  ext y; simp only [closedBall₂, ball₂, sphere₂, Set.mem_sdiff, Set.mem_ofPred_eq, not_lt]
+  exact ⟨fun h => le_antisymm h.1 h.2, fun h => ⟨h.le, h.ge⟩⟩

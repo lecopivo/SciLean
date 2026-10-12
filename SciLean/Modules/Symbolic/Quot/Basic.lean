@@ -57,15 +57,16 @@ namespace SciLean
   set_option trace.Meta.Tactic.fun_prop.attr true
 
   @[fun_prop]
-  theorem isqhom_eq_eq (f : α → β) : IsQHom Eq Eq f := sorry_proof
+  theorem isqhom_eq_eq (f : α → β) : IsQHom Eq Eq f := ⟨fun _ _ h => h ▸ rfl⟩
 
   @[fun_prop]
-  theorem isqhom_id (S : Rel α) : IsQHom S S (λ x => x) := sorry_proof
+  theorem isqhom_id (S : Rel α) : IsQHom S S (λ x => x) := ⟨fun _ _ h => h⟩
 
   @[fun_prop]
-  instance isqhom_comp (S : Rel α) (R : Rel β) (T : Rel γ)
+  theorem isqhom_comp (S : Rel α) (R : Rel β) (T : Rel γ)
     (f : β → γ) (g : α → β)
-    (hf : IsQHom R T f) (hg : IsQHom S R g) : IsQHom S T (f ∘ g) := sorry_proof
+    (hf : IsQHom R T f) (hg : IsQHom S R g) : IsQHom S T (f ∘ g) :=
+    ⟨fun _ _ h => hf.is_hom _ _ (hg.is_hom _ _ h)⟩
 
   ---------------------
 
@@ -75,13 +76,15 @@ namespace SciLean
     (f : β → γ) (g : α → β) (hf : IsQHom R T f) (hg : IsQHom S R g)
     :
     ⟦f, R, T⟧ ∘ ⟦g, S, R⟧ = ⟦f ∘ g, S, T⟧
-    :=
-    sorry_proof
+    := by
+    funext a; induction a using Quot.ind; rfl
 
   @[simp]
   theorem quot_apply {S : Rel α} {R : Rel β} (f : α → β) (hf : IsQHom S R f) (a : Quot S)
     : ⟦f a.repr, R⟧ = ⟦f⟧ a
-    := sorry_proof
+    := by
+    exact congrArg (Quot.lift (fun x => Quot.mk R (f x)) (IsQHom.sound f hf))
+      (Classical.choose_spec a.exists_rep)
 
   ---------------------
 

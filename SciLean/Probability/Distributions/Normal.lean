@@ -72,22 +72,28 @@ theorem normal.pdf (μ σ : R) :
 theorem normal.map_add_right (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => x + θ)
     =
-    (normal (μ+θ) σ) := sorry_proof
+    (normal (μ+θ) σ) := by simp only [bind_pure_comp]; ext x : 2; rfl
 
 @[simp, simp_core]
 theorem normal.map_add_left (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => θ + x)
     =
-    (normal (θ + μ) σ) := sorry_proof
+    (normal (θ + μ) σ) := by
+  have h : (fun x : R => θ + x) = (fun x : R => x + θ) := by funext x; rw [add_comm]
+  rw [h, normal.map_add_right, add_comm]
 
 @[simp, simp_core]
 theorem normal.map_sub_right (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => x - θ)
     =
-    (normal (μ-θ) σ) := sorry_proof
+    (normal (μ-θ) σ) := by
+  have h : (fun x : R => x - θ) = (fun x : R => x + (-θ)) := by funext x; rw [sub_eq_add_neg]
+  rw [h, normal.map_add_right, ← sub_eq_add_neg]
 
 theorem normal_reparameterize (μ σ : R) :
-    normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := sorry_proof
+    normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := by
+  -- as in `normal.map_add_right`, both sides have the same (erased) specification
+  simp only [smul_eq_mul, bind_pure_comp]; ext x : 2; rfl
 
 
 -- ----------------------------------------------------------------------------------------------------

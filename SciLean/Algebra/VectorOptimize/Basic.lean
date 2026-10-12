@@ -131,8 +131,7 @@ end Axpby
 
 section TMul
 
-theorem tmulAdd_spec (a : R) (y : Y) (x : X) (A : YX) :
-  tmulAdd a y x A = a•(y⊗[R]x) + A := by simp[tmul]; sorry_proof
+-- `tmulAdd_spec` now lives in `SciLean.Algebra.TensorProduct.Basic`
 
 @[vector_optimize]
 theorem tmul_eq_tmulAdd (y : Y) (x : X) :
@@ -140,13 +139,14 @@ theorem tmul_eq_tmulAdd (y : Y) (x : X) :
 
 @[simp, simp_core, vector_optimize]
 theorem tmulAdd_smul_y (a b : R) (y : Y) (x : X) (A : YX) :
-    tmulAdd a (b•y) x A = tmulAdd (a*b) y x A := by sorry_proof
+    tmulAdd a (b•y) x A = tmulAdd (a*b) y x A := by
+  simp only [TensorProductType.tmulAdd_eq_tmul, TensorProduct.smul_tmul', smul_smul]
 
 @[simp, simp_core, vector_optimize]
 theorem tmulAdd_smul_x (a b : R) (y : Y) (x : X) (A : YX) :
     tmulAdd a y (b•x) A = tmulAdd (a*b) y x A := by
-  simp [tmulAdd_spec]
-  sorry_proof
+  simp only [TensorProductType.tmulAdd_eq_tmul, TensorProduct.tmul_smul,
+    TensorProduct.smul_tmul', smul_smul]
 
 
 variable [Axpby R YX]
@@ -185,7 +185,7 @@ theorem matVecMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
     =
     have : MatrixType R Y X YX := ⟨⟩
     have : MatrixMulNotation YX := ⟨⟩
-    a•(A*x) + b•y := sorry_proof
+    a•(A*x) + b•y := matVecMulAdd_eq_smul_add a b A x y
 
 @[vector_optimize]
 theorem matVecMul_eq_matVecMulAdd
@@ -224,7 +224,7 @@ theorem vecMatMulAdd_spec (a b : R) (A : YX) (x : X) (y : Y) :
     =
     have : MatrixType R Y X YX := ⟨⟩
     have : MatrixMulNotation YX := ⟨⟩
-    a•(y*A) + b•x := sorry_proof
+    a•(y*A) + b•x := vecMatMulAdd_eq_smul_add a b A x y
 
 @[vector_optimize]
 theorem vecMatMul_eq_vecMatMulAdd

@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Algebra.Module.Defs
 public import Mathlib.LinearAlgebra.Dimension.Finrank
+public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import SciLean.Analysis.Scalar
 public import SciLean.Util.RewriteBy
 
@@ -53,16 +54,26 @@ instance : Dimension ℝ ℝ 1 where
   is_dim := by simp
 
 instance : Dimension ℝ ℂ 2 where
-  is_dim := sorry_proof
+  is_dim := Complex.finrank_real_complex
 
 instance : Dimension ℂ ℂ 1 where
-  is_dim := sorry_proof
+  is_dim := by simp
 
 instance [Scalar R C] : Dimension C C 1 where
   is_dim := by simp
 
 instance [RealScalar R] : Dimension ℝ R 1 where
-  is_dim := sorry_proof
+  is_dim := by
+    have hsurj : Function.Surjective (Algebra.linearMap ℝ R) := by
+      intro x
+      refine ⟨RCLike.re x, ?_⟩
+      have h := RCLike.re_add_im x
+      rw [RealScalar.is_real x] at h
+      simpa using h
+    have e : ℝ ≃ₗ[ℝ] R :=
+      LinearEquiv.ofBijective (Algebra.linearMap ℝ R)
+        ⟨fun x y h => by simpa using (algebraMap ℝ R).injective h, hsurj⟩
+    rw [← e.finrank_eq, Module.finrank_self]
 
 instance {R} [Field R] {n m}
     {X} [AddCommGroup X] [Module R X] [Module.Finite R X] [dX : Dimension R X n]

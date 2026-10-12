@@ -33,7 +33,7 @@ theorem let_mean (x' : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
   =
   (Rand.mean do
     let x ← x'
-    return (f x)) := sorry_proof
+    return (f x)) := Rand.mean_affine x' f hf
 
 meta def runFunProp (e : Expr) : MetaM (Option FunProp.Result) := do
   let env ← getEnv

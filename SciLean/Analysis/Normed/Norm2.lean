@@ -48,7 +48,14 @@ theorem norm₂_squared {R K X : Type _} [Scalar R K] [Norm2 K X] (x : X)
   : ‖x‖₂[K] ^ (2:K) = ‖x‖₂²[K] := by sorry_proof
 
 @[simp, simp_core]
-theorem scalar_norm {R} [RealScalar R] (r : R) : ‖r‖₂[R] = Scalar.abs r := by sorry_proof
+theorem scalar_norm {R} [RealScalar R] (r : R) : ‖r‖₂[R] = Scalar.abs r := by
+  apply Scalar.toReal_injective
+  have h := Scalar.sqrt_def (K:=R) (Norm2.norm2 r)
+  simp only [RealScalar.is_real, implies_true, ↓reduceIte, Scalar.toComplex_eq_toReal,
+    RCLike.re_to_complex, Complex.ofReal_re] at h
+  rw [norm₂, h, Scalar.abs_def, Scalar.toComplex_eq_toReal, Complex.norm_real, Real.norm_eq_abs,
+    norm2_def]
+  simp [inner, Scalar.toReal_mul, Real.sqrt_mul_self_eq_abs]
 
 section Inner
 
@@ -68,15 +75,17 @@ theorem _root_.Prod.inner_def (K X Y) [Add K] [Inner K X] [Inner K Y] (x y : X×
 
 @[simp, simp_core]
 theorem norm₂_prod {R K X Y} [Scalar R K] [AddCommMonoid K] [Inner K X] [Inner K Y] (x : X) (y : Y) :
-  ‖(x,y)‖₂[K] = Scalar.sqrt (‖x‖₂²[K] + ‖y‖₂²[K]) := by sorry_proof
+  ‖(x,y)‖₂[K] = Scalar.sqrt (‖x‖₂²[K] + ‖y‖₂²[K]) := by rfl
 
 @[simp, simp_core]
 theorem norm₂_scalar {R} [RealScalar R] (x : R) :
-  ‖x‖₂[R] = Scalar.abs x := by sorry_proof
+  ‖x‖₂[R] = Scalar.abs x := by simp
 
 @[simp, simp_core]
 theorem norm2_scalar {R} [RealScalar R] (x : R) :
-  ‖x‖₂²[R] = x^2 := by sorry_proof
+  ‖x‖₂²[R] = x^2 := by
+  rw [norm2_def, RCLike.inner_apply, RCLike.conj_eq_iff_im.mpr (RealScalar.is_real x)]
+  ring
 
 -- instance (priority:=low) (K ι) (X : ι → Type _)
 --   [AddCommMonoid K] [∀ i, Inner K (X i)] [IndexType ι]

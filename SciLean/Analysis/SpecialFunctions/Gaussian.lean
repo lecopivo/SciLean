@@ -103,47 +103,70 @@ abbrev_fun_trans gaussian in μ x [CompleteSpace X] : revFDeriv R by
 theorem mul_pow_base (x₁ x₂ y : R) : x₁ ^ y * x₂ ^ y = (x₁ * x₂) ^ y := sorry_proof
 
 @[pow_pull]
-theorem mul_pow_base_nat (x₁ x₂ : R) (n : ℕ) : x₁ ^ n * x₂ ^ n = (x₁ * x₂) ^ n := sorry_proof
+theorem mul_pow_base_nat (x₁ x₂ : R) (n : ℕ) : x₁ ^ n * x₂ ^ n = (x₁ * x₂) ^ n := by ring
 
 @[pow_push]
-theorem pow_mul (x₁ x₂ y : R) : (x₁ * x₂) ^ y = x₁ ^ y * x₂ ^ y := sorry_proof
+theorem pow_mul (x₁ x₂ y : R) : (x₁ * x₂) ^ y = x₁ ^ y * x₂ ^ y := (mul_pow_base x₁ x₂ y).symm
 
 @[pow_push]
-theorem pow_mul_nat (x₁ x₂ : R) (n : ℕ) : (x₁ * x₂) ^ n = x₁ ^ n * x₂ ^ n := sorry_proof
+theorem pow_mul_nat (x₁ x₂ : R) (n : ℕ) : (x₁ * x₂) ^ n = x₁ ^ n * x₂ ^ n := by ring
 
+
+theorem inv_eq_pow (x : R) : x⁻¹ = x ^ (-1:R) := by
+  apply Scalar.toReal_injective
+  rw [Scalar.toReal_rpow, Real.rpow_def]
+  conv_lhs => rw [← Scalar.algebraMap_toReal x, ← map_inv₀, Scalar.toReal_algebraMap]
+  conv_rhs => rw [← map_one (algebraMap ℝ R), ← map_neg, Scalar.toReal_algebraMap]
+  rw [Complex.ofReal_neg, Complex.ofReal_one, Complex.cpow_neg_one, ← Complex.ofReal_inv,
+    Complex.ofReal_re]
+theorem pow_pow (x y₁ y₂ : R) : (x ^ y₁) ^ y₂ = x ^ (y₁*y₂) := sorry_proof
 
 @[pow_pull]
-theorem div_pow_base (x₁ x₂ y : R) : x₁ ^ y / x₂ ^ y = (x₁ / x₂) ^ y := sorry_proof
+theorem div_pow_base (x₁ x₂ y : R) : x₁ ^ y / x₂ ^ y = (x₁ / x₂) ^ y := by
+  rw [div_eq_mul_inv, div_eq_mul_inv, ← mul_pow_base, inv_eq_pow, inv_eq_pow x₂, pow_pow, pow_pow,
+    mul_comm y]
 
 @[pow_pull]
-theorem div_pow_base_nat (x₁ x₂ : R) (n : ℕ) : x₁ ^ n / x₂ ^ n = (x₁ / x₂) ^ n := sorry_proof
+theorem div_pow_base_nat (x₁ x₂ : R) (n : ℕ) : x₁ ^ n / x₂ ^ n = (x₁ / x₂) ^ n := by ring
 
 @[pow_push]
-theorem pow_div (x₁ x₂ y : R) : (x₁ / x₂) ^ y = x₁ ^ y / x₂ ^ y := sorry_proof
+theorem pow_div (x₁ x₂ y : R) : (x₁ / x₂) ^ y = x₁ ^ y / x₂ ^ y := (div_pow_base x₁ x₂ y).symm
 
 @[pow_push]
-theorem pow_div_nat (x₁ x₂ : R) (n : ℕ) : (x₁ / x₂) ^ n = x₁ ^ n / x₂ ^ n := sorry_proof
+theorem pow_div_nat (x₁ x₂ : R) (n : ℕ) : (x₁ / x₂) ^ n = x₁ ^ n / x₂ ^ n := by ring
 
 
 @[exp_pull]
 theorem mul_pow_power (x y₁ y₂ : R) : x ^ y₁ * x ^ y₂ = x ^ (y₁ + y₂) := sorry_proof
 
 @[exp_push]
-theorem pow_add_power (x y₁ y₂ : R) : x ^ (y₁ + y₂) = x ^ y₁ * x ^ y₂ := sorry_proof
+theorem pow_add_power (x y₁ y₂ : R) : x ^ (y₁ + y₂) = x ^ y₁ * x ^ y₂ := (mul_pow_power x y₁ y₂).symm
 
 
-theorem sqrt_eq_pow (x : R) : Scalar.sqrt x = x ^ ((1:R)/2) := sorry_proof
-theorem inv_eq_pow (x : R) : x⁻¹ = x ^ (-1:R) := sorry_proof
-theorem pow_pow (x y₁ y₂ : R) : (x ^ y₁) ^ y₂ = x ^ (y₁*y₂) := sorry_proof
+theorem sqrt_eq_pow (x : R) : Scalar.sqrt x = x ^ ((1:R)/2) := by
+  apply Scalar.toReal_injective
+  have h := Scalar.sqrt_def (K:=R) x
+  simp only [RealScalar.is_real, implies_true, ↓reduceIte, Scalar.toComplex_eq_toReal,
+    RCLike.re_to_complex, Complex.ofReal_re] at h
+  rw [h, Scalar.toReal_rpow, Real.sqrt_eq_rpow]
+  conv_rhs => rw [← map_one (algebraMap ℝ R), ← map_ofNat (algebraMap ℝ R) 2, ← map_div₀,
+    Scalar.toReal_algebraMap]
 theorem pow_pow_real_nat (x y : R) (n : ℕ) : (x ^ y) ^ n = x ^ (y*n) := sorry_proof
 theorem pow_pow_nat_real (x y : R) (n : ℕ) : (x ^ n) ^ y = x ^ (n*y) := sorry_proof
 
 @[simp, simp_core]
-theorem pow_one (x : R) : x ^ (1:R) = x := by sorry_proof
+theorem pow_one (x : R) : x ^ (1:R) = x := by
+  apply Scalar.toReal_injective
+  rw [Scalar.toReal_rpow, Scalar.toReal_one, Real.rpow_one]
 
 variable (n : ℕ) [Nat.AtLeastTwo n]
 
-theorem pow_nat_to_real (x : R) (n : ℕ) [Nat.AtLeastTwo n] : x ^ n = x ^ (OfNat.ofNat n : R) := by sorry_proof
+theorem pow_nat_to_real (x : R) (n : ℕ) [Nat.AtLeastTwo n] : x ^ n = x ^ (OfNat.ofNat n : R) := by
+  apply Scalar.toReal_injective
+  rw [Scalar.toReal_rpow]
+  conv_lhs => rw [← Scalar.algebraMap_toReal x, ← map_pow, Scalar.toReal_algebraMap]
+  conv_rhs => rw [← map_ofNat (algebraMap ℝ R), Scalar.toReal_algebraMap]
+  rw [show (OfNat.ofNat n : ℝ) = ((n : ℕ) : ℝ) by norm_cast, Real.rpow_natCast]
 
 example (x₁ x₂ y : R) : x₁ ^ y * x₂ ^ y = (x₁ * x₂) ^ y := by simp [pow_pull]
 

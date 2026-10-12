@@ -22,7 +22,8 @@ def List.bubblesort [LT α] [DecidableRel (. < . : α → α → Prop)] (l : Lis
         ⟨y :: zs, by simp[h, ← he]⟩
       else
         ⟨x :: y :: ys, by simp[h]⟩
-decreasing_by sorry_proof
+termination_by l.length
+decreasing_by all_goals simp_all
 -- termination_by _ => l.length  -- clashes with Mathlib.Data.List.Basic
 
 namespace SciLean
@@ -182,7 +183,7 @@ namespace PrismRepr
     | .lt, .lt => isTrue (by rfl)
     | .gt, .gt => isTrue (by rfl)
     | .eq, .eq => isTrue (by rfl)
-    | _, _ => isFalse (by sorry_proof)
+    | .lt, .eq | .lt, .gt | .eq, .lt | .eq, .gt | .gt, .lt | .gt, .eq => isFalse (by intro h; cases h)
 
   instance (P Q : PrismRepr) : Decidable (P < Q) :=
     if h : ord P Q = .lt then
@@ -288,18 +289,25 @@ namespace PrismRepr
   theorem toCanonical_IsCanonical (P : PrismRepr) : P.toCanonical.IsCanonical := sorry_proof
   /-- toCanonical preserves dimension -/
   @[simp]
-  theorem toCanonical_dim (P : PrismRepr) : P.toCanonical.dim = P.dim := sorry_proof
+  theorem toCanonical_dim (P : PrismRepr) : P.toCanonical.dim = P.dim := by
+    suffices h : P.toCanonical.dim = P.dim ∧ ∀ A B, P.toCanonical = prod A B → ∃ C, A = cone C from h.1
+    induction P using toCanonical.induct <;> rw [toCanonical] <;> simp_all +zetaDelta [PrismRepr.dim] <;> omega
 
   @[simp]
   theorem IsCanonical_point : point.IsCanonical := IsCanonical.point
   @[simp]
-  theorem IsCanonical_base_of_cone (P : PrismRepr) (h : P.cone.IsCanonical) : P.IsCanonical := sorry_proof
+  theorem IsCanonical_base_of_cone (P : PrismRepr) (h : P.cone.IsCanonical) : P.IsCanonical := by
+    cases h; assumption
   @[simp]
   theorem IsCanonical_cone (P : PrismRepr) (h : P.IsCanonical) : P.cone.IsCanonical := IsCanonical.cone P h
   @[simp]
-  theorem IsCanonical_prod_fst (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : P.IsCanonical := sorry_proof
+  theorem IsCanonical_prod_fst (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : P.IsCanonical := by
+    cases h <;> exact .cone _ ‹_›
   @[simp]
-  theorem IsCanonical_prod_snd (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : Q.IsCanonical := sorry_proof
+  theorem IsCanonical_prod_snd (P Q : PrismRepr) (h : (P.prod Q).IsCanonical) : Q.IsCanonical := by
+    cases h
+    · exact .cone _ ‹_›
+    · assumption
 
 
   section ToCanonicalTests
@@ -423,41 +431,55 @@ namespace FaceRepr
   theorem toCanonical_ofPrism_IsCanonical (f : FaceRepr) : f.toCanonical.ofPrism.IsCanonical := sorry_proof
   theorem toCanonical_ofPrism (f : FaceRepr) : f.toCanonical.ofPrism = f.ofPrism.toCanonical := sorry_proof
   @[simp]
-  theorem toCanonical_dim (f : FaceRepr) : f.toCanonical.dim = f.dim := sorry_proof
+  theorem toCanonical_dim (f : FaceRepr) : f.toCanonical.dim = f.dim := by
+    suffices h : f.dim = f.toCanonical.dim ∧ (f.toCanonical = .point → f.ofPrism.dim = 0) ∧
+        ∀ a b, f.toCanonical = .prod a b → 0 < a.ofPrism.dim ∧ 0 < b.ofPrism.dim from h.1.symm
+    induction f using toCanonical.induct <;> rw [toCanonical] <;>
+      simp_all +zetaDelta [dim, toPrism, ofPrism, PrismRepr.dim] <;> omega
 
   /-- Isomorphism between faces of `P.toCanonical` and `P`.
 
   Maps every face of `P.toCanonical` to the corresponding face of `P`.
 
   It is an inverse of `FaceRepr.toCanonical` -/
-  def fromCanonical (f : FaceRepr) (P : PrismRepr) (_ : f.ofPrism = P.toCanonical) : FaceRepr :=
+  def fromCanonical (f : FaceRepr) (P : PrismRepr) (h : f.ofPrism = P.toCanonical) : FaceRepr :=
   match P, f with
   | .point, .point => .point
   | .point, _ => unreachable!
 
   | .cone P, .tip _ => .tip P
-  | .cone P, .cone f' => .cone (f'.fromCanonical P sorry_proof)
-  | .cone P, .base f' => .base (f'.fromCanonical P sorry_proof)
+  | .cone P, .cone f' => .cone (f'.fromCanonical P (by rw [PrismRepr.toCanonical] at h; exact PrismRepr.cone.inj h))
+  | .cone P, .base f' => .base (f'.fromCanonical P (by rw [PrismRepr.toCanonical] at h; exact PrismRepr.cone.inj h))
   | .cone _, _ => unreachable!
 
   | .prod .point P', f' =>
-    FaceRepr.prod .point (f'.fromCanonical P' sorry_proof)
+    FaceRepr.prod .point (f'.fromCanonical P' (by rw [PrismRepr.toCanonical] at h; exact h))
 
   | .prod (.cone P) Q, f' =>
     let Q' := Q.toCanonical
-    match Q' with
+    match hQ : Q' with
     | .point =>
-      .prod (f'.fromCanonical (.cone P) sorry_proof)
-            (FaceRepr.point.fromCanonical Q sorry_proof)
+      .prod (f'.fromCanonical (.cone P) (by have hQ : Q.toCanonical = _ := hQ; rw [PrismRepr.toCanonical, hQ] at h; rw [h, PrismRepr.toCanonical]))
+            (FaceRepr.point.fromCanonical Q hQ.symm)
 
     | .cone Q' =>
       match f' with
       | .prod f' g' =>
         let P' := P.toCanonical
-        if P' ≤ Q' then
-          .prod (f'.fromCanonical (.cone P) sorry_proof) (g'.fromCanonical Q sorry_proof)
+        if hP : P' ≤ Q' then
+          .prod (f'.fromCanonical (.cone P) (by
+                  have hQ : Q.toCanonical = _ := hQ; rw [PrismRepr.toCanonical, hQ] at h; dsimp only at h; rw [if_pos (show P.toCanonical ≤ Q' from hP)] at h
+                  rw [PrismRepr.toCanonical]; exact (PrismRepr.prod.inj h).1))
+                (g'.fromCanonical Q (by
+                  have hQ : Q.toCanonical = _ := hQ; rw [PrismRepr.toCanonical, hQ] at h; dsimp only at h; rw [if_pos (show P.toCanonical ≤ Q' from hP)] at h
+                  rw [hQ]; exact (PrismRepr.prod.inj h).2))
         else
-          .prod (g'.fromCanonical (.cone P) sorry_proof) (f'.fromCanonical Q sorry_proof)
+          .prod (g'.fromCanonical (.cone P) (by
+                  have hQ : Q.toCanonical = _ := hQ; rw [PrismRepr.toCanonical, hQ] at h; dsimp only at h; rw [if_neg (show ¬P.toCanonical ≤ Q' from hP)] at h
+                  rw [PrismRepr.toCanonical]; exact (PrismRepr.prod.inj h).2))
+                (f'.fromCanonical Q (by
+                  have hQ : Q.toCanonical = _ := hQ; rw [PrismRepr.toCanonical, hQ] at h; dsimp only at h; rw [if_neg (show ¬P.toCanonical ≤ Q' from hP)] at h
+                  rw [hQ]; exact (PrismRepr.prod.inj h).1))
       | _ => unreachable!
 
     | .prod (.cone Q₁') Q₂' =>
@@ -477,16 +499,26 @@ namespace FaceRepr
     | _ => unreachable!
   | .prod P Q, fg =>
     let P' := P.toCanonical
-    match P' with
+    match hP : P' with
     | .point =>
-      .prod (FaceRepr.point.fromCanonical P sorry_proof) (fg.fromCanonical Q sorry_proof)
+      .prod (FaceRepr.point.fromCanonical P hP.symm) (fg.fromCanonical Q (by
+              have hP : P.toCanonical = _ := hP
+              cases P with
+              | point => rw [PrismRepr.toCanonical] at h; exact h
+              | cone P => rw [PrismRepr.toCanonical] at hP; cases hP
+              | prod P₁ P₂ => rw [PrismRepr.toCanonical, hP] at h <;> first | exact h | simp))
     | .cone P' =>
       let fg' := fg.fromCanonical (.prod P'.cone Q) sorry_proof
       match fg' with
       | .prod f' g' => .prod (f'.fromCanonical P sorry_proof) g'
       | _ => unreachable!
     | .prod (.cone P₁') P₂' =>
-        let fg' := fg.fromCanonical (.prod P₁'.cone (.prod P₂' Q)) sorry_proof
+        let fg' := fg.fromCanonical (.prod P₁'.cone (.prod P₂' Q)) (by
+                have hP : P.toCanonical = _ := hP
+                cases P with
+                | point => rw [PrismRepr.toCanonical] at hP; cases hP
+                | cone P => rw [PrismRepr.toCanonical] at hP; cases hP
+                | prod P₁ P₂ => rw [PrismRepr.toCanonical, hP] at h <;> first | exact h | simp)
         match fg' with
         | .prod f₁' (.prod f₂' g') =>
           .prod ((FaceRepr.prod f₁' f₂').fromCanonical P sorry_proof) g'
@@ -540,34 +572,44 @@ This is morphism composition. The face `f` is a morphism `Q → P` and `g` is a 
       |   point,   point, _ => point
       |  tip P',   point, _ => tip P'
       | cone f',   tip _, _ => tip f'.ofPrism
-      | cone f', cone g', _ =>
-        cone (f'.comp g' (sorry_proof))
-      | cone f', base g', _ =>
-        base (f'.comp g' (sorry_proof))
-      | base f',      g', _ =>
-        base (f'.comp g' (sorry_proof))
-      | prod f' f'', prod g' g'', _ =>
-        prod (f'.comp g'   (sorry_proof))
-             (f''.comp g'' (sorry_proof))
+      | cone f', cone g', h =>
+        cone (f'.comp g' (by simpa [FaceRepr.toPrism, FaceRepr.ofPrism] using h))
+      | cone f', base g', h =>
+        base (f'.comp g' (by simpa [FaceRepr.toPrism, FaceRepr.ofPrism] using h))
+      | base f',      g', h =>
+        base (f'.comp g' (by simpa [FaceRepr.toPrism] using h))
+      | prod f' f'', prod g' g'', h =>
+        prod (f'.comp g'   (by simp [FaceRepr.toPrism, FaceRepr.ofPrism] at h; exact h.1))
+             (f''.comp g'' (by simp [FaceRepr.toPrism, FaceRepr.ofPrism] at h; exact h.2))
 
 
     /-- The prism type of a face does not depend on the larger prism. -/
     @[simp]
     theorem comp_toPrism (f g : FaceRepr) (h)
       : (f.comp g h).toPrism = g.toPrism
-      := sorry_proof
+      := by
+        induction f generalizing g with
+        | base f ih => simp [comp, toPrism]; exact ih _ _
+        | _ =>
+          cases g <;> (have h' := h; simp only [toPrism, ofPrism] at h'; try simp at h') <;>
+            simp [comp, toPrism, ofPrism, *]
 
     /--  -/
     @[simp]
     theorem comp_ofPrism (f g : FaceRepr) (h)
       : (f.comp g h).ofPrism = f.ofPrism
-      := sorry_proof
+      := by
+        induction f generalizing g with
+        | base f ih => simp [comp, ofPrism]; exact ih _ _
+        | _ =>
+          cases g <;> (have h' := h; simp only [toPrism, ofPrism] at h'; try simp at h') <;>
+            simp [comp, ofPrism, *]
 
     /-- The dimension of a face does not depend on the larger prism. -/
     @[simp]
     theorem comp_dim (f g : FaceRepr) (h)
       : (f.comp g h).dim = g.dim
-      := sorry_proof
+      := by simp [dim]
 
 end FaceRepr
 
@@ -580,9 +622,11 @@ namespace PrismRepr
   | .prod P Q => .prod P.topFace Q.topFace
 
   @[simp]
-  theorem topFace_ofPrism (P : PrismRepr) : P.topFace.ofPrism = P := sorry_proof
+  theorem topFace_ofPrism (P : PrismRepr) : P.topFace.ofPrism = P := by
+    induction P <;> simp_all [topFace, FaceRepr.ofPrism]
   @[simp]
-  theorem topFace_toPrism (P : PrismRepr) : P.topFace.toPrism = P := sorry_proof
+  theorem topFace_toPrism (P : PrismRepr) : P.topFace.toPrism = P := by
+    induction P <;> simp_all [topFace, FaceRepr.toPrism]
 
   /-- The first `n`-face of `P` -/
   def first (P : PrismRepr) (n : Nat) : Option FaceRepr:=
@@ -603,23 +647,96 @@ namespace PrismRepr
         | _, _ => continue
       none
 
+  /-- A face returned by `first` is an `n`-face of `P`. -/
+  theorem first_spec (P : PrismRepr) (n : Nat) (f : FaceRepr) (h : P.first n = some f) :
+      f.ofPrism = P ∧ f.dim = n := by
+    induction P generalizing n f with
+    | point =>
+      cases n with
+      | zero => simp only [first, Option.some.injEq] at h; subst h; exact ⟨rfl, rfl⟩
+      | succ n => simp [first] at h
+    | cone P ih =>
+      cases n with
+      | zero => simp only [first, Option.some.injEq] at h; subst h; exact ⟨rfl, rfl⟩
+      | succ n =>
+        simp only [first] at h
+        split at h
+        · rename_i f' hf'
+          cases h
+          have := ih n f' hf'
+          exact ⟨by simp [FaceRepr.ofPrism, this.1], by simp [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; exact this.2⟩
+        · cases h
+    | prod P Q ihP ihQ =>
+      simp only [first, Id.run] at h
+      rw [Std.Legacy.Range.forIn_eq_forIn_range'] at h
+      generalize hl : List.range' _ _ _ = l at h
+      have hb : ∀ i ∈ l, i ≤ n := by
+        intro i hi; rw [← hl] at hi; simp [List.mem_range'] at hi; omega
+      have key : ∀ (l : List Nat), (∀ i ∈ l, i ≤ n) →
+          ∀ x, ((forIn (m := Id) l ((none : Option (Option FaceRepr)), ()) fun i __s =>
+              match P.first i, Q.first (n - i) with
+              | some f', some g' => pure (ForInStep.done (some (some (f'.prod g')), ()))
+              | x, x_1 => pure (ForInStep.yield (none, ()))) : Id _).1 = some x →
+          ∃ i f' g', i ≤ n ∧ P.first i = some f' ∧ Q.first (n - i) = some g' ∧ x = some (f'.prod g') := by
+        intro l
+        induction l with
+        | nil => simp
+        | cons i l ihl =>
+          intro hl x hx
+          rw [List.forIn_cons] at hx
+          split at hx
+          · rename_i f' g' hf hg
+            cases hx
+            exact ⟨i, f', g', hl i (by simp), hf, hg, rfl⟩
+          · exact ihl (fun j hj => hl j (by simp [hj])) x hx
+      rcases hs : (forIn (m := Id) l
+          ((none : Option (Option FaceRepr)), ()) fun i __s =>
+            match P.first i, Q.first (n - i) with
+            | some f', some g' => pure (ForInStep.done (some (some (f'.prod g')), ()))
+            | x, x_1 => pure (ForInStep.yield (none, ()))) with ⟨s1, ⟨⟩⟩
+      rw [hs] at h
+      cases s1 with
+      | none => cases h
+      | some r =>
+        obtain ⟨i, f', g', hi, hf, hg, rfl⟩ := key l hb r (by rw [hs])
+        cases h
+        have h1 := ihP i f' hf
+        have h2 := ihQ (n - i) g' hg
+        refine ⟨by simp [FaceRepr.ofPrism, h1.1, h2.1], ?_⟩
+        simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h1 h2 ⊢
+        omega
+
   theorem first_ofPrism (P : PrismRepr) (n : Nat)
     : match P.first n with
       | some f => f.ofPrism = P
       | none => True
-    := sorry_proof
+    := by split
+          · exact (first_spec P n _ ‹_›).1
+          · trivial
 
   theorem first_dim (P : PrismRepr) (n : Nat)
     : match P.first n with
       | some f => f.dim = n
       | none => True
-    := sorry_proof
+    := by split
+          · exact (first_spec P n _ ‹_›).2
+          · trivial
 
   def prodSplit (P : PrismRepr) : List PrismRepr :=
   match P with
   | .point  => [.point]
   | .cone Q => [.cone Q]
   | .prod Q₁ Q₂ => Q₁ :: Q₂.prodSplit
+
+  theorem IsCanonical_of_mem_prodSplit (P Q : PrismRepr) (hP : P.IsCanonical)
+      (hQ : Q ∈ P.prodSplit) : Q.IsCanonical := by
+    induction P with
+    | point | cone _ _ => simp only [prodSplit, List.mem_singleton] at hQ; exact hQ ▸ hP
+    | prod P₁ P₂ _ ih₂ =>
+      simp only [prodSplit, List.mem_cons] at hQ
+      rcases hQ with rfl | hQ
+      · exact IsCanonical_prod_fst _ _ hP
+      · exact ih₂ (IsCanonical_prod_snd _ _ hP) hQ
 
   def prodHead (P : PrismRepr) : PrismRepr :=
   match P with
@@ -678,17 +795,86 @@ namespace FaceRepr
             | _, _ => none
     | _, _, _ => panic! "Unreachable code in Face.next. This is a bug!"
 
+  /-- A face returned by `next` is a face of the same prism and of the same dimension. -/
+  theorem next_spec (f f' : FaceRepr) (h : f.next = some f') :
+      f'.ofPrism = f.ofPrism ∧ f'.dim = f.dim := by
+    induction f generalizing f' with
+    | point => unfold next at h; cases h
+    | tip P =>
+      unfold next at h; simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h ⊢
+      split at h
+      · rename_i g hg
+        cases h
+        have h1 := PrismRepr.first_spec _ _ _ hg
+        simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism] at *
+        exact ⟨by rw [h1.1], h1.2⟩
+      · cases h
+    | cone f ih =>
+      unfold next at h; simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h ⊢
+      split at h
+      · rename_i g hg
+        cases h
+        have h1 := ih _ hg
+        simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at *
+        exact ⟨by rw [h1.1], by rw [h1.2]⟩
+      · split at h
+        · rename_i g hg
+          cases h
+          have h1 := PrismRepr.first_spec _ _ _ hg
+          simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism] at *
+          exact ⟨by rw [h1.1], h1.2⟩
+        · cases h
+    | base f ih =>
+      unfold next at h; simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism] at h ⊢
+      split at h
+      · rename_i g hg
+        cases h
+        have h1 := ih _ hg
+        simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism] at *
+        exact ⟨by rw [h1.1], h1.2⟩
+      · cases h
+    | prod f g ihf ihg =>
+      unfold next at h; simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h ⊢
+      split at h
+      · rename_i f'' hf
+        cases h
+        have h1 := ihf _ hf
+        simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at *
+        exact ⟨by rw [h1.1], by rw [h1.2]⟩
+      · split at h
+        · rename_i f'' g'' hf hg
+          cases h
+          have h1 := PrismRepr.first_spec _ _ _ hf
+          have h2 := ihg _ hg
+          simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at *
+          exact ⟨by rw [h1.1, h2.1], by rw [h1.2, h2.2]⟩
+        · split at h
+          · cases h
+          · rename_i m hm
+            split at h
+            · rename_i f'' g'' hf hg
+              cases h
+              have h1 := PrismRepr.first_spec _ _ _ hf
+              have h2 := PrismRepr.first_spec _ _ _ hg
+              simp only [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at *
+              exact ⟨by rw [h1.1, h2.1], by omega⟩
+            · cases h
+
   theorem next_ofPrism (f : FaceRepr)
     : match f.next with
       | some f' => f'.ofPrism = f.ofPrism
       | none => True
-    := sorry_proof
+    := by split
+          · exact (next_spec f _ ‹_›).1
+          · trivial
 
   theorem next_dim (f : FaceRepr)
     : match f.next with
       | some f' => f'.dim = f.dim
       | none => True
-    := sorry_proof
+    := by split
+          · exact (next_spec f _ ‹_›).2
+          · trivial
 
 end FaceRepr
 
@@ -785,7 +971,7 @@ def FaceRepr.fromIndex (P : PrismRepr) (dim : Nat) (i : Fin (P.faceCount dim)) :
     if h : i.1 < n' then
       .base (fromIndex P' (dim'+1) ⟨i.1, h⟩)
     else
-      .cone (fromIndex P' dim' ⟨i.1 - n', sorry_proof⟩)
+      .cone (fromIndex P' dim' ⟨i.1 - n', by have := i.2; simp only [PrismRepr.faceCount] at this; omega⟩)
   | .prod P' Q', _ => Id.run do
     let mut n := 0
     for d' in [0:dim+1] do
@@ -802,12 +988,156 @@ def FaceRepr.fromIndex (P : PrismRepr) (dim : Nat) (i : Fin (P.faceCount dim)) :
 /-- Index of a face is smaller then the number of faces of the same dimesnsion and of the same Prism -/
 def FaceRepr.index_numberOfFaces (f : FaceRepr)
   : f.index < f.ofPrism.faceCount f.dim
-  := sorry_proof
+  := by
+  induction f with
+  | point => simp [FaceRepr.index, PrismRepr.faceCount, FaceRepr.dim, FaceRepr.ofPrism, FaceRepr.toPrism, PrismRepr.dim]
+  | tip P => simp [FaceRepr.index, PrismRepr.faceCount, FaceRepr.dim, FaceRepr.ofPrism, FaceRepr.toPrism, PrismRepr.dim]
+  | base f ih =>
+    simp only [FaceRepr.index, FaceRepr.dim, FaceRepr.ofPrism, FaceRepr.toPrism] at ih ⊢
+    rcases h : f.toPrism.dim with _ | k
+    · rw [h] at ih; simp only [PrismRepr.faceCount]; omega
+    · rw [h] at ih; simp only [PrismRepr.faceCount]; omega
+  | cone f ih =>
+    simp only [FaceRepr.index, FaceRepr.dim, FaceRepr.ofPrism, FaceRepr.toPrism, PrismRepr.dim, PrismRepr.faceCount] at ih ⊢
+    omega
+  | prod f g ihf ihg =>
+    have hd : (FaceRepr.prod f g).dim = f.dim + g.dim := rfl
+    have ho : (FaceRepr.prod f g).ofPrism = f.ofPrism.prod g.ofPrism := rfl
+    simp only [FaceRepr.index, hd, ho, PrismRepr.faceCount]
+    rw [Fin.sum_univ_eq_sum_range (fun i => PrismRepr.faceCount i f.ofPrism *
+        PrismRepr.faceCount (f.dim + g.dim - i) g.ofPrism) f.dim,
+      Fin.sum_univ_eq_sum_range (fun i => PrismRepr.faceCount i f.ofPrism *
+        PrismRepr.faceCount (f.dim + g.dim - i) g.ofPrism) (f.dim + g.dim + 1)]
+    have h1 := Finset.sum_le_sum_of_subset (f := fun i => PrismRepr.faceCount i f.ofPrism *
+        PrismRepr.faceCount (f.dim + g.dim - i) g.ofPrism)
+      (Finset.range_subset_range.2 (show f.dim + 1 ≤ f.dim + g.dim + 1 by omega))
+    rw [Finset.sum_range_succ, show f.dim + g.dim - f.dim = g.dim by omega] at h1
+    have h2 := Nat.mul_le_mul_right (PrismRepr.faceCount f.dim f.ofPrism) (Nat.succ_le_of_lt ihg)
+    rw [Nat.succ_mul, Nat.mul_comm (PrismRepr.faceCount g.dim g.ofPrism)] at h2
+    omega
 
 /-- Face is uniquelly determined by its parent prism, dimension and index -/
 def FaceRepr.index_ext (f g : FaceRepr)
   : f.ofPrism = g.ofPrism → f.dim = g.dim → f.index = g.index → f = g
-  := sorry_proof
+  := by
+  induction f generalizing g with
+  | point =>
+    intro h1 h2 h3
+    cases g <;> simp_all [FaceRepr.ofPrism]
+  | tip P =>
+    intro h1 h2 h3
+    cases g with
+    | tip P' => simp_all [FaceRepr.ofPrism]
+    | base g' =>
+      have := FaceRepr.index_numberOfFaces g'
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim, FaceRepr.index] at h1 h2 h3 this
+      rw [← h2, ← h1, ← h3] at this
+      exact absurd this (Nat.lt_irrefl _)
+    | cone g' =>
+      simp [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h2
+    | _ => simp_all [FaceRepr.ofPrism]
+  | cone f ih =>
+    intro h1 h2 h3
+    cases g with
+    | cone g' =>
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim, Nat.add_right_cancel_iff] at h1 h2
+      simp only [FaceRepr.index, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim, h1, h2, Nat.add_left_cancel_iff] at h3
+      rw [ih g' h1 h2 h3]
+    | base g' =>
+      have := FaceRepr.index_numberOfFaces g'
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h1 h2
+      simp only [FaceRepr.index, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h3
+      simp only [FaceRepr.dim] at this
+      rw [← h1, ← h2, ← h3] at this
+      omega
+    | tip P' =>
+      simp [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h2
+    | _ => simp_all [FaceRepr.ofPrism]
+  | base f ih =>
+    intro h1 h2 h3
+    cases g with
+    | base g' =>
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism] at h1 h2
+      simp only [FaceRepr.index] at h3
+      rw [ih g' h1 h2 h3]
+    | tip P' =>
+      have := FaceRepr.index_numberOfFaces f
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim, FaceRepr.index] at h1 h2 h3 this
+      rw [h2, h1, h3] at this
+      exact absurd this (Nat.lt_irrefl _)
+    | cone g' =>
+      have := FaceRepr.index_numberOfFaces f
+      simp only [FaceRepr.ofPrism, PrismRepr.cone.injEq, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h1 h2
+      simp only [FaceRepr.index, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h3
+      simp only [FaceRepr.dim] at this
+      rw [h1, h2, h3] at this
+      omega
+    | _ => simp_all [FaceRepr.ofPrism]
+  | prod f₁ g₁ ihf ihg =>
+    intro h1 h2 h3
+    cases g with
+    | prod f₂ g₂ =>
+      simp only [FaceRepr.ofPrism, PrismRepr.prod.injEq] at h1
+      obtain ⟨hf, hg⟩ := h1
+      have hd1 : (FaceRepr.prod f₁ g₁).dim = f₁.dim + g₁.dim := rfl
+      have hd2 : (FaceRepr.prod f₂ g₂).dim = f₂.dim + g₂.dim := rfl
+      rw [hd1, hd2] at h2
+      simp only [FaceRepr.index, hd1, hd2] at h3
+      rw [← hf, ← hg, ← h2] at h3
+      have bf₁ := FaceRepr.index_numberOfFaces f₁
+      have bg₁ := FaceRepr.index_numberOfFaces g₁
+      have bf₂ := FaceRepr.index_numberOfFaces f₂
+      have bg₂ := FaceRepr.index_numberOfFaces g₂
+      rw [← hf] at bf₂
+      rw [← hg] at bg₂
+      generalize f₁.index = i₁ at *
+      generalize g₁.index = j₁ at *
+      generalize hi₂ : f₂.index = i₂ at *
+      generalize hj₂ : g₂.index = j₂ at *
+      have key : ∀ (a a' : Nat) (i j : Nat), a < a' → a' ≤ f₁.dim + g₁.dim →
+          i < PrismRepr.faceCount a f₁.ofPrism →
+          j < PrismRepr.faceCount (f₁.dim + g₁.dim - a) g₁.ofPrism →
+          ∑ k ∈ Finset.range a, PrismRepr.faceCount k f₁.ofPrism *
+              PrismRepr.faceCount (f₁.dim + g₁.dim - k) g₁.ofPrism
+            + j * PrismRepr.faceCount a f₁.ofPrism + i
+          < ∑ k ∈ Finset.range a', PrismRepr.faceCount k f₁.ofPrism *
+              PrismRepr.faceCount (f₁.dim + g₁.dim - k) g₁.ofPrism := by
+        intro a a' i j haa' ha' hi hj
+        have h1 := Finset.sum_le_sum_of_subset (f := fun k => PrismRepr.faceCount k f₁.ofPrism *
+            PrismRepr.faceCount (f₁.dim + g₁.dim - k) g₁.ofPrism)
+          (Finset.range_subset_range.2 (show a + 1 ≤ a' by omega))
+        rw [Finset.sum_range_succ] at h1
+        have h2 := Nat.mul_le_mul_right (PrismRepr.faceCount a f₁.ofPrism) (Nat.succ_le_of_lt hj)
+        rw [Nat.succ_mul, Nat.mul_comm (PrismRepr.faceCount (f₁.dim + g₁.dim - a) g₁.ofPrism)] at h2
+        omega
+      rw [Fin.sum_univ_eq_sum_range (fun k => PrismRepr.faceCount k f₁.ofPrism *
+          PrismRepr.faceCount (f₁.dim + g₁.dim - k) g₁.ofPrism) f₁.dim,
+        Fin.sum_univ_eq_sum_range (fun k => PrismRepr.faceCount k f₁.ofPrism *
+          PrismRepr.faceCount (f₁.dim + g₁.dim - k) g₁.ofPrism) f₂.dim] at h3
+      have ea : f₁.dim = f₂.dim := by
+        rcases Nat.lt_trichotomy f₁.dim f₂.dim with h | h | h
+        · have := key _ _ _ _ h (by omega) bf₁ (by rw [show f₁.dim + g₁.dim - f₁.dim = g₁.dim by omega]; exact bg₁)
+          omega
+        · exact h
+        · have := key _ _ _ _ h (by omega) bf₂ (by rw [show f₁.dim + g₁.dim - f₂.dim = g₂.dim by omega]; exact bg₂)
+          omega
+      have eb : g₁.dim = g₂.dim := by omega
+      rw [← ea] at h3 bf₂
+      have e2 : j₁ * PrismRepr.faceCount f₁.dim f₁.ofPrism + i₁
+          = j₂ * PrismRepr.faceCount f₁.dim f₁.ofPrism + i₂ := by omega
+      have hpos : 0 < PrismRepr.faceCount f₁.dim f₁.ofPrism := by omega
+      have ei : i₁ = i₂ := by
+        have := congrArg (· % PrismRepr.faceCount f₁.dim f₁.ofPrism) e2
+        simp only [Nat.add_comm (_ * _), Nat.add_mul_mod_self_right, Nat.mod_eq_of_lt bf₁,
+          Nat.mod_eq_of_lt bf₂] at this
+        exact this
+      have ej : j₁ = j₂ := by
+        have := congrArg (· / PrismRepr.faceCount f₁.dim f₁.ofPrism) e2
+        simp only [Nat.add_comm (_ * _), Nat.add_mul_div_right _ _ hpos, Nat.div_eq_of_lt bf₁,
+          Nat.div_eq_of_lt bf₂] at this
+        omega
+      rw [ihf f₂ hf ea (by rw [hi₂]; exact ei), ihg g₂ hg eb (by rw [hj₂]; exact ej)]
+    | _ => simp_all [FaceRepr.ofPrism]
 
 abbrev PrismRepr.Space : PrismRepr → Type
 | .point => Unit
@@ -874,15 +1204,15 @@ def PrismRepr.barycenter (P : PrismRepr) : P.Space :=
 /-- Barycentric coordinates of a prism
 
     This implementation has bad numerical properties and it is thus serves mostly as a specification -/
-def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (_ : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ :=
+def PrismRepr.barycentricCoordSpec {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P ∧ p.dim = 0 /- `p` is a point of P -/) (x : P.Space) : ℝ :=
   match P, p, x with
   | .point, _, _ => 1
   | .cone _, .tip _, (t, _) => t
   | .cone _, .base p', (t, x') =>
-    (1-t) * (barycentricCoordSpec p' sorry_proof ((1/(1-t)) • x'))
+    (1-t) * (barycentricCoordSpec p' ⟨PrismRepr.cone.inj h.1, h.2⟩ ((1/(1-t)) • x'))
   | .prod _ _, .prod p q, (x, y) =>
-    (barycentricCoordSpec p sorry_proof x) *
-    (barycentricCoordSpec q sorry_proof y)
+    (barycentricCoordSpec p ⟨(PrismRepr.prod.inj h.1).1, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ x) *
+    (barycentricCoordSpec q ⟨(PrismRepr.prod.inj h.1).2, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ y)
   | .cone _, .cone _, _ => unreachable!
 
 
@@ -897,14 +1227,14 @@ def PrismRepr.barycentricCoord {P : PrismRepr} (p : FaceRepr) (h : p.ofPrism = P
   | .cone (.cone _), .base (.tip _), (_, (s, _)), _ => s
   | .cone (.cone P), .base (.base p), (t, (s, x)), _ =>
     -- let p' : FaceRepr' (some $ .cone P) (0 : Nat) := ⟨.base p, sorry_proof, sorry_proof⟩
-    barycentricCoord (P := P.cone) (.base p) sorry_proof (t+s, x)
+    barycentricCoord (P := P.cone) (.base p) ⟨PrismRepr.cone.inj h.1, h.2⟩ (t+s, x)
   | .cone (.prod P Q), .base (.prod p q), (t, (x, y)),_ =>
     -- let p' : FaceRepr' (some $ .cone P) (0 : Nat) := ⟨.base p, sorry_proof, sorry_proof⟩
-    (barycentricCoord (P := P.cone) (.base p) sorry_proof (t,x)) *
-    (barycentricCoord q sorry_proof ((1/(1-t)) • y))
+    (barycentricCoord (P := P.cone) (.base p) ⟨congrArg PrismRepr.cone (PrismRepr.prod.inj (PrismRepr.cone.inj h.1)).1, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ (t,x)) *
+    (barycentricCoord q ⟨(PrismRepr.prod.inj (PrismRepr.cone.inj h.1)).2, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ ((1/(1-t)) • y))
   | .prod _ _, .prod p q, (x, y), _ =>
-    (barycentricCoord p sorry_proof x) *
-    (barycentricCoord q sorry_proof y)
+    (barycentricCoord p ⟨(PrismRepr.prod.inj h.1).1, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ x) *
+    (barycentricCoord q ⟨(PrismRepr.prod.inj h.1).2, by have := h.2; simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at this ⊢; omega⟩ y)
   -- In all these cases `p` is not a point
   -- Can we modify the original match statement to eliminate these?
   -- | .cone (.prod _ _), .cone _, _ => unreachable!

@@ -3,6 +3,7 @@ module
 public import SciLean.Analysis.AdjointSpace.HasAdjoint
 public import SciLean.Analysis.Calculus.HasFDeriv
 public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.SpecialFunctions.Norm2
 public import SciLean.Data.Nat
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
 -- import SciLean.Tactic.DataSynth.DefRevDeriv
@@ -46,19 +47,26 @@ variable {K}
 -- API for constructing and deconstructing HasRevFDeriv(Update)  -----------------------------------
 ----------------------------------------------------------------------------------------------------
 
-set_option linter.unusedVariables false in
 theorem hasRevFDeriv_from_hasFDerivAt_hasAdjoint {f : X → Y}
     {df : X → X →L[K] Y} (deriv : ∀ x, HasFDerivAt f (df x) x)
     {df' : X → Y → X} (adjoint : ∀ x, HasAdjoint K (df x) (df' x))
     {f'} (simp : f' = (fun x => (f x, df' x))) :
-    HasRevFDeriv K f f' := sorry_proof
+    HasRevFDeriv K f f' where
+  val := by subst simp; intro x; rfl
+  deriv := ⟨df, deriv, by subst simp; exact adjoint⟩
 
-set_option linter.unusedVariables false in
 theorem hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate {f : X → Y}
     {df : X → X →L[K] Y} (deriv : ∀ x, HasFDerivAt f (df x) x)
     {df' : X → Y → X → X} (adjoint : ∀ x, HasAdjointUpdate K (df x) (df' x))
     {f'} (simp : f' = (fun x => (f x, df' x))) :
-    HasRevFDerivUpdate K f f' := sorry_proof
+    HasRevFDerivUpdate K f f' := by
+  subst simp
+  refine ⟨fun x => rfl, df, deriv,
+    fun x => ContinuousLinearMap.mk' K (fun dy => df' x dy 0)
+      ((adjoint x).hasAdjoint.isContinuousLinearMap'), fun x => (adjoint x).hasAdjoint, ?_⟩
+  intro x dy dx
+  show df' x dy dx = dx + df' x dy 0
+  rw [(adjoint x).apply_eq_zero_add dx dy, add_comm]
 
 theorem hasRevFDeriv_from_hasRevFDeriv {f : X → Y}
     {f'} (deriv : HasRevFDeriv K f f')
@@ -70,23 +78,36 @@ theorem hasRevFDerivUpdate_from_hasRevFDerivUpdate {f : X → Y}
     {f''} (simp : f'' = f') :
     HasRevFDerivUpdate K f f'' := by rw[simp]; exact deriv
 
-set_option linter.unusedVariables false in
 theorem HasRevFDeriv.toHasRevFDerivUpdate {f : X → Y} {f' : X → Y×(Y→X)}
     (h : HasRevFDeriv K f f') :
     HasRevFDerivUpdate K f
       (fun x =>
         let' (y,df') := f' x
-        (y, fun dy dx => dx + df' dy)) := sorry_proof
+        (y, fun dy dx => dx + df' dy)) := by
+  obtain ⟨val, df, hd, ha⟩ := h
+  refine ⟨val, df, hd, fun x => ContinuousLinearMap.mk' K ((f' x).2) (ha x).isContinuousLinearMap',
+    fun x => ha x, ?_⟩
+  intros; rfl
 
-set_option linter.unusedVariables false in
 theorem HasRevFDerivUpdate.toHasRevFDeriv {f : X → Y} {f' : X → Y×(Y→X→X)}
     (h : HasRevFDerivUpdate K f f') :
     HasRevFDeriv K f
       (fun x =>
         let' (y,df') := f' x
-        (y, fun dy => df' dy 0)) := sorry_proof
+        (y, fun dy => df' dy 0)) := by
+  obtain ⟨val, df, hd, dfc, ha, hupd⟩ := h
+  refine ⟨val, df, hd, fun x => ?_⟩
+  show HasAdjoint K (⇑(df x)) (fun dy => (f' x).2 dy 0)
+  rw [show ((fun dy => (f' x).2 dy 0) : Y → X) = ⇑(dfc x) from
+    funext fun dy => by rw [hupd x dy 0, zero_add]]
+  exact ha x
 
-set_option linter.unusedVariables false in
+theorem HasRevFDerivUpdate.apply_eq_zero_add {f : X → Y} {f' : X → Y×(Y→X→X)}
+    (h : HasRevFDerivUpdate K f f') (x : X) (dy : Y) (dx : X) :
+    (f' x).2 dy dx = dx + (f' x).2 dy 0 := by
+  obtain ⟨df, hd, df', ha, hupd⟩ := h.deriv
+  rw [hupd x dy dx, hupd x dy 0, zero_add]
+
 theorem HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
   (h : HasRevFDeriv K f f') :
   (∀ x, (f' x).1 = f x)
@@ -94,9 +115,8 @@ theorem HasRevFDeriv.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X)}
   ∃ df : X → X →L[K] Y,
     (∀ x, HasFDerivAt f (df x) x)
     ∧
-    (∀ x, HasAdjoint K (df x) ((f' x).2)) := sorry_proof
+    (∀ x, HasAdjoint K (df x) ((f' x).2)) := ⟨h.val, h.deriv⟩
 
-set_option linter.unusedVariables false in
 theorem HasRevFDerivUpdate.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X→X)}
   (h : HasRevFDerivUpdate K f f') :
   (∀ x, (f' x).1 = f x)
@@ -107,9 +127,10 @@ theorem HasRevFDerivUpdate.deriv_adjoint {f : X → Y} {f' : X → Y×(Y→X→X
     ∃ df' : X → Y → X,
       (∀ x, HasAdjoint K (df x) (df' x))
       ∧
-      (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy) := sorry_proof
+      (∀ x dy dx, (f' x).2 dy dx = dx + df' x dy) := by
+  obtain ⟨df, hd, df', ha, hupd⟩ := h.deriv
+  exact ⟨h.val, df, hd, fun x => (df' x : Y → X), ha, hupd⟩
 
-set_option linter.unusedVariables false in
 theorem HasRevFDerivUpdate.deriv_adjointUpdate {f : X → Y} {f' : X → Y×(Y→X→X)}
   (h : HasRevFDerivUpdate K f f') :
   (∀ x, (f' x).1 = f x)
@@ -117,13 +138,21 @@ theorem HasRevFDerivUpdate.deriv_adjointUpdate {f : X → Y} {f' : X → Y×(Y�
   ∃ df : X → X →L[K] Y,
     (∀ x, HasFDerivAt f (df x) x)
     ∧
-    (∀ x, HasAdjointUpdate K (df x) ((f' x).2)) := sorry_proof
+    (∀ x, HasAdjointUpdate K (df x) ((f' x).2)) := by
+  obtain ⟨df, hd, df', ha, hupd⟩ := h.deriv
+  exact ⟨h.val, df, hd,
+         fun x => hasAdjointUpdate_from_hasAdjoint (ha x) (fun dy dx => hupd x dy dx)⟩
 
-set_option linter.unusedVariables false in
 -- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
 theorem revFDeriv_from_hasRevFDeriv
   {f : X → Y} {f'} (hf : HasRevFDeriv K f f') :
-  revFDeriv K f = f' := sorry_proof
+  revFDeriv K f = f' := by
+  obtain ⟨val, df, hd, ha⟩ := hf
+  funext x
+  rw [revFDeriv]
+  refine Prod.ext (val x).symm ?_
+  simp only [(hd x).fderiv]
+  exact adjoint_from_hasAdjoint (ha x)
 
 simproc_decl revFDeriv_simproc (revFDeriv _ _) :=
   mkDataSynthSimproc `revFDeriv_simproc ``revFDeriv_from_hasRevFDeriv
@@ -186,18 +215,56 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
   case adjoint => intro; eta_expand; simp; data_synth
   case simp => simp_all; ac_rfl
 
+/-- The adjoint of the evaluation map `x ↦ x i` is `dxi ↦ fun j => if i = j then dxi else 0`. -/
+theorem hasAdjoint_apply {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
+    HasAdjoint K (fun x : I → X => x i) (fun dxi j => if i=j then dxi else 0) := by
+  constructor
+  case adjoint =>
+    intro x y
+    rw [show (⟪x, fun j => if i = j then y else 0⟫[K])
+          = ∑ᴵ j, ⟪x j, (if i = j then y else 0 : X)⟫[K] from rfl,
+      SciLean.IndexType.sum_eq_finset_sum, Finset.sum_eq_single i]
+    · simp
+    · intro j _ hj; simp [Ne.symm hj]
+    · intro h; exact absurd (Finset.mem_univ i) h
+  case is_linear => fun_prop
+
+/-- The adjoint of `x ↦ x.1 i` on a product. -/
+theorem hasAdjoint_apply' {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
+    HasAdjoint K (fun x : (I → X)×Y => x.1 i)
+      (fun dxi => ((fun j => if i=j then dxi else 0 : I → X), (0:Y))) := by
+  constructor
+  case adjoint =>
+    intro u y
+    show ⟪u.1 i, y⟫[K] = ⟪u, ((fun j => if i = j then y else 0 : I → X), (0:Y))⟫[K]
+    rw [AdjointSpace.inner_prod_split, (hasAdjoint_apply (X:=X) i).adjoint u.1 y]
+    simp
+  case is_linear => fun_prop
+
 @[data_synth]
 theorem apply_rule {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : I → X => x i)
       (fun x =>
-        (x i, fun dxi j => if i=j then dxi else 0)) := sorry_proof
+        (x i, fun dxi j => if i=j then dxi else 0)) := by
+  have hclm : IsContinuousLinearMap K (fun x : I → X => x i) := by fun_prop
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun _ => ContinuousLinearMap.mk' K (fun x : I → X => x i) hclm)
+  case deriv => intro x; exact (ContinuousLinearMap.mk' K (fun x : I → X => x i) hclm).hasFDerivAt
+  case adjoint => intro x; exact hasAdjoint_apply i
+  case simp => rfl
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
 theorem apply_rule' {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDeriv K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
-        (x.1 i, fun dxi => (fun j => if i=j then dxi else 0, 0))) := sorry_proof
+        (x.1 i, fun dxi => (fun j => if i=j then dxi else 0, 0))) := by
+  have hclm : IsContinuousLinearMap K (fun x : (I → X)×Y => x.1 i) := by fun_prop
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun _ => ContinuousLinearMap.mk' K (fun x : (I → X)×Y => x.1 i) hclm)
+  case deriv => intro x; exact (ContinuousLinearMap.mk' K (fun x : (I → X)×Y => x.1 i) hclm).hasFDerivAt
+  case adjoint => intro x; exact hasAdjoint_apply' i
+  case simp => rfl
 
 set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
@@ -212,13 +279,28 @@ theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
             let dyi := dy i
             let dx := df' dyi dx
             dx)) := by
-  sorry_proof
+  choose df hdf df' hadj hupd using fun i => (hf i).deriv
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun x => ContinuousLinearMap.pi (fun i => df i x))
+    (df' := fun x dy => IndexType.fold .full (init:=(0:X)) fun i dx => (f' i x).2 (dy i) dx)
+  case deriv =>
+    intro x
+    rw [hasFDerivAt_pi']
+    intro i
+    simpa using hdf i x
+  case adjoint =>
+    intro x
+    exact HasAdjoint.pi_rule (K:=K) (f := fun dx i => df i x dx)
+      (fun i => hasAdjointUpdate_from_hasAdjoint (hadj i x) (hupd i x))
+  case simp => rfl
 
 -- structure Decomposition (p₁ : X → X₁) (p₂ : X → X₂) (q : X₁ → X₂ → X) : Prop where
 --   mk_proj : ∀ x, q (p₁ x) (p₂ x) = x
 --   proj₁_mk : ∀ x₁ x₂, p₁ (q x₁ x₂) = x₁
 --   proj₂_mk : ∀ x₁ x₂, p₂ (q x₁ x₂) = x₂
 
+-- note: this rule still needs the commented out `Decomposition p₁ p₂ q` hypothesis - without it
+-- nothing says that `fun x₁ => q x₁ 0` is the adjoint of `p₁`, so the rule is not provable.
 set_option linter.unusedVariables false in
 theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
@@ -326,14 +408,39 @@ theorem let_rule (g : X → Y) (f : Y → X → Z) {g' f'}
 theorem apply_rule {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : I → X => x i)
       (fun x =>
-        (x i, fun dxi dx j => if i=j then dx j + dxi else dx j)) := sorry_proof
+        (x i, fun dxi dx j => if i=j then dx j + dxi else dx j)) := by
+  have hclm : IsContinuousLinearMap K (fun x : I → X => x i) := by fun_prop
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun _ => ContinuousLinearMap.mk' K (fun x : I → X => x i) hclm)
+    (df' := fun _ dxi dx j => if i=j then dx j + dxi else dx j)
+  case deriv => intro x; exact (ContinuousLinearMap.mk' K (fun x : I → X => x i) hclm).hasFDerivAt
+  case adjoint =>
+    intro x
+    refine hasAdjointUpdate_from_hasAdjoint (HasRevFDeriv.hasAdjoint_apply i) ?_
+    intro dxi dx
+    funext j
+    by_cases h : i = j <;> simp [h, add_comm]
+  case simp => rfl
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
 theorem apply_rule' {I} {nI} [IndexType I nI] [Fold I] [DecidableEq I] (i : I) :
     HasRevFDerivUpdate K (fun x : (I → X)×Y => x.1 i)
       (fun x =>
-        (x.1 i, fun dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))) := sorry_proof
+        (x.1 i, fun dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))) := by
+  have hclm : IsContinuousLinearMap K (fun x : (I → X)×Y => x.1 i) := by fun_prop
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun _ => ContinuousLinearMap.mk' K (fun x : (I → X)×Y => x.1 i) hclm)
+    (df' := fun _ dxi dx => (fun j => if i=j then dx.1 j + dxi else dx.1 j, dx.2))
+  case deriv => intro x; exact (ContinuousLinearMap.mk' K (fun x : (I → X)×Y => x.1 i) hclm).hasFDerivAt
+  case adjoint =>
+    intro x
+    refine hasAdjointUpdate_from_hasAdjoint (HasRevFDeriv.hasAdjoint_apply' (Y:=Y) i) ?_
+    intro dxi dx
+    refine Prod.ext ?_ ?_
+    · funext j; by_cases h : i = j <;> simp [h, add_comm]
+    · simp
+  case simp => rfl
 
 set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
@@ -347,7 +454,20 @@ theorem pi_rule {I : Type*} {nI} [IndexType I nI] [Fold I] [Fold I]
           let dyi := dy i
           let dx := df' dyi dx
           dx)) := by
-  sorry_proof
+  choose df hdf df' hadj hupd using fun i => (hf i).deriv
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun x => ContinuousLinearMap.pi (fun i => df i x))
+    (df' := fun x dy dx => IndexType.fold .full (init:=dx) fun i dx => (f' i x).2 (dy i) dx)
+  case deriv =>
+    intro x
+    rw [hasFDerivAt_pi']
+    intro i
+    simpa using hdf i x
+  case adjoint =>
+    intro x
+    exact HasAdjointUpdate.pi_rule (K:=K) (f := fun dx i => df i x dx)
+      (fun i => hasAdjointUpdate_from_hasAdjoint (hadj i x) (hupd i x))
+  case simp => rfl
 
 set_option linter.unusedVariables false in
 theorem proj_rule
@@ -663,12 +783,23 @@ theorem HMul.hMul.arg_a0a1.HasRevFDeriv_rule
           let dx := dg dy₁
           let dx := df dy₂ dx
           dx)) := by
+  have hglin : ∀ x, IsContinuousLinearMap K (g' x).2 := by
+    obtain ⟨_, dg, _, ha⟩ := hg.deriv_adjoint
+    exact fun x => (ha x).isContinuousLinearMap'
   have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
   have ⟨_,_,_,_⟩ := hg.deriv_adjoint
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
   case deriv => intro; data_synth
   case adjoint => intro x; eta_expand; simp; data_synth
-  case simp => simp_all; sorry_proof -- push smul
+  case simp =>
+    simp_all
+    -- push smul: the adjoint `(g' x).2` is linear
+    funext x
+    refine Prod.ext rfl ?_
+    funext dy
+    dsimp only
+    rw [show (starRingEnd K) (f x) * dy = (starRingEnd K) (f x) • dy from (smul_eq_mul ..).symm,
+      (hglin x).1.map_smul]
 
 open ComplexConjugate in
 @[data_synth]
@@ -692,7 +823,70 @@ theorem HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule
   case adjoint => intro x; eta_expand; simp; data_synth
   case simp => simp_all
 
--- TODO: !!!check this!!!
+open ComplexConjugate in
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem HInv.hInv.arg_a0.HasRevFDeriv_rule
+    (f : X → K) (f')
+    (hf : HasRevFDeriv K f f') (hf' : ∀ x, f x ≠ 0) :
+    HasRevFDeriv K (fun x => (f x)⁻¹)
+      (fun x =>
+        let' (y,df) := f' x
+        (y⁻¹, fun dy =>
+          let s := ((conj y)^2)⁻¹
+          let dy₁ := -s • dy
+          let dx := df dy₁
+          dx)) := by
+  obtain ⟨hval, df, hd, ha⟩ := hf.deriv_adjoint
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun x => (_root_.ContinuousLinearMap.toSpanSingleton K (-((f x)^2)⁻¹)).comp (df x))
+  case deriv =>
+    intro x
+    exact (hasFDerivAt_inv (hf' x)).comp x (hd x)
+  case adjoint =>
+    intro x
+    have h : ⇑((_root_.ContinuousLinearMap.toSpanSingleton K (-((f x)^2)⁻¹)).comp (df x))
+             = fun dx => (-((f x)^2)⁻¹) * (df x dx) := by
+      funext dx
+      simp [_root_.ContinuousLinearMap.toSpanSingleton_apply, smul_eq_mul, mul_comm]
+    rw [h]
+    exact HasAdjoint.comp_rule _ _ (ha x) (HMul.hMul.arg_a1.HasAdjoint_simp_rule _)
+  case simp =>
+    funext x
+    simp [hval, map_neg, map_inv₀, map_pow, smul_eq_mul]
+
+open ComplexConjugate in
+set_option linter.unusedVariables false in
+@[data_synth]
+theorem HInv.hInv.arg_a0.HasRevFDerivUpdate_rule
+    (f : X → K) (f')
+    (hf : HasRevFDerivUpdate K f f') (hf' : ∀ x, f x ≠ 0) :
+    HasRevFDerivUpdate K (fun x => (f x)⁻¹)
+      (fun x =>
+        let' (y,df) := f' x
+        (y⁻¹, fun dy dx =>
+          let s := ((conj y)^2)⁻¹
+          let dy₁ := -s • dy
+          let dx := df dy₁ dx
+          dx)) := by
+  obtain ⟨hval, df, hd, ha⟩ := hf.deriv_adjointUpdate
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun x => (_root_.ContinuousLinearMap.toSpanSingleton K (-((f x)^2)⁻¹)).comp (df x))
+  case deriv =>
+    intro x
+    exact (hasFDerivAt_inv (hf' x)).comp x (hd x)
+  case adjoint =>
+    intro x
+    have h : ⇑((_root_.ContinuousLinearMap.toSpanSingleton K (-((f x)^2)⁻¹)).comp (df x))
+             = fun dx => (-((f x)^2)⁻¹) * (df x dx) := by
+      funext dx
+      simp [_root_.ContinuousLinearMap.toSpanSingleton_apply, smul_eq_mul, mul_comm]
+    rw [h]
+    exact HMul.hMul.arg_a1.HasAdjointUpdate_comp_rule _ _ (ha x)
+  case simp =>
+    funext x
+    simp [hval, map_neg, map_inv₀, map_pow, smul_eq_mul]
+
 set_option linter.unusedVariables false in
 open ComplexConjugate in
 @[data_synth]
@@ -710,15 +904,21 @@ theorem HDiv.hDiv.arg_a0a1.HasRevFDeriv_rule
           let dx := dg dy₁
           let dx := df dy₂ dx
           dx)) := by
-  sorry_proof
-  -- have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
-  -- have ⟨_,_,_,_⟩ := hg.deriv_adjoint
-  -- apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  -- case deriv =>
-  --   set_option trace.Meta.Tactic.data_synth true in
-  --   intro; data_synth
-  -- case adjoint => intro x; eta_expand; simp; data_synth
-  -- case simp => simp_all
+  -- `f / g` is `f * g⁻¹`, so this follows from the multiplication and the reciprocal rule
+  have hginv := HInv.hInv.arg_a0.HasRevFDeriv_rule g g' hg hg'
+  have h := HMul.hMul.arg_a0a1.HasRevFDeriv_rule f (fun x => (g x)⁻¹) f' _ hf hginv
+  have hfun : (fun x => f x / g x) = (fun x => f x * (g x)⁻¹) := by
+    funext x; rw [div_eq_mul_inv]
+  rw [hfun]
+  refine hasRevFDeriv_from_hasRevFDeriv h ?_
+  have hval := hg.val
+  funext x
+  have hz : conj (g x) ≠ 0 := by
+    simpa using (starRingEnd K).injective.ne_iff.mpr (hg' x)
+  simp only [hval, div_eq_mul_inv, smul_eq_mul, map_inv₀]
+  refine Prod.ext rfl ?_
+  funext dy
+  field_simp
 
 open ComplexConjugate in
 set_option linter.unusedVariables false in
@@ -737,57 +937,21 @@ theorem HDiv.hDiv.arg_a0a1.HasRevFDerivUpdate_rule
           let dx := dg dy₁ dx
           let dx := df dy₂ dx
           dx)) := by
-  sorry_proof
-  -- have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
-  -- have ⟨_,_,_,_⟩ := hg.deriv_adjoint
-  -- apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  -- case deriv =>
-  --   set_option trace.Meta.Tactic.data_synth true in
-  --   intro; data_synth
-  -- case adjoint => intro x; eta_expand; simp; data_synth
-  -- case simp => simp_all
-
-open ComplexConjugate in
-set_option linter.unusedVariables false in
-@[data_synth]
-theorem HInv.hInv.arg_a0.HasRevFDeriv_rule
-    (f : X → K) (f')
-    (hf : HasRevFDeriv K f f') (hf' : ∀ x, f x ≠ 0) :
-    HasRevFDeriv K (fun x => (f x)⁻¹)
-      (fun x =>
-        let' (y,df) := f' x
-        (y⁻¹, fun dy =>
-          let s := ((conj y)^2)⁻¹
-          let dy₁ := -s • dy
-          let dx := df dy₁
-          dx)) := by
-  sorry_proof
-  -- have ⟨_,_,_,_⟩ := hf.deriv_adjoint
-  -- apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  -- case deriv => intro; data_synth
-  -- case adjoint => intro x; eta_expand; simp; data_synth
-  -- case simp => simp_all
-
-open ComplexConjugate in
-set_option linter.unusedVariables false in
-@[data_synth]
-theorem HInv.hInv.arg_a0.HasRevFDerivUpdate_rule
-    (f : X → K) (f')
-    (hf : HasRevFDerivUpdate K f f') (hf' : ∀ x, f x ≠ 0) :
-    HasRevFDerivUpdate K (fun x => (f x)⁻¹)
-      (fun x =>
-        let' (y,df) := f' x
-        (y⁻¹, fun dy dx =>
-          let s := ((conj y)^2)⁻¹
-          let dy₁ := -s • dy
-          let dx := df dy₁ dx
-          dx)) := by
-  sorry_proof
-  -- have ⟨_,_,_,_⟩ := hf.deriv_adjointUpdate
-  -- apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
-  -- case deriv => intro; data_synth
-  -- case adjoint => intro x; eta_expand; simp; data_synth
-  -- case simp => simp_all
+  -- `f / g` is `f * g⁻¹`, so this follows from the multiplication and the reciprocal rule
+  have hginv := HInv.hInv.arg_a0.HasRevFDerivUpdate_rule g g' hg hg'
+  have h := HMul.hMul.arg_a0a1.HasRevFDerivUpdate_rule f (fun x => (g x)⁻¹) f' _ hf hginv
+  have hfun : (fun x => f x / g x) = (fun x => f x * (g x)⁻¹) := by
+    funext x; rw [div_eq_mul_inv]
+  rw [hfun]
+  refine hasRevFDerivUpdate_from_hasRevFDerivUpdate h ?_
+  have hval := hg.val
+  funext x
+  have hz : conj (g x) ≠ 0 := by
+    simpa using (starRingEnd K).injective.ne_iff.mpr (hg' x)
+  simp only [hval, div_eq_mul_inv, smul_eq_mul, map_inv₀]
+  refine Prod.ext rfl ?_
+  funext dy dx
+  field_simp
 
 open ComplexConjugate in
 @[data_synth]
@@ -800,15 +964,22 @@ theorem HPow.hPow.arg_a0.HasRevFDeriv_rule
         (y ^ n, fun dy =>
           let dx := df (n * (conj y)^(n-1) • dy)
           dx)) := by
-  have ⟨_,_,_,_⟩ := hf.deriv_adjoint
-  sorry_proof
-  -- apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
-  -- case deriv => intro; data_synth
-  -- case adjoint =>
-  --   intro x; eta_expand at *; simp_all;
-  --   set_option trace.Meta.Tactic.data_synth true in
-  --   data_synth
-  -- case simp => simp_all
+  obtain ⟨hval, df, hd, ha⟩ := hf.deriv_adjoint
+  apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun x => (n • (f x)^(n-1)) • df x)
+  case deriv =>
+    intro x
+    exact (hd x).pow n
+  case adjoint =>
+    intro x
+    have h : ⇑((n • (f x)^(n-1)) • df x)
+             = fun dx => ((n : K) * (f x)^(n-1)) * (df x dx) := by
+      funext dx; simp [smul_eq_mul, nsmul_eq_mul]
+    rw [h]
+    exact HasAdjoint.comp_rule _ _ (ha x) (HMul.hMul.arg_a1.HasAdjoint_simp_rule _)
+  case simp =>
+    funext x
+    simp [hval, map_mul, map_pow, map_natCast, smul_eq_mul, mul_assoc]
 
 set_option linter.unusedVariables false in
 open ComplexConjugate in
@@ -822,7 +993,22 @@ theorem HPow.hPow.arg_a0.HasRevFDerivUpdate_rule
         (y ^ n, fun dy dx =>
           let dx := df (n * (conj y)^(n-1) • dy) dx
           dx)) := by
-  sorry_proof
+  obtain ⟨hval, df, hd, ha⟩ := hf.deriv_adjointUpdate
+  apply hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun x => (n • (f x)^(n-1)) • df x)
+  case deriv =>
+    intro x
+    exact (hd x).pow n
+  case adjoint =>
+    intro x
+    have h : ⇑((n • (f x)^(n-1)) • df x)
+             = fun dx => ((n : K) * (f x)^(n-1)) * (df x dx) := by
+      funext dx; simp [smul_eq_mul, nsmul_eq_mul]
+    rw [h]
+    exact HMul.hMul.arg_a1.HasAdjointUpdate_comp_rule _ _ (ha x)
+  case simp =>
+    funext x
+    simp [hval, map_mul, map_pow, map_natCast, smul_eq_mul, mul_assoc]
 
 @[data_synth]
 theorem SciLean.sum.arg_f.HasRevFDeriv_rule
@@ -1057,6 +1243,25 @@ theorem Norm2.norm2.arg_a0.HasRevFDerivUpdate_simple_rule :
   · funext x
     ext <;> simp [smul_smul, mul_comm, add_comm]
 
+/-- `y ↦ ‖y‖₂` is differentiable away from zero and its derivative is `dy ↦ ⟪dy,y⟫/‖y‖₂`. -/
+theorem norm₂.hasFDerivAt_of_ne_zero (y : Y) (hy : y ≠ 0) :
+    HasFDerivAt (fun y : Y => ‖y‖₂[R]) (fun dy =>L[R] ⟪dy,y⟫[R] / ‖y‖₂[R]) y := by
+  have h := (norm₂.arg_x.DifferentiableAt_rule (R:=R) (U:=Y) y hy).hasFDerivAt
+  rwa [norm₂.arg_x.fderiv_rule_at (R:=R) y hy] at h
+
+/-- Adjoint of `dy ↦ ⟪dy,y⟫/c`. -/
+theorem inner_div.hasAdjoint (y : Y) (c : R) :
+    HasAdjoint R (fun dy : Y => ⟪dy,y⟫[R] / c) (fun dr : R => (dr / c) • y) := by
+  have h := Inner.inner.arg_a1.HasAdjoint_simple_rule (K:=R) (X:=Y) (c⁻¹ • y)
+  have e : (fun dy : Y => ⟪(c⁻¹ • y),dy⟫[R]) = (fun dy : Y => ⟪dy,y⟫[R] / c) := by
+    funext dy
+    rw [AdjointSpace.inner_smul_left, conj_for_real_scalar,
+      ← AdjointSpace.conj_symm (𝕜:=R) dy y, conj_for_real_scalar, div_eq_inv_mul]
+  rw [e] at h
+  have e2 : (fun dr : R => dr • (c⁻¹ • y)) = (fun dr : R => (dr / c) • y) := by
+    funext dr; rw [smul_smul, div_eq_mul_inv]
+  rwa [e2] at h
+
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem norm2.arg_a0.HasRevFDeriv_rule
@@ -1070,7 +1275,17 @@ theorem norm2.arg_a0.HasRevFDeriv_rule
           let dy := (dr * ynorm⁻¹) • y
           let dx := df dy
           dx)) := by
-  sorry_proof
+  obtain ⟨hval, df, hderiv, hadj⟩ := hf
+  refine hasRevFDeriv_from_hasFDerivAt_hasAdjoint
+    (df := fun x => (ContinuousLinearMap.mk' R (fun dy : Y => ⟪dy, f x⟫[R] / ‖f x‖₂[R])
+      ((inner_div.hasAdjoint (R:=R) (f x) (‖f x‖₂[R])).is_linear)).comp (df x))
+    (df' := fun x dr => (f' x).2 ((dr / ‖f x‖₂[R]) • f x)) ?_ ?_ ?_
+  · intro x
+    exact (norm₂.hasFDerivAt_of_ne_zero (R:=R) (f x) (hf' x)).comp x (hderiv x)
+  · intro x
+    exact HasAdjoint.comp_rule _ _ (hadj x) (inner_div.hasAdjoint (R:=R) (f x) (‖f x‖₂[R]))
+  · funext x
+    simp only [hval x, div_eq_mul_inv]
 
 set_option linter.unusedVariables false in
 @[data_synth]
@@ -1085,7 +1300,18 @@ theorem norm2.arg_a0.HasRevFDerivUpdate_rule
           let dy := (dr * ynorm⁻¹) • y
           let dx := df dy dx
           dx)) := by
-  sorry_proof
+  obtain ⟨hval, df, hderiv, hadj⟩ := hf.deriv_adjointUpdate
+  refine hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate
+    (df := fun x => (ContinuousLinearMap.mk' R (fun dy : Y => ⟪dy, f x⟫[R] / ‖f x‖₂[R])
+      ((inner_div.hasAdjoint (R:=R) (f x) (‖f x‖₂[R])).is_linear)).comp (df x))
+    (df' := fun x dr dx => (f' x).2 ((dr / ‖f x‖₂[R]) • f x) dx) ?_ ?_ ?_
+  · intro x
+    exact (norm₂.hasFDerivAt_of_ne_zero (R:=R) (f x) (hf' x)).comp x (hderiv x)
+  · intro x
+    exact HasAdjointUpdate.comp_rule _ _ (hadj x)
+      (inner_div.hasAdjoint (R:=R) (f x) (‖f x‖₂[R]))
+  · funext x
+    simp only [hval x, div_eq_mul_inv]
 
 end OverReals
 

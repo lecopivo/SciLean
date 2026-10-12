@@ -34,7 +34,7 @@ class ArrayType (Cont : Type u) (Idx : Type v |> outParam) (Elem : Type w |> out
   set (cont : Cont) (i : Idx) (xi : Elem) : Cont
   modify (cont : Cont) (i : Idx) (f : Elem → Elem) : Cont
   get_ofFn : Function.LeftInverse get ofFn
-  ofFn_get : Function.RightInverse ofFn get
+  ofFn_get : Function.LeftInverse ofFn get
   get_set_eq : ∀ c i xi, get (set c i xi) i = xi
   get_set_neq : ∀ c i i' xi, i≠i' → get (set c i xi) i' = get c i'
   modify_set : ∀ c i f, modify c i f = set c i (f (get c i))
@@ -54,10 +54,18 @@ instance {Cont Idx Elem} [ArrayType Cont Idx Elem] : StructType Cont (Idx×Unit)
   structProj := fun c (i,_) => ArrayType.get c i
   structMake := fun f => ArrayType.ofFn (fun i => f (i,()))
   structModify := fun (i,_) f c => ArrayType.modify c i f
-  left_inv := sorry_proof
-  right_inv := sorry_proof
-  structProj_structModify := sorry_proof
-  structProj_structModify' := sorry_proof
+  left_inv := by
+    intro f; funext (i,_); dsimp only
+    exact congrFun (ArrayType.get_ofFn _) i
+  right_inv := fun x => ArrayType.ofFn_get x
+  structProj_structModify := by
+    intro (i,_) f c; dsimp only
+    rw [ArrayType.modify_set]
+    exact ArrayType.get_set_eq c i _
+  structProj_structModify' := by
+    intro (i,_) (j,_) f c h; dsimp only
+    rw [ArrayType.modify_set]
+    exact ArrayType.get_set_neq c i j _ (fun hij => h (by simp [hij]))
 
 
 namespace ArrayType
@@ -70,10 +78,13 @@ variable
   [ArrayType Cont Idx Elem]
 
 @[ext]
-theorem ext (x y : Cont) : (∀ i, get x i = get y i) → x = y := by sorry_proof
+theorem ext (x y : Cont) : (∀ i, get x i = get y i) → x = y := by
+  intro h
+  rw [← ArrayType.ofFn_get x, ← ArrayType.ofFn_get y]
+  exact congrArg ofFn (funext h)
 
 @[simp,simp_core]
-theorem eta (cont : Cont) : (ofFn fun i => get cont i) = cont := sorry_proof
+theorem eta (cont : Cont) : (ofFn fun i => get cont i) = cont := ArrayType.ofFn_get cont
 
 def mapMono (f : Elem → Elem) (cont : Cont) : Cont :=
   IndexType.fold .full cont (fun i c => modify c i f)
@@ -91,7 +102,7 @@ theorem get_mapIdxMono (f : Idx → Elem → Elem) (cont : Cont) (i : Idx) :
 
 @[simp,simp_core]
 theorem get_ofFn' (f : Idx → Elem) :
-  get (ofFn (Cont:=Cont) f) = f := sorry_proof
+  get (ofFn (Cont:=Cont) f) = f := ArrayType.get_ofFn f
 
 @[simp,simp_core]
 theorem get_modify_eq (xs : Cont) (f : Elem → Elem) (i : Idx) :
@@ -136,7 +147,15 @@ instance [StructType Elem I ElemI] : StructType Cont (Idx×I) (fun (_,i) => Elem
   left_inv := by intro x; simp
   right_inv := by intro x; simp
   structProj_structModify := by intro x; simp
-  structProj_structModify' := by intro (i,j) (i',j') _ _ _; sorry_proof
+  structProj_structModify' := by
+    intro (i,j) (i',j') f x h
+    dsimp only
+    rw [modify_set]
+    by_cases hi : i = i'
+    · subst hi
+      rw [get_set_eq]
+      exact StructType.structProj_structModify' j j' f (get x i) (fun hj => h (by rw [hj]))
+    · rw [get_set_neq _ _ _ _ hi]
 
 
 
@@ -159,32 +178,45 @@ section Operations
   scoped instance (priority:=low) [LT Elem] : LT Cont := ⟨λ f g => ∀ x, get f x < get g x⟩
   scoped instance (priority:=low) [LE Elem] : LE Cont := ⟨λ f g => ∀ x, get f x ≤ get g x⟩
 
+  -- these three instances decide the corresponding statement about all the elements, which is
+  -- decidable as `Idx` is a finite type; the original hand written loops are kept below in comments
   scoped instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
-    λ f g => Id.run do
-      let mut eq : Bool := true
-      for x in fullRange Idx do
-        if get f x ≠ get g x then
-          eq := false
-          break
-      if eq then isTrue sorry_proof else isFalse sorry_proof
+    fun f g => decidable_of_iff (∀ i, get f i = get g i)
+      ⟨fun h => ArrayType.ext f g h, fun h i => by rw [h]⟩
 
   scoped instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
-      Decidable (f < g) := Id.run do
-    let mut lt : Bool := true
-    for x in fullRange Idx do
-      if ¬(get f x < get g x) then
-        lt := false
-        break
-    if lt then isTrue sorry_proof else isFalse sorry_proof
+      Decidable (f < g) := inferInstanceAs (Decidable (∀ i, get f i < get g i))
 
   scoped instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
-      Decidable (f ≤ g) := Id.run do
-    let mut le : Bool := true
-    for x in fullRange Idx do
-      if ¬(get f x ≤ get g x) then
-        le := false
-        break
-    if le then isTrue sorry_proof else isFalse sorry_proof
+      Decidable (f ≤ g) := inferInstanceAs (Decidable (∀ i, get f i ≤ get g i))
+
+  -- original implementations:
+  -- scoped instance (priority:=low) [DecidableEq Elem] : DecidableEq Cont :=
+  --   λ f g => Id.run do
+  --     let mut eq : Bool := true
+  --     for x in fullRange Idx do
+  --       if get f x ≠ get g x then
+  --         eq := false
+  --         break
+  --     if eq then isTrue sorry_proof else isFalse sorry_proof
+  --
+  -- scoped instance (priority:=low) [LT Elem] [∀ x y : Elem, Decidable (x < y)] (f g : Cont) :
+  --     Decidable (f < g) := Id.run do
+  --   let mut lt : Bool := true
+  --   for x in fullRange Idx do
+  --     if ¬(get f x < get g x) then
+  --       lt := false
+  --       break
+  --   if lt then isTrue sorry_proof else isFalse sorry_proof
+  --
+  -- scoped instance (priority:=low) [LE Elem] [∀ x y : Elem, Decidable (x ≤ y)] (f g : Cont) :
+  --     Decidable (f ≤ g) := Id.run do
+  --   let mut le : Bool := true
+  --   for x in fullRange Idx do
+  --     if ¬(get f x ≤ get g x) then
+  --       le := false
+  --       break
+  --   if le then isTrue sorry_proof else isFalse sorry_proof
 
   --TODO: all of these theorem should be autogenerated based on IsAddGroupHom
   @[simp, simp_core]

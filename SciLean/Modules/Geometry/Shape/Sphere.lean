@@ -86,8 +86,8 @@ def gramSchmidtArrayImpl {X} [SemiHilbert R X] (u : Array X) : Array X := Id.run
   for i in IndexType.univ (Fin u.size) do
     let i : Fin u.size := ⟨i, sorry_proof⟩
     let mut ui := u[i]
-    for j in [0:i.1] do
-      let j : Fin u.size := ⟨j,sorry_proof⟩
+    for hj : j in [0:i.1] do
+      let j : Fin u.size := ⟨j, Nat.lt_trans hj.upper i.2⟩
       let uj := u[j]
       ui -= ⟪uj,ui⟫ • uj
     u := u.set i (vecNormalize (R:=R) ui)
@@ -99,8 +99,8 @@ def gramSchmidtDataArrayImpl {X} [SemiHilbert R X] [PlainDataType X] (u : X^[n])
   let mut u := u
   for i in IndexType.univ (Fin n) do
     let mut ui := u[i]
-    for j in [0:i.1] do
-      let j : Fin n := ⟨j,sorry_proof⟩
+    for hj : j in [0:i.1] do
+      let j : Fin n := ⟨j, Nat.lt_trans hj.upper i.2⟩
       let uj := u[j]
       ui -= ⟪uj,ui⟫ • uj
     u[i] := vecNormalize (R:=R) ui

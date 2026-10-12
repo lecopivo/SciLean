@@ -226,6 +226,44 @@ theorem ext_inner_left {x y : E} (h : ∀ v, ⟪v, x⟫ = ⟪v, y⟫) : x = y :=
 theorem ext_inner_right {x y : E} (h : ∀ v, ⟪x, v⟫ = ⟪y, v⟫) : x = y := by
   rw [← sub_eq_zero, ← @inner_self_eq_zero 𝕜, inner_sub_left, sub_eq_zero, h (x - y)]
 
+/-- The inner product of an `AdjointSpace` satisfies the axioms of a semi-inner product, i.e. it
+gives rise to `PreInnerProductSpace.Core`. This is used to obtain the Cauchy-Schwarz inequality. -/
+noncomputable def toPreInnerProductSpaceCore : PreInnerProductSpace.Core 𝕜 E where
+  inner x y := ⟪x, y⟫
+  conj_inner_symm := conj_symm
+  re_inner_nonneg := by
+    intro x
+    obtain ⟨c,_,hc,_,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+    have h' : (0:ℝ) ≤ c • ‖x‖^2 := by positivity
+    exact le_trans h' (h x).1
+  add_left := add_left
+  smul_left := smul_left
+
+/-- Cauchy-Schwarz inequality. -/
+theorem inner_mul_inner_self_le (x y : E) :
+    ‖⟪x, y⟫‖ * ‖⟪y, x⟫‖ ≤ re ⟪x, x⟫ * re ⟪y, y⟫ := by
+  letI : PreInnerProductSpace.Core 𝕜 E := toPreInnerProductSpaceCore 𝕜
+  exact InnerProductSpace.Core.inner_mul_inner_self_le (𝕜:=𝕜) x y
+
+/-- The inner product is bounded by the norm up to a constant. Unlike for inner product spaces,
+the constant can't be taken to be one as the norm does not have to come from the inner product. -/
+theorem exists_norm_inner_le : ∃ C : ℝ, 0 < C ∧ ∀ x y : E, ‖⟪x, y⟫‖ ≤ C * (‖x‖ * ‖y‖) := by
+  obtain ⟨c,d,hc,hd,h⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+  refine ⟨d, hd, fun x y => ?_⟩
+  have h1 := inner_mul_inner_self_le 𝕜 x y
+  rw [norm_inner_symm y x] at h1
+  have h2 : re ⟪x, x⟫ ≤ d * ‖x‖^2 := by simpa using (h x).2
+  have h3 : re ⟪y, y⟫ ≤ d * ‖y‖^2 := by simpa using (h y).2
+  have h0y : (0:ℝ) ≤ re ⟪y, y⟫ := by
+    have : (0:ℝ) ≤ c • ‖y‖^2 := by positivity
+    linarith [(h y).1]
+  have key : ‖⟪x, y⟫‖ * ‖⟪x, y⟫‖ ≤ (d * (‖x‖*‖y‖)) * (d * (‖x‖*‖y‖)) := by
+    refine le_trans h1 ?_
+    nlinarith [mul_le_mul h2 h3 h0y (by positivity : (0:ℝ) ≤ d * ‖x‖^2)]
+  by_contra hcon
+  rw [not_le] at hcon
+  exact absurd key (not_le.mpr (mul_self_lt_mul_self (by positivity) hcon))
+
 
 
 
@@ -284,16 +322,26 @@ instance : AdjointSpace 𝕜 Unit where
 instance : AdjointSpace 𝕜 (X×Y) where
   inner := fun (x,y) (x',y') => ⟪x,x'⟫_𝕜 + ⟪y,y'⟫_𝕜
   inner_top_equiv_norm := by
-    have ⟨cx,dx,hcx,hdx,_hx⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=X)
-    have ⟨cy,dy,hcy,hdy,_hy⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=X)
-    apply Exists.intro (cx*cx + cy*cy) -- todo: fix this constant
-    apply Exists.intro (dx*dx + dy*dy) -- todo: fix this constant
-    constructor
-    · positivity
-    constructor
-    · positivity
-    · intro (x,y)
-      sorry_proof
+    have ⟨cx,dx,hcx,hdx,hx⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=X)
+    have ⟨cy,dy,hcy,hdy,hy⟩ := inner_top_equiv_norm (𝕜:=𝕜) (E:=Y)
+    refine ⟨min cx cy, dx + dy, lt_min hcx hcy, by positivity, ?_⟩
+    intro (x,y)
+    obtain ⟨hx1, hx2⟩ := hx x
+    obtain ⟨hy1, hy2⟩ := hy y
+    have hn : ‖(x,y)‖ = max ‖x‖ ‖y‖ := Prod.norm_def _
+    have hxn : (0:ℝ) ≤ ‖x‖ := norm_nonneg x
+    have hyn : (0:ℝ) ≤ ‖y‖ := norm_nonneg y
+    show min cx cy • ‖(x,y)‖^2 ≤ re (⟪x,x⟫_𝕜 + ⟪y,y⟫_𝕜)
+         ∧ re (⟪x,x⟫_𝕜 + ⟪y,y⟫_𝕜) ≤ (dx+dy) • ‖(x,y)‖^2
+    rw [hn, map_add]
+    simp only [smul_eq_mul] at hx1 hx2 hy1 hy2 ⊢
+    rcases le_total ‖x‖ ‖y‖ with h | h
+    · have hsq : ‖x‖^2 ≤ ‖y‖^2 := by nlinarith
+      rw [max_eq_right h]
+      exact ⟨by nlinarith [min_le_left cx cy, min_le_right cx cy], by nlinarith⟩
+    · have hsq : ‖y‖^2 ≤ ‖x‖^2 := by nlinarith
+      rw [max_eq_left h]
+      exact ⟨by nlinarith [min_le_left cx cy, min_le_right cx cy], by nlinarith⟩
   conj_symm := by simp
   add_left := by simp[inner_add_left]; intros; ac_rfl
   smul_left := by simp[inner_smul_left,mul_add]
@@ -311,16 +359,63 @@ open Classical in
 instance [∀ i, NormedAddCommGroup (E i)] [∀ i, AdjointSpace 𝕜 (E i)] :
     AdjointSpace 𝕜 ((i : ι) → E i) where
   inner_top_equiv_norm := by
-    -- have h := fun i => inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
-    -- let c := (fun i => let ci := choose (h i); ci*ci)
-    -- let d := (fun i => let di := choose <| choose_spec (h i); di*di)
-    -- universe issues with IndexType :(
-    -- apply Exists.intro (∑ i, c i ^ 2)
-    -- apply Exists.intro (∑ i, d i ^ 2)
-    sorry_proof
-  conj_symm := by simp[Inner.inner]; sorry_proof
-  add_left := by simp[Inner.inner, inner_add_left]; sorry_proof
-  smul_left := by simp[Inner.inner, inner_smul_left]; sorry_proof
+    choose cf df hcf hdf hbound using
+      fun i => AdjointSpace.inner_top_equiv_norm (𝕜:=𝕜) (E:=E i)
+    by_cases hι : (Finset.univ : Finset ι).Nonempty
+    · refine ⟨Finset.univ.inf' hι cf, ∑ i, df i, ?_, ?_, ?_⟩
+      · exact (Finset.lt_inf'_iff hι).2 fun i _ => hcf i
+      · exact Finset.sum_pos (fun i _ => hdf i) hι
+      · intro x
+        have hsum : re (inner 𝕜 x x) = ∑ i, re (inner 𝕜 (x i) (x i)) := by
+          show re (∑ᴵ i, ⟪ x i, x i ⟫_𝕜) = _
+          rw [SciLean.IndexType.sum_eq_finset_sum, map_sum]
+        obtain ⟨i₀, hi₀⟩ := Finset.exists_mem_eq_sup' hι (fun i => ‖x i‖₊)
+        have hnorm : ‖x‖ = ‖x i₀‖ := by
+          rw [Pi.norm_def, ← Finset.sup'_eq_sup hι, hi₀.2]; rfl
+        have hnonneg : ∀ i, 0 ≤ re (inner 𝕜 (x i) (x i)) := fun i =>
+          le_trans (by rw [smul_eq_mul]; exact mul_nonneg (hcf i).le (sq_nonneg _))
+            (hbound i (x i)).1
+        constructor
+        · rw [hsum]
+          calc Finset.univ.inf' hι cf • ‖x‖^2
+              ≤ cf i₀ • ‖x i₀‖^2 := by
+                rw [hnorm, smul_eq_mul, smul_eq_mul]
+                exact mul_le_mul_of_nonneg_right (Finset.inf'_le _ (Finset.mem_univ i₀))
+                  (by positivity)
+            _ ≤ re (inner 𝕜 (x i₀) (x i₀)) := (hbound i₀ (x i₀)).1
+            _ ≤ ∑ i, re (inner 𝕜 (x i) (x i)) :=
+                Finset.single_le_sum (fun i _ => hnonneg i) (Finset.mem_univ i₀)
+        · rw [hsum, Finset.sum_smul]
+          refine Finset.sum_le_sum fun i _ => le_trans (hbound i (x i)).2 ?_
+          rw [smul_eq_mul, smul_eq_mul]
+          exact mul_le_mul_of_nonneg_left
+            (by gcongr; exact norm_le_pi_norm x i) (hdf i).le
+    · have hempty : IsEmpty ι := by
+        rw [Finset.not_nonempty_iff_eq_empty, Finset.univ_eq_empty_iff] at hι
+        exact hι
+      refine ⟨1, 1, one_pos, one_pos, fun x => ?_⟩
+      have hx : x = 0 := funext fun i => hempty.elim i
+      have h0 : re (inner 𝕜 x x) = 0 := by
+        show re (∑ᴵ i, ⟪ x i, x i ⟫_𝕜) = 0
+        rw [SciLean.IndexType.sum_eq_finset_sum, Finset.univ_eq_empty, Finset.sum_empty, map_zero]
+      subst hx
+      simp [h0]
+  conj_symm := by
+    intro x y
+    show conj (∑ᴵ i, ⟪y i, x i⟫_𝕜) = ∑ᴵ i, ⟪x i, y i⟫_𝕜
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum, map_sum]
+    exact Finset.sum_congr rfl fun i _ => AdjointSpace.conj_symm _ _
+  add_left := by
+    intro x y z
+    show (∑ᴵ i, ⟪x i + y i, z i⟫_𝕜) = (∑ᴵ i, ⟪x i, z i⟫_𝕜) + (∑ᴵ i, ⟪y i, z i⟫_𝕜)
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum,
+      ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun i _ => AdjointSpace.add_left _ _ _
+  smul_left := by
+    intro x y r
+    show (∑ᴵ i, ⟪r • x i, y i⟫_𝕜) = conj r * ∑ᴵ i, ⟪x i, y i⟫_𝕜
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => AdjointSpace.smul_left _ _ _
 
 -- deprecate these
 theorem inner_prod_split (x y : X×Y) : ⟪x,y⟫_𝕜 = ⟪x.1,y.1⟫_𝕜 + ⟪x.2,y.2⟫_𝕜 := by rfl

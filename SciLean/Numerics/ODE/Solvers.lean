@@ -100,4 +100,33 @@ theorem explicitSymplecticEuler_eq_implicitSymplecticEulerV1
     =
     implicitSymplecticEulerV1 (fun q p => T p + V q) :=
 by
-  sorry_proof
+  have shift : ∀ (g : X → R) (c : R) g', HasVecFwdFDeriv R X g g' →
+      HasVecFwdFDeriv R X (fun y => g y + c) (fun x dx => ((g' x dx).1 + c, (g' x dx).2)) := by
+    intro g c g' hg
+    obtain ⟨df, hdf, ht⟩ := hg.deriv
+    exact ⟨fun x dx => by rw [hg.val], ⟨df, fun x => (hdf x).add_const c, ht⟩, hg.linear⟩
+  have hJ : ∀ (g : X → R) (c : R) x, jacobianMat R (fun y => g y + c) x = jacobianMat R g x := by
+    intro g c x
+    unfold jacobianMat
+    by_cases hg : ∃ g', HasVecFwdFDeriv R X g g'
+    · obtain ⟨g', hg'⟩ := hg
+      rw [vecFwdFDeriv_from_hasVecFwdFDeriv (shift g c g' hg'),
+        vecFwdFDeriv_from_hasVecFwdFDeriv hg']
+    · have hn : ¬∃ g', HasVecFwdFDeriv R X (fun y => g y + c) g' :=
+        fun ⟨g', hg'⟩ => hg ⟨_, by simpa using shift _ (-c) _ hg'⟩
+      simp [vecFwdFDeriv, hg, hn]
+  have hJ' : ∀ (g : X → R) (c : R) x, jacobianMat R (fun y => c + g y) x = jacobianMat R g x := by
+    intro g c x; simp_rw [add_comm c]; exact hJ g c x
+  funext Δt qₙ pₙ
+  unfold explicitSymplecticEuler implicitSymplecticEulerV1
+  simp only [hJ, hJ']
+  have hu : HasUniqueSolution (fun q' p' : X =>
+      q' = qₙ + Δt • jacobianMat R T p' ∧ p' = pₙ - Δt • jacobianMat R V qₙ) := by
+    refine ⟨⟨⟨(qₙ + Δt • jacobianMat R T (pₙ - Δt • jacobianMat R V qₙ),
+      pₙ - Δt • jacobianMat R V qₙ), rfl, rfl⟩⟩, ?_⟩
+    rintro ⟨a, b⟩ ⟨a', b'⟩ ⟨h1, h2⟩ ⟨h1', h2'⟩
+    subst h2 h2' h1 h1'
+    rfl
+  simp only [solveFun, hu, ↓reduceDIte]
+  obtain ⟨h1, h2⟩ := Classical.choose_spec hu.ex
+  exact hu.uniq _ _ ⟨rfl, rfl⟩ ⟨h1, h2⟩

@@ -30,14 +30,25 @@ structure DataArray (α : Type*) [pd : PlainDataType α] where
 variable {α : Type*} [pd : PlainDataType α]
 variable {ι n} [IndexType ι n] {κ : Type*} {m} [IndexType κ m]
 
-instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, by sorry_proof⟩
+instance [PlainDataType X] : Inhabited (DataArray X) := ⟨.empty, by rfl⟩
 
 @[inline]
 def DataArray.size (xs : DataArray α) : Nat := xs.byteData.size / pd.btype.bytes.toNat
 
+/-- The bytes of the `i`-th element lie in the byte array (a `USize` overflow only makes the
+start index smaller). -/
+theorem DataArray.bytes_mul_add_le (b i : USize) (s : Nat) (hb : 1 < b)
+    (hi : i.toNat < s / b.toNat) : (b * i + b).toNat ≤ s := by
+  have hb0 : 0 < b.toNat := by rw [USize.lt_iff_toNat_lt] at hb; simp at hb; omega
+  have h1 := (Nat.le_div_iff_mul_le hb0).1 hi
+  rw [Nat.add_one_mul, Nat.mul_comm] at h1
+  rw [USize.toNat_add, USize.toNat_mul, Nat.mod_add_mod]
+  exact Nat.le_trans (Nat.mod_le _ _) h1
+
 @[inline]
 def DataArray.get (arr : DataArray α) (i : Idx arr.size) : α :=
-  pd.btype.fromByteArray arr.byteData (pd.btype.bytes * i) sorry_proof
+  pd.btype.fromByteArray arr.byteData (pd.btype.bytes * i)
+    (DataArray.bytes_mul_add_le _ _ _ pd.btype.h_size i.2)
 
   -- let i := i.1
   -- match pd.btype with
@@ -58,11 +69,18 @@ instance : GetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
 
 @[inline]
 def DataArray.set (arr : DataArray α) (i : Idx arr.size) (val : α) : DataArray α := -- ⟨pd.set a.byteData i sorry_proof val, a.size, sorry_proof⟩
-  ⟨pd.btype.toByteArray arr.byteData (pd.btype.bytes * i) sorry_proof val, sorry_proof⟩
+  ⟨pd.btype.toByteArray arr.byteData (pd.btype.bytes * i)
+     (DataArray.bytes_mul_add_le _ _ _ pd.btype.h_size i.2) val,
+   by rw [pd.btype.toByteArray_size]; exact arr.h_size⟩
+
+@[simp]
+theorem DataArray.size_set (arr : DataArray α) (i : Idx arr.size) (val : α) :
+    (arr.set i val).size = arr.size := by
+  simp [DataArray.size, DataArray.set, pd.btype.toByteArray_size]
 
 instance : SetElem (DataArray α) USize α (fun a i => i.toNat < a.size) where
   setElem := fun x i v h => x.set ⟨i,h⟩ v
-  setElem_valid := sorry_proof
+  setElem_valid := by intros; simp_all
 
   -- let i := i.1
   -- match pd.btype with
@@ -98,16 +116,18 @@ def DataArray.capacity (arr : DataArray α) : Squash Nat := Quot.mk _ (pd.capaci
 def DataArray.emptyWithCapacity (capacity : Nat) : DataArray α := Id.run do
   let newBytes := pd.bytes capacity
   { byteData := .emptyWithCapacity newBytes
-    h_size := by sorry_proof }
+    h_size := by rfl }
 
 def DataArray.mkZero (n : Nat) : DataArray α := Id.run do
+  -- `ByteArray.replicate` is opaque, hence we can't prove anything about the size of the result
   ⟨ByteArray.replicate (pd.bytes n) 0, sorry_proof⟩
 
 def DataArray.replicate (n : Nat) (v : α) : DataArray α := Id.run do
   -- TODO: make unsafe version that does not zero initialize
   let mut data : DataArray α := .mkZero n
   for i in fullRange (Idx data.size) do
-    data := data.set ⟨i,sorry_proof⟩ v
+    if h : i.1.toNat < data.size then
+      data := data.set ⟨i,h⟩ v
   return data
 
 
@@ -138,7 +158,7 @@ def DataArray.swap (arr : DataArray α) (i j : Idx arr.size) : DataArray α :=
   let ai := arr.get i
   let aj := arr.get j
   let arr := arr.set i aj
-  let arr := arr.set ⟨j.1, sorry_proof⟩ ai
+  let arr := arr.set ⟨j.1, by rw [DataArray.size_set]; exact j.2⟩ ai
   arr
 
 
@@ -146,9 +166,10 @@ def DataArray.reverse (arr : DataArray α) : DataArray α := Id.run do
   let mut arr := arr
   let n := arr.size
   for i in fullRange (Idx (n/2)) do
-    let i' : Idx arr.size := ⟨i, sorry_proof⟩
-    let j' : Idx arr.size := ⟨n.toUSize - i - 1, sorry_proof⟩
-    arr := arr.swap i' j'
+    if h : i.1.toNat < arr.size ∧ (n.toUSize - i - 1).toNat < arr.size then
+      let i' : Idx arr.size := ⟨i, h.1⟩
+      let j' : Idx arr.size := ⟨n.toUSize - i - 1, h.2⟩
+      arr := arr.swap i' j'
   arr
 
 
@@ -168,7 +189,8 @@ where
   aux (toIdx : ι → Idx n) : DataArray α := Id.run do
     let mut d' : DataArray α := .mkZero n
     for i in fullRange ι do
-      d' := d'.set ⟨toIdx i, sorry_proof⟩ (f i)
+      if h : (toIdx i).1.toNat < d'.size then
+        d' := d'.set ⟨toIdx i, h⟩ (f i)
     d'
 
 
@@ -200,7 +222,7 @@ def DataArrayN.linGet (xs : DataArrayN α ι) (i : Idx n) : α := (xs.1.get (i.c
 
 @[inline]
 def DataArrayN.linSet (xs : DataArrayN α ι) (i : Idx n) (xi : α) : DataArrayN α ι :=
-  ⟨xs.1.set (i.cast xs.2) xi, sorry_proof⟩
+  ⟨xs.1.set (i.cast xs.2) xi, by rw [DataArray.size_set]; exact xs.2⟩
 
 @[inline]
 def DataArrayN.set (xs : DataArrayN α ι) (i : ι) (xi : α) : DataArrayN α ι :=
@@ -214,7 +236,26 @@ instance : GetElem (α^[ι]) ι α (fun _ _ => True) where
   getElem x i _ := x.get i
 
 instance : InjectiveGetElem (α^[ι]) ι where
-  getElem_injective := sorry_proof
+  -- two arrays with the same elements have the same underlying data, by `DataArray.ext`
+  -- every index of the data is of the form `toIdx i` as `toIdx` is surjective
+  getElem_injective := by
+    have idx_cast : ∀ {n m : ℕ} (h : n = m) (j : Idx n), (h ▸ j : Idx m) = j.cast h := by
+      intro n m h j; cases h; rfl
+    intro ⟨xd,hx⟩ ⟨yd,hy⟩ h
+    have h : ∀ i : ι, xd.get ((toIdx i).cast hx) = yd.get ((toIdx i).cast hy) :=
+      fun i => congrFun h i
+    have hsize : xd.size = yd.size := by rw [← hx, ← hy]
+    have hdata : xd = yd := by
+      apply DataArray.ext xd yd hsize
+      intro j
+      have h2 := h (fromIdx (j.cast hx.symm))
+      rw [IndexType.toIdx_fromIdx] at h2
+      rw [idx_cast hsize j,
+          show (Idx.cast hsize j) = Idx.cast hy (Idx.cast hx.symm j) from Idx.eq_of_val_eq rfl,
+          show j = Idx.cast hx (Idx.cast hx.symm j) from Idx.eq_of_val_eq rfl]
+      exact h2
+    subst hdata
+    rfl
 
 instance : DefaultIndex (α^[ι]) ι where
 instance : DefaultIndexOfRank (α^[ι]) 1 ι where
@@ -222,10 +263,13 @@ instance {r} [DefaultIndexOfRank (α^[κ]) r κ] : DefaultIndexOfRank (α^[ι,κ
 
 instance : SetElem (α^[ι]) ι α (fun _ _ => True) where
   setElem x i v _ := x.set i v
-  setElem_valid := sorry_proof
+  setElem_valid := by trivial
 
 instance : LawfulSetElem (α^[ι]) ι where
-  getElem_setElem_eq  := sorry_proof
+  -- reading an element right after writting it returns the written value, this is exactly the
+  -- law `fromByteArray_toByteArray` of the underlying `ByteType`
+  getElem_setElem_eq  := fun xs i v _ =>
+    pd.btype.fromByteArray_toByteArray v xs.data.byteData _ _ _
   getElem_setElem_neq := sorry_proof
 
 instance [Fold ι] : OfFn (α^[ι]) ι α where
@@ -254,15 +298,17 @@ instance : Membership α (DataArrayN α ι) where
   mem xs x := ∃ i, xs.get i = x
 
 instance [Fold ι] : ArrayType (DataArrayN α ι) ι α where
-  ofFn f := ⟨DataArray.intro f, sorry_proof⟩
+  ofFn f := ofFn (coll := α^[ι]) f
   get xs i := xs.get i
   set xs i x := xs.set i x
   modify xs i f := xs.modify i f
-  get_ofFn := sorry_proof
-  ofFn_get := sorry_proof
-  get_set_eq := sorry_proof
-  get_set_neq := sorry_proof
-  modify_set := sorry_proof
+  get_ofFn f := funext fun i => getElem_ofFn (coll := α^[ι]) f i
+  ofFn_get c := InjectiveGetElem.getElem_injective (idx := ι)
+    (funext fun i => getElem_ofFn (coll := α^[ι]) (c[·]) i)
+  -- as above, this is the `fromByteArray_toByteArray` law of the underlying `ByteType`
+  get_set_eq := fun c _ x => pd.btype.fromByteArray_toByteArray x c.data.byteData _ _ _
+  get_set_neq c i i' x h := getElem_setElem_neq c i i' x .intro .intro h
+  modify_set := by aesop
 
 -- instance : LinearArrayType (λ n => DataArrayN α (Idx n)) α where
 --   toArrayType := by infer_instance
@@ -362,24 +408,36 @@ def DataArrayN.uncurry (x : X^[J]^[I]) : X^[I,J] :=
   cast sorry_proof x -- this is slow at runtime ⟨⟨x.data.byteData, sorry_proof⟩, sorry_proof⟩
 
 
-theorem DataArrayN.uncurry_def [Fold.{_,0} I] [Fold.{_,0} J]
-    (x : DataArrayN (DataArrayN X J) I) :
-    -- x.uncurry = ⊞ i j => x[i][j] := sorry_proof
-    x.uncurry = ofFn (↿fun i j => x[i][j]) := sorry_proof
-
 theorem DataArrayN.uncurry_getElem
     (x : DataArrayN (DataArrayN X J) I) (i : I) (j : J) :
     x.uncurry[i,j] = x[i][j] := sorry_proof
 
-theorem DataArrayN.curry_def [Fold.{_,0} I] [Fold.{_,0} J]
-    (x : DataArrayN X (I×J)) :
-    x.curry = ⊞ i => ⊞ j => x[i,j] := by
-  sorry_proof
+theorem DataArrayN.uncurry_def [Fold.{_,0} I] [Fold.{_,0} J]
+    (x : DataArrayN (DataArrayN X J) I) :
+    -- x.uncurry = ⊞ i j => x[i][j] := sorry_proof
+    x.uncurry = ofFn (↿fun i j => x[i][j]) := by
+  apply InjectiveGetElem.getElem_injective (idx := I×J)
+  funext ⟨i, j⟩
+  simp only [getElem_ofFn]
+  exact uncurry_getElem x i j
 
 @[simp, simp_core]
 theorem DataArrayN.curry_getElem (x : DataArrayN X (I×J)) (i : I) (j : J) :
     x.curry[i][j] = x[i,j] := by
-  sorry_proof
+  -- `curry` and `uncurry` are inverse casts
+  have h := uncurry_getElem x.curry i j
+  rw [show x.curry.uncurry = x by simp [curry, uncurry]] at h
+  exact h.symm
+
+theorem DataArrayN.curry_def [Fold.{_,0} I] [Fold.{_,0} J]
+    (x : DataArrayN X (I×J)) :
+    x.curry = ⊞ i => ⊞ j => x[i,j] := by
+  apply InjectiveGetElem.getElem_injective (idx := I)
+  funext i
+  apply InjectiveGetElem.getElem_injective (idx := J)
+  funext j
+  simp only [getElem_ofFn]
+  exact curry_getElem x i j
 
 
 @[inline]

@@ -26,7 +26,7 @@ namespace SciLean
       | ⟨.point, _⟩, ⟨.cone .point, _⟩, ⟨.base .point, _, _⟩, e => e
       -- end point of a segment
       | ⟨.point, _⟩, ⟨.cone .point, _⟩, ⟨.tip .point, _, _⟩, e => e+1
-      | _, _, _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
+      | _, _, _, _ => absurd (a := Nonempty Empty) sorry_proof (fun ⟨e⟩ => nomatch e) /- `e` is element of Empty -> contradiction, how to prove this? -/
 
     face_comp := sorry_proof
   }
@@ -57,26 +57,26 @@ namespace SciLean
       match Q, P with
       -- neighbours of a point
       | ⟨.point, _⟩, ⟨.point, _⟩ =>
-        (⟨.point, sorry_proof, sorry_proof⟩, e)
+        (⟨.point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, e)
       | ⟨.point, _⟩, ⟨.cone .point, _⟩ =>
         match n with
-        | 0 => absurd (a:= True) sorry_proof sorry_proof /- `id` has to be an element of Empty -/
+        | 0 => absurd (a:= True) trivial sorry_proof /- `id` has to be an element of Empty -/
         | n'+1 =>
           let e : Fin (n'+2) := e
           if h : e = 0
-          then (⟨.base .point, sorry_proof, sorry_proof⟩, ⟨0, sorry_proof⟩)
+          then (⟨.base .point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, ⟨0, sorry_proof⟩)
           else if h' : e = n' + 1
-          then (⟨.tip .point, sorry_proof, sorry_proof⟩, ⟨n', by simp⟩)
+          then (⟨.tip .point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, ⟨n', by simp⟩)
           else
             let id : Fin 2 := cast (by simp[h,h']) id
             if id = 0
-            then (⟨ .tip .point, sorry_proof, sorry_proof⟩, ⟨e-1, sorry_proof⟩)
-            else (⟨.base .point, sorry_proof, sorry_proof⟩, ⟨e, sorry_proof⟩)
+            then (⟨ .tip .point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, ⟨e-1, sorry_proof⟩)
+            else (⟨.base .point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, ⟨e, sorry_proof⟩)
 
       -- neighbours of a segment is the segment itself
       | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ =>
-        (⟨.cone .point, sorry_proof, sorry_proof⟩, e)
-      | _, _ => absurd (a := Nonempty Empty) sorry_proof sorry_proof /- `e` is element of Empty -> contradiction, how to prove this? -/
+        (⟨.cone .point, rfl, by show (PrismRepr.cone .point).toCanonical = .cone .point; rw [PrismRepr.toCanonical, PrismRepr.toCanonical]⟩, e)
+      | _, _ => absurd (a := Nonempty Empty) sorry_proof (fun ⟨e⟩ => nomatch e) /- `e` is element of Empty -> contradiction, how to prove this? -/
 
     face_coface := sorry_proof
 
@@ -128,7 +128,7 @@ namespace SciLean
           let e : Fin n := e
           let x : ℝ := x
           e + x
-        | _ => absurd (a:=True) sorry_proof sorry_proof)
+        | _ => absurd (a:=True) trivial sorry_proof)
 
       (toPos_face := sorry_proof)
 

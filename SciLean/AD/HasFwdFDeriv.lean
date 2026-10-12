@@ -43,11 +43,14 @@ theorem hasFwdFDeriv_from_hasFDerivAt {f : X → Y}
     simp_all
 
 
-set_option linter.unusedVariables false in
 -- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
 theorem fwdFDeriv_from_hasFwdFDeriv
   {f : X → Y} {f'} (hf : HasFwdFDeriv K f f') :
-  fwdFDeriv K f = f' := sorry_proof
+  fwdFDeriv K f = f' := by
+  obtain ⟨val, df, hd, hd'⟩ := hf
+  funext x dx
+  simp only [fwdFDeriv, (hd x).fderiv]
+  exact Prod.ext (val x dx).symm (hd' x dx)
 
 simproc_decl fwdFDeriv_simproc (fwdFDeriv _ _) :=
   mkDataSynthSimproc `fwdFDeriv_simproc ``fwdFDeriv_from_hasFwdFDeriv
@@ -112,7 +115,10 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
   obtain ⟨hgv,dg,hgd,hgd'⟩ := hg
   have hg' : HasFwdFDeriv K
     (fun x => (g x, x))
-    (fun x dx => let' (y,dy) := g' x dx; ((y,x),(dy,dx))) := sorry_proof
+    (fun x dx => let' (y,dy) := g' x dx; ((y,x),(dy,dx))) := by
+    apply hasFwdFDeriv_from_hasFDerivAt (df := fun x => (dg x).prod (ContinuousLinearMap.id K X))
+    case deriv => intro x; exact (hgd x).prodMk (hasFDerivAt_id x)
+    case simp => intros; simp_all
   obtain ⟨hgv',dg',hgd',hgd''⟩ := hg'
   apply hasFwdFDeriv_from_hasFDerivAt
   case deriv =>
@@ -126,30 +132,34 @@ theorem let_rule {g : X → Y} {f : Y → X → Z} {f' g'}
 theorem apply_rule {I} [IndexType I NI] [DecidableEq I] (i : I) :
     HasFwdFDeriv K (fun x : I → X => x i)
       (fun x dx =>
-        (x i, dx i)) := sorry_proof
+        (x i, dx i)) where
+  val := by intros; rfl
+  deriv := ⟨fun _ => ContinuousLinearMap.proj i,
+            fun _ => (ContinuousLinearMap.proj (R:=K) (φ:=fun _ : I => X) i).hasFDerivAt,
+            by intros; rfl⟩
 
 -- this should not be necessary if once we improve function decomposition in `data_synth` tactic
 @[data_synth]
 theorem apply_rule' {I} [IndexType I NI] [DecidableEq I] (i : I) :
     HasFwdFDeriv K (fun x : (I → X)×Y => x.1 i)
       (fun x dx =>
-        (x.1 i, dx.1 i)) := sorry_proof
+        (x.1 i, dx.1 i)) where
+  val := by intros; rfl
+  deriv :=
+    let df := (ContinuousLinearMap.proj (R:=K) (φ:=fun _ : I => X) i).comp
+                (ContinuousLinearMap.fst K (I → X) Y)
+    ⟨fun _ => df, fun _ => df.hasFDerivAt, by intros; rfl⟩
 
-set_option linter.unusedVariables false in
 theorem pi_rule {I : Type*} [IndexType I NI]
     {f : X → I → Y} {f' : I → _} (hf : ∀ i, HasFwdFDeriv K (f · i) (f' i)) :
     HasFwdFDeriv K f
       (fun x dx =>
         Equiv.arrowProdEquivProdArrow _ _ _ (fun i => f' i x dx)) := by
-
-  sorry_proof
-  -- apply hasFwdFDeriv_from_hasFDerivAt
-  -- case deriv =>
-  --   intro x
-
-  --   apply hasFDerivAt_pi
-  --   intro i
-  --   apply (hf i).deriv.1
+  have hval := fun i => (hf i).val
+  choose df hd hd' using fun i => (hf i).deriv
+  apply hasFwdFDeriv_from_hasFDerivAt (df := fun x => ContinuousLinearMap.pi (fun i => df i x))
+  case deriv => intro x; exact hasFDerivAt_pi'.2 (fun i => hd i x)
+  case simp => intros x dx; simp_all [Equiv.arrowProdEquivProdArrow]
 
 set_option linter.unusedVariables false in
 theorem proj_rule
@@ -164,7 +174,12 @@ theorem proj_rule
         let dx₁ := p₁ dx
         let ydy := g' x₁ dx₁
         ydy) := by
-  sorry_proof
+  obtain ⟨hv,dg,hd,hd'⟩ := hg
+  subst hf
+  apply hasFwdFDeriv_from_hasFDerivAt
+    (df := fun x => (dg (p₁ x)).comp (fun x =>L[K] p₁ x))
+  case deriv => intro x; exact (hd (p₁ x)).comp x (fun x =>L[K] p₁ x).hasFDerivAt
+  case simp => intros; exact Prod.ext (hv _ _) (hd' _ _).symm
 
 set_option linter.unusedVariables false in
 theorem let_skip_rule
@@ -180,7 +195,13 @@ theorem let_skip_rule
         let a := g x
         let' (z, dz) := f' a x dx
         (z, dz)) := by
-  sorry_proof
+  have h1 : (fun x => let y := g x; f y x) = (fun x => f (g 0) x) := by
+    funext x; dsimp only; rw [hg x 0]
+  have h2 : (fun x dx => let a := g x; let' (z, dz) := f' a x dx; (z, dz))
+            = (fun x dx => f' (g 0) x dx) := by
+    funext x dx; dsimp only; rw [hg x 0]
+  rw [h1, h2]
+  exact hf (g 0)
 
 
 open Lean Meta
@@ -364,10 +385,13 @@ theorem HDiv.hDiv.arg_a0.HasFwdFDeriv_comp_rule
       (fun x dx =>
         let' (y, dy) := f' x dx;
         (y / c, dy / c)) := by
-  have ⟨_,_,_,_⟩ := hf
-  -- HasFDerivAt seems to miss this variant
-  -- so the proof is not immediate
-  sorry_proof
+  obtain ⟨hv,df,hd,hd'⟩ := hf
+  apply hasFwdFDeriv_from_hasFDerivAt (df := fun x => c⁻¹ • df x)
+  case deriv =>
+    intro x
+    simp only [div_eq_mul_inv, mul_comm _ c⁻¹]
+    exact (hd x).const_mul c⁻¹
+  case simp => intros; simp_all [div_eq_mul_inv, mul_comm]
 
 
 @[data_synth]
@@ -412,9 +436,15 @@ theorem SciLean.sum.arg_f.HasFwdFDeriv_rule
         ∑ᴵ i,
           let ydy := f' i x dx
           ydy) := by
-  sorry_proof
+  simp only [IndexType.sum_eq_finset_sum]
+  have hval := fun i => (hf i).val
+  choose df hd hd' using fun i => (hf i).deriv
+  apply hasFwdFDeriv_from_hasFDerivAt (df := fun x => ∑ i, df i x)
+  case deriv => intro x; exact HasFDerivAt.fun_sum (fun i _ => hd i x)
+  case simp =>
+    intros x dx
+    refine Prod.ext ?_ ?_ <;> simp_all [Prod.fst_sum, Prod.snd_sum]
 
-set_option linter.unusedVariables false in
 @[data_synth]
 theorem Finset.sum.arg_f.HasFwdFDeriv_rule
     {I : Type*} (A : Finset I)
@@ -426,7 +456,13 @@ theorem Finset.sum.arg_f.HasFwdFDeriv_rule
         ∑ i ∈ A,
           let ydy := f' i x dx
           ydy) := by
-  sorry_proof
+  have hval := fun i => (hf i).val
+  choose df hd hd' using fun i => (hf i).deriv
+  apply hasFwdFDeriv_from_hasFDerivAt (df := fun x => ∑ i ∈ A, df i x)
+  case deriv => intro x; exact HasFDerivAt.fun_sum (fun i _ => hd i x)
+  case simp =>
+    intros x dx
+    refine Prod.ext ?_ ?_ <;> simp_all [Prod.fst_sum, Prod.snd_sum]
 
 variable (K) in
 structure DifferentiableCondition (c : W → Prop) (f g : W → X) : Prop where
@@ -437,6 +473,20 @@ theorem differentiableCondition_const (c : Prop) (f g : W → X) :
     DifferentiableCondition K (fun _ => c) f g := by
   by_cases c <;> constructor <;> simp_all
 
+/-- If two functions have the same derivative and the same value at a point then any function
+that is pointwise equal to one of them has this derivative too. -/
+theorem hasFDerivAt_ite {c : W → Prop} [dec : ∀ w, Decidable (c w)]
+    {f g : W → X} {L : W →L[K] X} {w : W}
+    (hf : HasFDerivAt f L w) (hg : HasFDerivAt g L w) (hfg : f w = g w) :
+    HasFDerivAt (fun w => if c w then f w else g w) L w := by
+  have hw : (if c w then f w else g w) = f w := by split <;> simp [hfg]
+  rw [hasFDerivAt_iff_isLittleO, Asymptotics.isLittleO_iff] at hf hg ⊢
+  intro ε hε
+  filter_upwards [hf hε, hg hε] with w' h1 h2
+  by_cases hc : c w'
+  · simpa [hc, hw] using h1
+  · simpa [hc, hw, hfg] using h2
+
 set_option linter.unusedVariables false in
 @[data_synth]
 theorem ite.arg_te.HasFwdFDeriv_rule
@@ -446,7 +496,45 @@ theorem ite.arg_te.HasFwdFDeriv_rule
     HasFwdFDeriv K
       (fun w => if c w then f w else g w)
       (fun w => if c w then f' w else g' w) := by
-  sorry_proof
+  obtain ⟨hfval, df, hdf, hdf'⟩ := hf
+  obtain ⟨hgval, dg, hdg, hdg'⟩ := hg
+  apply hasFwdFDeriv_from_hasFDerivAt (df := fun w => if c w then df w else dg w)
+  case deriv =>
+    intro w
+    by_cases hi : w ∈ interior {w | c w}
+    · have hcw : c w := interior_subset hi
+      rw [if_pos hcw]
+      refine (hdf w).congr_of_eventuallyEq ?_
+      filter_upwards [mem_interior_iff_mem_nhds.mp hi] with w' hw'
+      have hcw' : c w' := hw'
+      simp [hcw']
+    · by_cases hi' : w ∈ interior {w | c w}ᶜ
+      · have hcw : ¬ c w := interior_subset hi'
+        rw [if_neg hcw]
+        refine (hdg w).congr_of_eventuallyEq ?_
+        filter_upwards [mem_interior_iff_mem_nhds.mp hi'] with w' hw'
+        have hcw' : ¬ c w' := hw'
+        simp [hcw']
+      · have hfr : w ∈ frontier {w | c w} := by
+          refine ⟨?_, hi⟩
+          have h : w ∉ (closure {w | c w})ᶜ := by rwa [← interior_compl]
+          exact not_not.mp h
+        have hL : df w = dg w := by
+          have h1 : fderiv K f w = df w := (hdf w).fderiv
+          have h2 : fderiv K g w = dg w := (hdg w).fderiv
+          rw [← h1, ← h2, hc.deriv w hfr]
+        by_cases hcw : c w
+        · rw [if_pos hcw]
+          exact hasFDerivAt_ite (hdf w) (hL ▸ hdg w) (hc.values w hfr)
+        · rw [if_neg hcw]
+          exact hasFDerivAt_ite (hL ▸ hdf w) (hdg w) (hc.values w hfr)
+  case simp =>
+    intro w dx
+    by_cases hcw : c w
+    · simp only [if_pos hcw]
+      exact Prod.ext (hfval w dx) (hdf' w dx).symm
+    · simp only [if_neg hcw]
+      exact Prod.ext (hgval w dx) (hdg' w dx).symm
 
 
 @[data_synth]

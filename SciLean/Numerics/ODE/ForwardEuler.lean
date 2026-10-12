@@ -24,4 +24,11 @@ namespace forwardEuler
 theorem isOdeStepper (f : R → X → X)
   : IsOdeStepper f (forwardEuler f)
 where
-  consistent := by sorry_proof
+  consistent := by
+    intro t x
+    -- the step `xₙ + Δt • f t xₙ` is affine in `Δt`, so its derivative is `f t xₙ` everywhere
+    have h : (fun Δt' : R => ∂ (Δt:=Δt'), forwardEuler f t Δt x) = fun _ => f t x := by
+      funext Δt'
+      unfold forwardEuler
+      fun_trans
+    rw [h, Filter.limit_of_const]

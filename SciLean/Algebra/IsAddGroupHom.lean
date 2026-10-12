@@ -115,7 +115,7 @@ theorem HAdd.hAdd.arg_a0a1.IsAddGroupHom_rule
     (f g : X → Y) (hf : IsAddGroupHom f) (hg : IsAddGroupHom g) :
     IsAddGroupHom fun x => f x + g x := by
   constructor
-  · simp [hf.map_add,hg.map_add]; sorry_proof
+  · simp [hf.map_add,hg.map_add]; grind
   · simp [hf.map_neg,hg.map_neg,add_comm]
 
 
@@ -129,7 +129,7 @@ theorem HSub.hSub.arg_a0a1.IsAddGroupHom_rule
     (f g : X → Y) (hf : IsAddGroupHom f) (hg : IsAddGroupHom g) :
     IsAddGroupHom fun x => f x - g x := by
   constructor
-  · simp [hf.map_add,hg.map_add]; sorry_proof
+  · simp [hf.map_add,hg.map_add]; grind
   · simp [hf.map_neg,hg.map_neg,add_comm,←neg_add_eq_sub]
 
 

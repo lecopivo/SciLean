@@ -149,10 +149,10 @@ open IndexType in
 instance [OrthonormalBasis ι R X] : BoundingBox (Triangle R X) where
   boundingBox t :=
     have := t.hdim'
-    { min := (min t.a[0] (min t.b[0] t.c[0])) • ⅇ (fromFin ⟨0,sorry_proof⟩) +
-             (min t.a[1] (min t.b[1] t.c[1])) • ⅇ (fromFin ⟨1,sorry_proof⟩),
-      max := (max t.a[0] (max t.b[0] t.c[0])) • ⅇ (fromFin ⟨0,sorry_proof⟩) +
-             (max t.a[1] (max t.b[1] t.c[1])) • ⅇ (fromFin ⟨1,sorry_proof⟩) }
+    { min := (min t.a[0] (min t.b[0] t.c[0])) • ⅇ (fromFin ⟨0, by omega⟩) +
+             (min t.a[1] (min t.b[1] t.c[1])) • ⅇ (fromFin ⟨1, by omega⟩),
+      max := (max t.a[0] (max t.b[0] t.c[0])) • ⅇ (fromFin ⟨0, by omega⟩) +
+             (max t.a[1] (max t.b[1] t.c[1])) • ⅇ (fromFin ⟨1, by omega⟩) }
   is_bounding_box := sorry_proof
 
 
@@ -208,10 +208,10 @@ def planeDecomposition
     if i.1 = 0 then
       u
     else if i.1 ≤ i'.1 then
-      let i'' : ι := fromFin ⟨i.1-1, sorry_proof⟩
+      let i'' : ι := fromFin ⟨i.1-1, by omega⟩
       ⅇ i''
     else
-      let i'' : ι := fromFin ⟨i.1, sorry_proof⟩
+      let i'' : ι := fromFin ⟨i.1, by omega⟩
       ⅇ i''
 
   let basis := gramSchmidtArrayImpl (R:=R) basis

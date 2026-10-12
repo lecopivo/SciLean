@@ -146,8 +146,8 @@ partial def Idx.forInFull {β} [Monad m]
   loop init 0
 where
   @[specialize] loop (x : β) (i : USize) : m β := do
-    if i < n.toUSize then
-      match (← f ⟨i, sorry_proof⟩ x) with
+    if h : i < n.toUSize then
+      match (← f ⟨i, Nat.lt_of_lt_of_le (USize.lt_iff_toNat_lt.1 h) (usize_toNat_ofNat_le n)⟩ x) with
       | .yield x => loop x (i+1)
       | .done x => pure x
     else
@@ -161,8 +161,8 @@ partial def Idx.forInIntervalUp {β} [Monad m]
   loop init a.1
 where
   @[specialize] loop (x : β) (i : USize) : m β := do
-    if i <= b.1 then
-      match (← f ⟨i, sorry_proof⟩ x) with
+    if h : i <= b.1 then
+      match (← f ⟨i, Nat.lt_of_le_of_lt (USize.le_iff_toNat_le.1 h) b.2⟩ x) with
       | .yield x => loop x (i+1)
       | .done x => pure x
     else
@@ -178,10 +178,15 @@ where
   @[specialize] loop (x : β) (i : Idx n) : m β := do
     match (← f i x) with
     | .yield x =>
-      if a ≥ i then
+      if h : a ≥ i then
         pure x
       else
-        loop x ⟨i-1, sorry_proof⟩
+        loop x ⟨i-1, by
+          have h1 : ¬ (i.1.toNat ≤ a.1.toNat) := fun hle => h (USize.le_iff_toNat_le.2 hle)
+          have h2 : (1:USize) ≤ i.1 := USize.le_iff_toNat_le.2 (by rw [USize.toNat_one]; omega)
+          rw [USize.toNat_sub_of_le _ _ h2, USize.toNat_one]
+          have := i.2
+          omega⟩
     | .done x => pure x
 
 
@@ -209,8 +214,9 @@ partial def Fin.forInFull {β} [Monad m]
   loopSmall init 0
 where
   @[specialize] loopSmall (x : β) (i : USize) : m β := do
-    if i < n.toUSize then
-      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+    if h : i < n.toUSize then
+      match (← f ⟨i.toNat, Nat.lt_of_lt_of_le (USize.lt_iff_toNat_lt.1 h)
+                             (usize_toNat_ofNat_le n)⟩ x) with
       | .yield x => loopSmall x (i+1)
       | .done x => pure x
     else
@@ -224,8 +230,10 @@ partial def Fin.forInIntervalUp {β} [Monad m]
   loop init a.1.toUSize
 where
   @[specialize] loop (x : β) (i : USize) : m β := do
-    if i <= b.1.toUSize then
-      match (← f ⟨i.toNat, sorry_proof⟩ x) with
+    if h : i <= b.1.toUSize then
+      match (← f ⟨i.toNat, Nat.lt_of_le_of_lt
+                             (Nat.le_trans (USize.le_iff_toNat_le.1 h) (usize_toNat_ofNat_le b.1))
+                             b.2⟩ x) with
       | .yield x => loop x (i+1)
       | .done x => pure x
     else
@@ -244,7 +252,7 @@ where
       if a ≥ i then
         pure x
       else
-        loop x ⟨i-1, sorry_proof⟩
+        loop x ⟨i-1, by omega⟩
     | .done x => pure x
 
 @[inline]
@@ -271,8 +279,8 @@ partial def Idx2.forInFull {β} [Monad m]
   loop init a.toInt64
 where
   @[specialize] loop (x : β) (i : Int64) : m β := do
-    if i ≤ b.toInt64 then
-      match (← f ⟨i, sorry_proof⟩ x) with
+    if h : i ≤ b.toInt64 ∧ a ≤ i.toInt ∧ i.toInt ≤ b then
+      match (← f ⟨i, h.2⟩ x) with
       | .yield x => loop x (i+1)
       | .done x => pure x
     else
@@ -286,8 +294,8 @@ partial def Idx2.forInIntervalUp {β} [Monad m]
   loop init a.1
 where
   @[specialize] loop (x : β) (i : Int64) : m β := do
-    if i <= b.1 then
-      match (← f ⟨i, sorry_proof⟩ x) with
+    if h : i <= b.1 ∧ c ≤ i.toInt ∧ i.toInt ≤ d then
+      match (← f ⟨i, h.2⟩ x) with
       | .yield x => loop x (i+1)
       | .done x => pure x
     else
@@ -301,13 +309,16 @@ partial def Idx2.forInIntervalDown {β} [Monad m]
   loop init b
 where
   @[specialize] loop (x : β) (i : Int64) : m β := do
-    match (← f ⟨i,sorry_proof⟩ x) with
-    | .yield x =>
-      if i ≤ a then
-        pure x
-      else
-        loop x (i-1)
-    | .done x => pure x
+    if h : c ≤ i.toInt ∧ i.toInt ≤ d then
+      match (← f ⟨i,h⟩ x) with
+      | .yield x =>
+        if i ≤ a then
+          pure x
+        else
+          loop x (i-1)
+      | .done x => pure x
+    else
+      pure x
 
 
 @[inline]

@@ -419,12 +419,15 @@ theorem HDiv.hDiv.arg_a0.IsContinuousLinearMap_rule
 --------------------------------------------------------------------------------
 
 @[fun_prop]
-theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
-  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
+theorem Finset.sum.arg_f.IsContinuousLinearMap_rule [ContinuousAdd Y]
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap R fun x : X => f x i) (A : Finset ι)
   : IsContinuousLinearMap R fun x => ∑ i ∈ A, f x i :=
 {
-  linear := sorry_proof
-  cont := sorry_proof
+  linear := by
+    constructor
+    · intro x y; simp [(hf _).linear.map_add, Finset.sum_add_distrib]
+    · intro r x; simp [(hf _).linear.map_smul, Finset.smul_sum]
+  cont := continuous_finsetSum A (fun i _ => (hf i).cont)
 }
 
 -- @[fun_prop]
@@ -438,11 +441,21 @@ theorem Finset.sum.arg_f.IsContinuousLinearMap_rule
 
 @[fun_prop]
 theorem SciLean.IndexType.sum.arg_f.IsContinuousLinearMap_rule {ι n} [IndexType ι n] [Fold ι]
-  (f : X → ι → Y) (_ : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
+  [ContinuousAdd Y]
+  (f : X → ι → Y) (hf : ∀ i, IsContinuousLinearMap R fun x : X => f x i)
   : IsContinuousLinearMap R fun x => ∑ᴵ i, f x i :=
 {
-  linear := sorry_proof
-  cont := sorry_proof
+  linear := by
+    constructor
+    · intro x y
+      simp only [SciLean.IndexType.sum_eq_finset_sum, ← Finset.sum_add_distrib]
+      exact Finset.sum_congr rfl fun i _ => (hf i).linear.map_add x y
+    · intro c x
+      simp only [SciLean.IndexType.sum_eq_finset_sum, Finset.smul_sum]
+      exact Finset.sum_congr rfl fun i _ => (hf i).linear.map_smul c x
+  cont := by
+    simp only [SciLean.IndexType.sum_eq_finset_sum]
+    exact continuous_finsetSum _ fun i _ => (hf i).cont
 }
 
 -- do we need this one?
@@ -507,7 +520,61 @@ theorem ContinuousLinearMap.mk'.arg_f.IsContinuousLinearMap
   · constructor
     · intro x x'; ext y; apply (hfx y).1 x x'
     · intro k x; ext y; apply (hfx y).2 k x
-  · sorry_proof
+  · -- a jointly continuous bilinear map is bounded, hence `x ↦ f x ·` is continuous
+    obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ x y, ‖f x y‖ ≤ C * ‖x‖ * ‖y‖ := by
+      obtain ⟨δ, hδ, hball⟩ := Metric.continuous_iff.mp hf (0,0) 1 one_pos
+      have h00 : f 0 0 = 0 := (hfx 0).map_zero
+      have key : ∀ x y, ‖x‖ < δ → ‖y‖ < δ → ‖f x y‖ < 1 := by
+        intro x y hx hy
+        have hd : dist ((x,y)) ((0:X),(0:Y)) < δ := by
+          rw [Prod.dist_eq]; simp [dist_eq_norm, hx, hy]
+        simpa only [show ↿f (x,y) = f x y from rfl, show ↿f ((0:X),(0:Y)) = f 0 0 from rfl,
+          h00, dist_eq_norm, sub_zero] using hball _ hd
+      refine ⟨4/δ^2, ?_⟩
+      intro x y
+      rcases eq_or_ne x 0 with rfl | hx
+      · simp [(hfx y).map_zero]
+      rcases eq_or_ne y 0 with rfl | hy
+      · simp [(hfy x).linear.map_zero]
+      have hxn : 0 < ‖x‖ := norm_pos_iff.mpr hx
+      have hyn : 0 < ‖y‖ := norm_pos_iff.mpr hy
+      set a : ℝ := δ/(2*‖x‖) with ha
+      set b : ℝ := δ/(2*‖y‖) with hb
+      have hapos : 0 < a := by positivity
+      have hbpos : 0 < b := by positivity
+      have hax : ‖(a:K) • x‖ < δ := by
+        rw [norm_smul, RCLike.norm_ofReal, abs_of_pos hapos, ha, div_mul_eq_mul_div, mul_comm,
+          div_lt_iff₀ (by positivity)]
+        nlinarith
+      have hby : ‖(b:K) • y‖ < δ := by
+        rw [norm_smul, RCLike.norm_ofReal, abs_of_pos hbpos, hb, div_mul_eq_mul_div, mul_comm,
+          div_lt_iff₀ (by positivity)]
+        nlinarith
+      have hsc : f ((a:K) • x) ((b:K) • y) = ((a*b : ℝ) : K) • f x y := by
+        rw [(hfx _).map_smul, (hfy _).linear.map_smul]
+        push_cast
+        rw [smul_smul]
+      have hlt := key _ _ hax hby
+      rw [hsc, norm_smul, RCLike.norm_ofReal, abs_of_pos (by positivity)] at hlt
+      have hfin : ‖f x y‖ ≤ 1/(a*b) := by
+        rw [le_div_iff₀ (by positivity)]
+        nlinarith [norm_nonneg (f x y)]
+      have heq : 1/(a*b) = 4/δ^2 * ‖x‖ * ‖y‖ := by
+        rw [ha, hb]; field_simp; ring
+      linarith [hfin, heq.le, heq.ge]
+    let L : X →ₗ[K] (Y →L[K] Z) :=
+      { toFun := fun x => ContinuousLinearMap.mk' K (f x ·) (hfy x)
+        map_add' := by intro x x'; ext y; exact (hfx y).1 x x'
+        map_smul' := by intro k x; ext y; exact (hfx y).2 k x }
+    have hb : ∀ x, ‖L x‖ ≤ (max C 0) * ‖x‖ := by
+      intro x
+      refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) (fun y => ?_)
+      calc ‖f x y‖ ≤ C * ‖x‖ * ‖y‖ := hC x y
+        _ ≤ (max C 0 * ‖x‖) * ‖y‖ := by
+            have : C * ‖x‖ ≤ max C 0 * ‖x‖ :=
+              mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg x)
+            exact mul_le_mul_of_nonneg_right this (norm_nonneg y)
+    exact (L.mkContinuous _ hb).continuous
 
 @[fun_prop]
 theorem SciLean.IsContinuousLinearMap.differentiable (f : X → Y) (hf : IsContinuousLinearMap K f) :

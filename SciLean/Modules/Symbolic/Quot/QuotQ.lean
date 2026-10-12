@@ -1,6 +1,7 @@
 module
 
 public import SciLean.Modules.Symbolic.Quot.Basic
+public import Aesop
 
 @[expose] public section
 
@@ -77,22 +78,31 @@ namespace SciLean.Quot'
 
     instance decLt (l l' : Level) : Decidable (l < l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n < n' then isTrue sorry_proof else isFalse sorry_proof
-    | redLvl n, normLvl => isTrue sorry_proof
-    | normLvl, _ => isFalse sorry_proof
+    | redLvl n, redLvl n' =>
+      if h : n < n' then isTrue (.redLt n n' h) else isFalse (by intro h'; cases h'; contradiction)
+    | redLvl n, normLvl => isTrue (.normLt n)
+    | normLvl, _ => isFalse (by intro h; cases h)
 
     instance decLe (l l' : Level) : Decidable (l ≤ l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n ≤ n' then isTrue sorry_proof else isFalse sorry_proof
-    | normLvl, normLvl => isFalse sorry_proof
-    | redLvl n, normLvl => isTrue sorry_proof
-    | normLvl, redLvl n' => isFalse sorry_proof
+    | redLvl n, redLvl n' =>
+      if h : n ≤ n' then
+        isTrue (by
+          rcases Nat.lt_or_eq_of_le h with h | h
+          · exact Or.inl (.redLt n n' h)
+          · exact Or.inr (h ▸ rfl))
+      else isFalse (by rintro (h' | h') <;> cases h' <;> omega)
+    | normLvl, normLvl => isTrue (Or.inr rfl)
+    | redLvl n, normLvl => isTrue (Or.inl (.normLt n))
+    | normLvl, redLvl n' => isFalse (by rintro (h | h) <;> cases h)
 
     instance decEq (l l' : Level) : Decidable (l = l') :=
     match l, l' with
-    | redLvl n, redLvl n' => if n = n' then isTrue sorry_proof else isFalse sorry_proof
-    | normLvl, normLvl => isTrue sorry_proof
-    | _, _ => isFalse sorry_proof
+    | redLvl n, redLvl n' =>
+      if h : n = n' then isTrue (h ▸ rfl) else isFalse (by intro h'; cases h'; exact h rfl)
+    | normLvl, normLvl => isTrue rfl
+    | redLvl _, normLvl => isFalse (by intro h; cases h)
+    | normLvl, redLvl _ => isFalse (by intro h; cases h)
 
     instance : HAdd Level Nat Level :=
     ⟨λ l n' =>
@@ -260,31 +270,57 @@ namespace Quot'
   def repr (x : Quot' S) : α := x.repr'.repr
 
   def lift (f : α → β) (hf : IsQHom S R f) : Quot' S → Quot' R :=
-  Quot.lift (λ x => ⟦⟨f x.repr, rawLvl, by intro x; rw[QForm.redform_zero]; simp; done⟩⟧) sorry_proof
+  Quot.lift (λ x => ⟦⟨f x.repr, rawLvl, by intro x; rw[QForm.redform_zero]; simp; done⟩⟧)
+    (fun _ _ h => Quot.sound (hf.is_hom _ _ h))
 
   def lift' (lvl : Level) (f : α → α) (hf : IsQHom' lvl S f) : Quot' S → Quot' S :=
-  Quot.lift (λ x => ⟦⟨f x.repr, lvl, sorry_proof⟩⟧) sorry_proof
+  Quot.lift (λ x => ⟦⟨f x.repr, lvl, sorry_proof⟩⟧) (fun _ _ h => Quot.sound (hf.toQHom.is_hom _ _ h))
 
   abbrev nlift (f : α → α) (hf : IsQHom' normLvl S f) : Quot' S → Quot' S :=
     lift' normLvl f hf
 
   def lift₂ (f : α → β → γ) (hf : IsQHom₂ S R T f) : Quot' S → Quot' R → Quot' T :=
   Quot.lift (λ x =>
-    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, sorry_proof⟩⟧
+    Quot.lift (λ y => ⟦⟨f x.repr y.repr, rawLvl, by intro x; rw[QForm.redform_zero]; simp; done⟩⟧
       ) sorry_proof
     ) sorry_proof
 
+  theorem mk_reduce {lvl} [QReduce S lvl] (x : QRepr S) :
+      (⟦x.reduce lvl⟧ : Quot' S) = ⟦x⟧ := by
+    unfold QRepr.reduce; split
+    · apply Eq.symm; apply Quot.sound; exact QReduce.eq_reduce (S:=S) (lvl:=lvl) x.repr
+    · rfl
+
+  theorem lvl_normalize [QNormalize S] (x : QRepr S) : (x.reduce normLvl).lvl = normLvl := by
+    unfold QRepr.reduce; split
+    · rfl
+    · rename_i h; rcases x with ⟨r, l, hx⟩; cases l
+      · exact absurd (Level.lt.normLt _) h
+      · rfl
+
   instance {lvl} [QReduce S lvl] : Reduce (Quot' S) lvl :=
   {
-    reduce := Quot.lift (λ x : QRepr S => ⟦x.reduce lvl⟧) sorry_proof
-    id_reduce := sorry_proof
+    reduce := Quot.lift (λ x : QRepr S => ⟦x.reduce lvl⟧)
+      (fun a b h => (mk_reduce a).trans
+        ((Quot.sound (r := fun x y : QRepr S => S x.repr y.repr) h).trans (mk_reduce b).symm))
+    id_reduce := fun x => by induction x using Quot.ind with | mk x => exact mk_reduce x
   }
 
   instance [QNormalize S] [DecidableEq α] : DecidableEq (Quot' S) :=
     λ a b =>
-      if a.nrepr = b.nrepr
-      then (isTrue sorry_proof)
-      else (isFalse sorry_proof)
+      if h : a.nrepr = b.nrepr
+      then (isTrue (by
+        induction a using Quot.ind with | mk x => ?_
+        induction b using Quot.ind with | mk y => ?_
+        rw [← mk_reduce (lvl := normLvl) x, ← mk_reduce (lvl := normLvl) y]
+        have hx := lvl_normalize x
+        have hy := lvl_normalize y
+        change (x.reduce normLvl).repr = (y.reduce normLvl).repr at h
+        generalize x.reduce normLvl = x' at *
+        generalize y.reduce normLvl = y' at *
+        rcases x' with ⟨_, _, _⟩; rcases y' with ⟨_, _, _⟩
+        cases h; cases hx; cases hy; rfl))
+      else (isFalse (fun e => h (e ▸ rfl)))
 
   variable (x : Quot' S) [QNormalize S]
 

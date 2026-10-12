@@ -41,9 +41,9 @@ variable
 
 instance : TensorProductSelf R R R where
   identityMatrix := 1
-  identityMatrix_spec := sorry_proof
+  identityMatrix_spec := by intro x; simp [TensorProductType.matVecMulAdd]
   addIdentityMatrix r A := r + A
-  addIdentityMatrix_spec := sorry_proof
+  addIdentityMatrix_spec := by simp
 
 
 @[simp, simp_core]
@@ -53,14 +53,16 @@ theorem identityMatrix_scalar : identityMatrix R R = (1 :R) := by rfl
 theorem addIdentityMatrix_scalar (r A : R) : addIdentityMatrix R r A = r + A := by rfl
 
 theorem addIdentityMatrix_def (a : R) (A : XX) :
-  ts.addIdentityMatrix a A = A + a•ts.identityMatrix := sorry_proof
+  ts.addIdentityMatrix a A = A + a•ts.identityMatrix := by
+  rw [ts.addIdentityMatrix_spec]; abel
 
 
 @[simp, simp_core]
 theorem matVecMulAdd_identityMatrix (a b : R) (x y : X) :
     matVecMulAdd a ts.identityMatrix x b y
     =
-    a•x+b•y := by sorry_proof
+    a•x+b•y := by
+  rw [matVecMulAdd_eq_smul_add, ts.identityMatrix_spec]
 
 @[simp, simp_core]
 theorem matVecMulAdd_addIdentityMatrix (a b c : R) (A : XX) (x y : X) :

@@ -79,8 +79,8 @@ def RandWithTrace.bind (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
     let ty ← (f x).traceRand
     pure (tx,ty)
   map  := fun (wx,wy) => (f (x.map wx)).map wy
-  hmap := by simp; sorry_proof
-  htype := sorry_proof
+  hmap := by simp; aesop
+  htype := by rw [x.htype, (f (x.rand.rand.run' mkStdGen)).htype]; rfl
 
 def sample {X} (x : Rand X) (tag : Name) :
     RandWithTrace X (.single tag X) X where
@@ -170,8 +170,8 @@ def forLoop (f : Nat → X → RandWithTrace X t T) (init : X) (n : Nat) :
     for w in ws.1, i in [0:n] do
       x := (f i x).map w
     return x
-  hmap := sorry_proof
-  htype := by sorry_proof
+  hmap := by ext x : 2; rfl
+  htype := by rw [(f 0 init).htype]; rfl
 
 @[simp]
 theorem trace_bind_pdf (x : RandWithTrace X t T) (f : X → RandWithTrace Y s S)
@@ -197,7 +197,7 @@ theorem trace_return_pdf (x : X) [MeasureSpace X] :
 theorem trace_sample_pdf (x : Rand X) (n : Name) [MeasureSpace X] :
   (sample x n).traceRand.pdf R volume
   =
-  fun x' => x.pdf R volume x' := sorry_proof
+  fun x' => x.pdf R volume x' := by rfl
 
 
 

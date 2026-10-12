@@ -147,11 +147,50 @@ theorem swap_bind (f : X → Y → Z) (x : Rand X) (y : Rand Y) :
     (do let x' ← x; let y' ← y; pure (f x' y'))
     =
     (do let y' ← y; let x' ← x; pure (f x' y')) := by
-  sorry_proof
+  ext x_1 : 2
+  rfl
 
 
 @[simp, simp_core]
-theorem pure_ℙ (x : X) : (pure x : Rand X).ℙ = Measure.dirac x := sorry_proof
+theorem pure_ℙ (x : X) : (pure x : Rand X).ℙ = Measure.dirac x := by
+  have hspec : (pure x : Rand X).spec.out = fun φ : X → ℝ => φ x := by
+    simp [Pure.pure]
+  have hm : ((pure x : Rand X).spec.out).IsMeasure := by
+    refine ⟨Measure.dirac x, ?_⟩
+    intro f
+    rw [hspec]
+    simp [integral_dirac]
+  rw [Rand.ℙ]
+  split
+  case isFalse h => exact absurd hm h
+  case isTrue h =>
+    -- `ℙ` picks *some* measure with the given integrals, we show it has to be `dirac x`
+    set μ := Classical.choose h with hμdef
+    have hμ : ∀ f : X → ℝ, (pure x : Rand X).spec.out f = ∫ y, f y ∂μ :=
+      Classical.choose_spec h
+    have h1 : (1:ℝ) = ∫ _y, (1:ℝ) ∂μ := by
+      have := hμ (fun _ => (1:ℝ)); rw [hspec] at this; simpa using this
+    have hfin : IsFiniteMeasure μ := by
+      by_contra hc
+      have hnint : ¬ Integrable (fun _ : X => (1:ℝ)) μ := by
+        intro hint
+        rcases integrable_const_iff.mp hint with h0 | hfin'
+        · exact one_ne_zero h0
+        · exact hc hfin'
+      rw [integral_undef hnint] at h1
+      exact one_ne_zero h1
+    ext A hA
+    have hind := hμ (A.indicator (fun _ => (1:ℝ)))
+    rw [hspec, integral_indicator_const _ hA] at hind
+    simp only [smul_eq_mul, mul_one] at hind
+    rw [Measure.dirac_apply' _ hA]
+    by_cases hx : x ∈ A
+    · rw [Set.indicator_of_mem hx] at hind
+      simp only [Set.indicator_of_mem hx, Pi.one_apply]
+      exact (ENNReal.toReal_eq_one_iff _).mp hind.symm
+    · rw [Set.indicator_of_notMem hx] at hind
+      simp only [Set.indicator_of_notMem hx]
+      exact ((ENNReal.toReal_eq_zero_iff _).mp hind.symm).resolve_right (measure_ne_top μ A)
 
 
 ----------------------------------------------------------------------------------------------------
@@ -198,7 +237,7 @@ theorem map_ℙ  (r : Rand X) (f : X → Y) :
 
 @[simp, simp_core]
 theorem map_ℙ'  (r : Rand X) (f : X → Y) :
-  (f <$> r).ℙ = r.ℙ.map f := sorry_proof
+  (f <$> r).ℙ = r.ℙ.map f := map_ℙ r f
 
 
 ----------------------------------------------------------------------------------------------------
@@ -256,9 +295,9 @@ theorem reparameterize [Nonempty X] (f : X → Y) (hf : f.Injective) {r : Rand X
     =
     let invf := f.invFun
     (r.map f).E (fun y => φ (invf y)) := by
-  simp [E]
-  rw[weakIntegral_map sorry_proof sorry_proof]
-  simp [Function.invFun_comp' hf]
+  show _ = (f <$> r).E _
+  rw [map_E]
+  simp [Function.comp_def, Function.leftInverse_invFun hf _]
 
 section Mean
 
@@ -270,8 +309,8 @@ def mean (r : Rand X) : X := r.E id
 @[rand_pull_E]
 theorem expectedValue_as_mean (x : Rand X) (φ : X → Y) :
     x.E φ = (x.map φ).mean := by
-  simp [mean,E]
-  rw[weakIntegral_map sorry_proof sorry_proof]
+  show _ = (φ <$> x).E id
+  rw [map_E]
   rfl
 
 @[simp,simp_core]
@@ -287,14 +326,18 @@ theorem map_mean (f : X → Y) {r : Rand X} :
     =
     r.E f := by simp[mean]
 
-theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean := by
-  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
-theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
-  simp[HAdd.hAdd,mean,E,pure,bind]; sorry_proof
-
 set_option linter.unusedVariables false in
 theorem mean_affine (x : Rand X) (f : X → Y) (hf : IsAffineMap ℝ f) :
    f x.mean = (do let x' ← x; return (f x')).mean := sorry_proof
+
+theorem mean_add  (x : Rand X) (x' : X) : x.mean + x' = (x  + x').mean :=
+  mean_affine x (fun x'' => x'' + x') (by fun_prop)
+theorem mean_add' (x : Rand X) (x' : X) : x' + x.mean = (x' +  x).mean := by
+  have h : (x' + x) = (x + x') := by
+    show (do let x'' ← x; pure (x' + x'')) = (do let x'' ← x; pure (x'' + x'))
+    simp only [add_comm]
+  rw [h, add_comm]
+  exact mean_add x x'
 
 end Mean
 

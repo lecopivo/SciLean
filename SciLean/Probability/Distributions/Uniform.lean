@@ -114,21 +114,21 @@ instance (a b : R) : UniformRand (Ioo a b) where
     let x ← uniformI R
     return a + x * (b - a)
   is_uniform := by sorry_proof
-  is_prob := by sorry_proof
+  is_prob := UniformRand.is_prob (A := Icc a b)
 
 instance (a b : R) : UniformRand (Ioc a b) where
   uniform := do
     let x ← uniformI R
     return a + x * (b - a)
   is_uniform := by sorry_proof
-  is_prob := by sorry_proof
+  is_prob := UniformRand.is_prob (A := Icc a b)
 
 instance (a b : R) : UniformRand (Set.Ico a b) where
   uniform := do
     let x ← uniformI R
     return a + x * (b - a)
   is_uniform := by sorry_proof
-  is_prob := by sorry_proof
+  is_prob := UniformRand.is_prob (A := Icc a b)
 
 set_option linter.unusedVariables false in
 @[simp,  simp_core]
@@ -137,18 +137,22 @@ theorem Set.Ioo_volume (a b : R) (h : a ≤ b) :
 
 set_option linter.unusedVariables false in
 @[simp,  simp_core]
-theorem Set.Ioc_volume (a b : R) (h : a ≤ b) :
-  (volume (Set.Ioc a b)) = Scalar.toENNReal (b - a) := sorry_proof
-
-set_option linter.unusedVariables false in
-@[simp,  simp_core]
-theorem Set.Ico_volume (a b : R) (h : a ≤ b) :
-  (volume (Set.Ico a b)) = Scalar.toENNReal (b - a) := sorry_proof
-
-set_option linter.unusedVariables false in
-@[simp,  simp_core]
 theorem Set.Icc_volume (a b : R) (h : a ≤ b) :
   (volume (Set.Icc a b)) = Scalar.toENNReal (b - a) := sorry_proof
+
+-- `Ioo a b ⊆ Ioc a b ⊆ Icc a b` and the outer two have the same volume
+@[simp,  simp_core]
+theorem Set.Ioc_volume (a b : R) (h : a ≤ b) :
+    (volume (Set.Ioc a b)) = Scalar.toENNReal (b - a) :=
+  le_antisymm (Set.Icc_volume a b h ▸ measure_mono Ioc_subset_Icc_self)
+    (Set.Ioo_volume a b h ▸ measure_mono Ioo_subset_Ioc_self)
+
+-- `Ioo a b ⊆ Ico a b ⊆ Icc a b` and the outer two have the same volume
+@[simp,  simp_core]
+theorem Set.Ico_volume (a b : R) (h : a ≤ b) :
+    (volume (Set.Ico a b)) = Scalar.toENNReal (b - a) :=
+  le_antisymm (Set.Icc_volume a b h ▸ measure_mono Ico_subset_Icc_self)
+    (Set.Ioo_volume a b h ▸ measure_mono Ioo_subset_Ico_self)
 
 
 

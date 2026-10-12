@@ -83,13 +83,17 @@ theorem HAdd.hAdd.arg_a0.preimage_rule_Ioo (x' a b : R) :
 theorem HAdd.hAdd.arg_a1.preimage_rule_Ioo (x' a b : R)  :
     preimage (fun x : R => x' + x) (Ioo a b)
     =
-    Ioo (a - x') (b - x') := by ext; simp; sorry_proof -- over ℝ `simp` finishes the proof
+    Ioo (a - x') (b - x') := by
+  have h : (fun x : R => x' + x) = (fun x : R => x + x') := by funext x; rw [add_comm]
+  rw [h, HAdd.hAdd.arg_a0.preimage_rule_Ioo]
 
 @[fun_trans]
 theorem HSub.hSub.arg_a0.preimage_rule_Ioo (x' a b : R)  :
     preimage (fun x : R => x - x') (Ioo a b)
     =
-    Ioo (a + x') (b + x') := by ext; simp; sorry_proof -- over ℝ `simp` finishes the proof
+    Ioo (a + x') (b + x') := by
+  have h : (fun x : R => x - x') = (fun x : R => x + (-x')) := by funext x; rw [sub_eq_add_neg]
+  rw [h, HAdd.hAdd.arg_a0.preimage_rule_Ioo, sub_neg_eq_add, sub_neg_eq_add]
 
 @[fun_trans]
 theorem HSub.hSub.arg_a1.preimage_rule_Ioo (x' a b : R)  :
@@ -101,4 +105,6 @@ theorem HSub.hSub.arg_a1.preimage_rule_Ioo (x' a b : R)  :
 theorem Neg.neg.arg_a1.preimage_rule_Ioo (a b : R)  :
     preimage (fun x : R => - x) (Ioo a b)
     =
-    Ioo (-b) (-a) := by ext; simp; sorry_proof -- over ℝ `simp` finishes the proof
+    Ioo (-b) (-a) := by
+  have h : (fun x : R => -x) = (fun x : R => 0 - x) := by funext x; rw [zero_sub]
+  rw [h, HSub.hSub.arg_a1.preimage_rule_Ioo, zero_sub, zero_sub]

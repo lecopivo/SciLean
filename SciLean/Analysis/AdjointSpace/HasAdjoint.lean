@@ -48,21 +48,27 @@ theorem HasAdjointUpdate.adjoint' {f : X → Y} {f' : Y → X → X} (h : HasAdj
   rw[h.adjoint y.2]
   ring
 
-set_option linter.unusedVariables false in
 theorem HasAdjointUpdate.apply_eq_zero_add {f : X → Y} {f' : Y → X → X}
     (h : HasAdjointUpdate K f f') (x y) :
     f' y x = f' y 0 + x := by
   apply AdjointSpace.ext_inner_left K
   intro x'
-  sorry_proof
+  have h1 := h.adjoint x x' y
+  have h2 := h.adjoint 0 x' y
+  simp at h2
+  rw [AdjointSpace.inner_add_right, ← h2, h1]
+  ring
 
-set_option linter.unusedVariables false in
 theorem HasAdjointUpdate.smul_left {f : X → Y} {f' : Y → X → X}
     (h : HasAdjointUpdate K f f') (x y) (k : K) :
     f' (k•y) x = k•f' y x - k•x + x  := by
   apply AdjointSpace.ext_inner_left K
   intro x'
-  sorry_proof
+  have h1 := h.adjoint x x' (k•y)
+  have h2 := h.adjoint x x' y
+  simp only [AdjointSpace.inner_smul_right, AdjointSpace.inner_sub_right,
+             AdjointSpace.inner_add_right] at h1 h2 ⊢
+  linear_combination (-1 : K) * h1 + k * h2
 
 theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y → X → X}
     (adjoint : HasAdjoint K f f') (simp : ∀ y x, f'' y x = x + f' y) :
@@ -71,13 +77,12 @@ theorem hasAdjointUpdate_from_hasAdjoint {f : X → Y} {f' : Y → X} {f'' : Y �
   case adjoint => intro x' x y; simp[adjoint.adjoint,simp,AdjointSpace.inner_add_right]
   case is_linear => have := adjoint.is_linear; fun_prop
 
-set_option linter.unusedVariables false in
 theorem HasAdjoint.isContinuousLinearMap {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :
-    IsContinuousLinearMap K f := sorry_proof
+    IsContinuousLinearMap K f := hf.is_linear
 
-set_option linter.unusedVariables false in
 theorem HasAdjoint.isContinuousLinearMap' {f : X → Y} {f' : Y → X} (hf : HasAdjoint K f f') :
-    IsContinuousLinearMap K f' := sorry_proof
+    IsContinuousLinearMap K f' :=
+  isContinuousLinearMap_of_inner_adjoint hf.is_linear hf.adjoint
 
 theorem HasAdjointUpdate.hasAdjoint {f : X → Y} {f' : Y → X → X}
     (h : HasAdjointUpdate K f f') :
@@ -87,11 +92,16 @@ theorem HasAdjointUpdate.hasAdjoint {f : X → Y} {f' : Y → X → X}
   · apply h.is_linear
 
 
-set_option linter.unusedVariables false in
 -- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
 theorem adjoint_from_hasAdjoint
   {f : X → Y} {f'} (hf : HasAdjoint K f f') :
-  adjoint K f = f' := sorry_proof
+  adjoint K f = f' := by
+  have h : ∃ g : Y → X, ∀ x y, ⟪f x, y⟫[K] = ⟪x, g y⟫[K] := ⟨f', hf.adjoint⟩
+  funext y
+  simp only [adjoint, h, ↓reduceDIte]
+  apply AdjointSpace.ext_inner_left K
+  intro x
+  rw [← Classical.choose_spec h x y, hf.adjoint]
 
 simproc_decl adjoint_simproc (adjoint _ _) :=
   mkDataSynthSimproc `adjoint_simproc ``adjoint_from_hasAdjoint
@@ -100,11 +110,12 @@ variable (K) in
 noncomputable
 def adjointUpdate (f : X → Y) (y : Y) (x : X) : X := x + adjoint K f y
 
-set_option linter.unusedVariables false in
 -- @[to_data_synth_simproc] -- this attribute should automatically generate the following simproc
 theorem adjointUpdate_from_hasAdjointUpdate
   {f : X → Y} {f'} (hf : HasAdjointUpdate K f f') :
-  adjointUpdate K f = f' := sorry_proof
+  adjointUpdate K f = f' := by
+  funext y x
+  rw [adjointUpdate, adjoint_from_hasAdjoint hf.hasAdjoint, hf.apply_eq_zero_add x y, add_comm]
 
 simproc_decl adjointUpdate_simproc (adjointUpdate _ _) :=
   mkDataSynthSimproc `adjointUpdate_simproc ``adjointUpdate_from_hasAdjointUpdate
@@ -165,13 +176,28 @@ theorem pi_rule {I : Type*} {n} [IndexType I n] [Fold.{_,u'} I] [Fold.{_,u} I]
   constructor
   case adjoint =>
     intro x y
-    have h := fun i => (hf i).adjoint 0
-    simp[Inner.inner, h]
-    sorry_proof
+    -- the accumulating adjoints only add to the accumulator, so the fold is just the sum
+    have hfold :
+        (IndexType.fold .full (init:=(0:X)) fun (i : I) (x : X) => f' i (y i) x)
+        =
+        IndexType.sum (fun i => f' i (y i) 0) := by
+      rw [show (fun (i : I) (x : X) => f' i (y i) x)
+             = (fun (i : I) (x : X) => x + f' i (y i) 0) from
+            by funext i x; rw [(hf i).apply_eq_zero_add x (y i), add_comm]]
+      rfl
+    show (⟪fun i => f x i, y⟫[K])
+         = ⟪x, IndexType.fold .full (init:=(0:X)) fun (i : I) (x : X) => f' i (y i) x⟫[K]
+    rw [hfold]
+    show (∑ᴵ i, ⟪f x i, y i⟫[K]) = ⟪x, ∑ᴵ i, f' i (y i) 0⟫[K]
+    rw [IndexType.sum_eq_finset_sum, IndexType.sum_eq_finset_sum, AdjointSpace.inner_sum]
+    exact Finset.sum_congr rfl fun i _ => (hf i).hasAdjoint.adjoint x (y i)
   case is_linear => apply IsContinuousLinearMap.pi_rule _ (fun i => (hf i).is_linear)
 
 
 
+-- note: as stated this rule cannot be proved: nothing relates `f` with `g` and `p₁` and nothing
+-- says that `fun x₁ => q x₁ 0` is the adjoint of `p₁`; the missing hypotheses are `f = g ∘ p₁`
+-- together with the commented out `Decomposition p₁ p₂ q` above.
 set_option linter.unusedVariables false in
 theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
@@ -256,12 +282,26 @@ theorem pi_rule {I : Type*} {n} [IndexType I n] [Fold.{_,u'} I] [Fold.{_,u} I]
           x) := by
   constructor
   case adjoint =>
-    intro x y
-    have h := fun i => (hf i).adjoint
-    simp[Inner.inner]
-    sorry_proof
+    intro x' x y
+    -- the accumulating adjoints only add to the accumulator, so the fold is `x'` plus the sum
+    have hfold :
+        (IndexType.fold .full (init:=x') fun (i : I) (x : X) => f' i (y i) x)
+        =
+        x' + Finset.univ.sum (fun i => f' i (y i) 0) := by
+      rw [show (fun (i : I) (x : X) => f' i (y i) x)
+             = (fun (i : I) (x : X) => x + f' i (y i) 0) from
+            by funext i x; rw [(hf i).apply_eq_zero_add x (y i), add_comm]]
+      exact IndexType.fold_add_eq_add_sum x' _
+    show (⟪fun i => f x i, y⟫[K])
+         = ⟪x, IndexType.fold .full (init:=x') fun (i : I) (x : X) => f' i (y i) x⟫[K] - ⟪x, x'⟫[K]
+    rw [hfold, AdjointSpace.inner_add_right, add_sub_cancel_left]
+    show (∑ᴵ i, ⟪f x i, y i⟫[K]) = _
+    rw [IndexType.sum_eq_finset_sum, AdjointSpace.inner_sum]
+    exact Finset.sum_congr rfl fun i _ => (hf i).hasAdjoint.adjoint x (y i)
   case is_linear => apply IsContinuousLinearMap.pi_rule _ (fun i => (hf i).is_linear)
 
+-- note: as for `HasAdjoint.proj_rule`, this rule is missing the hypotheses relating `f` with
+-- `g ∘ p₁` and saying that `p₁`, `p₂`, `q` decompose `X`; without them it is not provable.
 set_option linter.unusedVariables false in
 theorem proj_rule
     {X₁ : Type*} [NormedAddCommGroup X₁] [AdjointSpace K X₁]
@@ -442,7 +482,7 @@ theorem HSmul.hSMul.arg_a0.HasAdjoint_simp_rule (x : X) :
       (fun y => ⟪x,y⟫[K]) := by
   constructor
   case adjoint => intro k y; simp [AdjointSpace.inner_smul_left,mul_comm]
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 @[data_synth]
 theorem HSmul.hSMul.arg_a0.HasAdjointUpdate_simp_rule (x : X) :
@@ -451,7 +491,7 @@ theorem HSmul.hSMul.arg_a0.HasAdjointUpdate_simp_rule (x : X) :
       (fun y k => k + ⟪x,y⟫[K]) := by
   constructor
   case adjoint => intro k y; simp [AdjointSpace.inner_smul_left]; ring_nf; simp
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -461,7 +501,7 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule (k : K) :
       (fun x => conj k • x) := by
   constructor
   case adjoint => intro x y; simp [AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right]
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -473,7 +513,7 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule (k : K) :
   case adjoint =>
     intro x y;
     simp [AdjointSpace.inner_smul_left,AdjointSpace.inner_smul_right,AdjointSpace.inner_add_right]
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -541,7 +581,13 @@ theorem HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_complex_over_real
       (fun x => (conj k) • x) := by
   constructor
   case adjoint => intro y z; sorry_proof
-  case is_linear => sorry_proof
+  case is_linear =>
+    have h : IsContinuousLinearMap K (fun x : X => k • x) := by fun_prop
+    constructor
+    · constructor
+      · intro x y; exact h.1.map_add x y
+      · intro r x; rw [smul_comm]
+    · exact h.2
 
 -- todo: finish the proof as I'm not sure if these assumptions are sufficient!!! (but very plausible)
 open ComplexConjugate in
@@ -553,9 +599,9 @@ theorem HSMul.hSMul.arg_a1.HasAdjointUpdate_simple_rule_complex_over_real
     HasAdjointUpdate R
       (fun x : X => k • x)
       (fun x x'=> x' + (conj k) • x) := by
-  constructor
-  case adjoint => intro y z; sorry_proof
-  case is_linear => sorry_proof
+  apply hasAdjointUpdate_from_hasAdjoint
+  case adjoint => exact HSMul.hSMul.arg_a1.HasAdjoint_simple_rule_complex_over_real k
+  case simp => intros; rfl
 
 open ComplexConjugate in
 @[data_synth]
@@ -565,7 +611,7 @@ theorem HMul.hMul.arg_a0.HasAdjoint_simp_rule (y : K) :
       (fun z => z * conj y) := by
   constructor
   case adjoint => intro k y; simp; ac_rfl
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -575,7 +621,7 @@ theorem HMul.hMul.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
       (fun z x' => x' + z * conj y) := by
   constructor
   case adjoint => intro k y; simp; ring_nf; simp
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -585,7 +631,7 @@ theorem HMul.hMul.arg_a1.HasAdjoint_simp_rule (x : K) :
       (fun z => conj x * z) := by
   constructor
   case adjoint => intro k y; simp; ac_rfl
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 set_option linter.unusedVariables false in
 open ComplexConjugate in
@@ -598,8 +644,13 @@ theorem HMul.hMul.arg_a1.HasAdjoint_comp_rule
         let x := f' z
         conj y • x) := by
   constructor
-  case adjoint => intro k y; sorry_proof
-  case is_linear => sorry_proof
+  case adjoint =>
+    intro x z
+    rw [show ⟪x, conj y • f' z⟫[K] = conj y * ⟪x, f' z⟫[K] from AdjointSpace.inner_smul_right .. ,
+        ← hf.adjoint x z]
+    simp
+    ring
+  case is_linear => have := hf.is_linear; fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -609,7 +660,7 @@ theorem HMul.hMul.arg_a1.HasAdjointUpdate_simp_rule (x : K) :
       (fun z y' => y' + conj x * z) := by
   constructor
   case adjoint => intro k y; simp; ring_nf; simp
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 set_option linter.unusedVariables false in
 open ComplexConjugate in
@@ -622,8 +673,13 @@ theorem HMul.hMul.arg_a1.HasAdjointUpdate_comp_rule
         let x := f' (conj y • z) y'
         x) := by
   constructor
-  case adjoint => intro k y; dsimp; sorry_proof
-  case is_linear => sorry_proof
+  case adjoint =>
+    intro x' x z
+    dsimp
+    rw [← hf.adjoint x' x (conj y * z)]
+    simp
+    ring
+  case is_linear => have := hf.is_linear; fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -633,7 +689,7 @@ theorem HDiv.hDiv.arg_a0.HasAdjoint_simp_rule (y : K) :
       (fun z => z / conj y) := by
   constructor
   case adjoint => intro k y; simp; ring
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 open ComplexConjugate in
 @[data_synth]
@@ -643,7 +699,7 @@ theorem HDiv.hDiv.arg_a0.HasAdjointUpdate_simp_rule (y : K) :
       (fun z x' => x' + z / conj y) := by
   constructor
   case adjoint => intro k y; simp; ring_nf; simp
-  case is_linear => sorry_proof
+  case is_linear => fun_prop
 
 @[data_synth]
 theorem SciLean.IndexType.sum.arg_f.HasAdjoint_simp_rule
@@ -652,7 +708,11 @@ theorem SciLean.IndexType.sum.arg_f.HasAdjoint_simp_rule
       (fun f : I → X => ∑ᴵ i, f i)
       (fun k _ => k) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro f y
+    show ⟪∑ᴵ i, f i, y⟫[K] = ∑ᴵ i, ⟪f i, y⟫[K]
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum,
+      AdjointSpace.sum_inner]
   case is_linear => fun_prop
 
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
@@ -671,7 +731,13 @@ theorem SciLean.IndexType.sum.arg_f.HasAdjointUpdate_simp_rule
       (fun f : I → X => ∑ᴵ i, f i)
       (fun k f' i => f' i + k) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro x' f y
+    show ⟪∑ᴵ i, f i, y⟫[K] = (∑ᴵ i, ⟪f i, x' i + y⟫[K]) - ∑ᴵ i, ⟪f i, x' i⟫[K]
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum,
+      SciLean.IndexType.sum_eq_finset_sum, ← Finset.sum_sub_distrib, AdjointSpace.sum_inner]
+    exact Finset.sum_congr rfl fun i _ => by
+      rw [AdjointSpace.inner_add_right]; ring
   case is_linear => fun_prop
 
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
@@ -691,7 +757,17 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule
       (fun f : I → X => A.sum (fun i => f i))
       (fun k i => (A : Set I).indicator (fun _ => k) i) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro f y
+    show ⟪A.sum (fun i => f i), y⟫[K]
+         = ∑ᴵ i, ⟪f i, (A : Set I).indicator (fun _ => y) i⟫[K]
+    classical
+    have h : ∀ i : I, ⟪f i, (A : Set I).indicator (fun _ => y) i⟫[K]
+             = if i ∈ A then ⟪f i, y⟫[K] else 0 := by
+      intro i; by_cases hi : i ∈ A <;> simp [hi]
+    rw [SciLean.IndexType.sum_eq_finset_sum]
+    simp only [h]
+    rw [Finset.sum_ite_mem, Finset.univ_inter, AdjointSpace.sum_inner]
   case is_linear => fun_prop
 
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
@@ -704,7 +780,17 @@ theorem Finset.sum.arg_f.HasAdjoint_simp_rule'
       (fun f : I → X => A.sum f)
       (fun k i => (A : Set I).indicator (fun _ => k) i) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro f y
+    show ⟪A.sum f, y⟫[K]
+         = ∑ᴵ i, ⟪f i, (A : Set I).indicator (fun _ => y) i⟫[K]
+    classical
+    have h : ∀ i : I, ⟪f i, (A : Set I).indicator (fun _ => y) i⟫[K]
+             = if i ∈ A then ⟪f i, y⟫[K] else 0 := by
+      intro i; by_cases hi : i ∈ A <;> simp [hi]
+    rw [SciLean.IndexType.sum_eq_finset_sum]
+    simp only [h]
+    rw [Finset.sum_ite_mem, Finset.univ_inter, AdjointSpace.sum_inner]
   case is_linear => fun_prop
 
 @[data_synth]
@@ -715,7 +801,21 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule
       (fun f : I → X => A.sum (fun i => f i))
       (fun k f i => f i + (A : Set I).indicator (fun _ => k) i) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro x' f y
+    show ⟪A.sum (fun i => f i), y⟫[K]
+         = (∑ᴵ i, ⟪f i, x' i + (A : Set I).indicator (fun _ => y) i⟫[K])
+           - ∑ᴵ i, ⟪f i, x' i⟫[K]
+    classical
+    have h : ∀ i : I, ⟪f i, x' i + (A : Set I).indicator (fun _ => y) i⟫[K] - ⟪f i, x' i⟫[K]
+             = if i ∈ A then ⟪f i, y⟫[K] else 0 := by
+      intro i
+      rw [AdjointSpace.inner_add_right]
+      by_cases hi : i ∈ A <;> simp [hi]
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum,
+      ← Finset.sum_sub_distrib]
+    simp only [h]
+    rw [Finset.sum_ite_mem, Finset.univ_inter, AdjointSpace.sum_inner]
   case is_linear => fun_prop
 
 -- we have to formulate it this way too because some issue with RefinedDiscrTree
@@ -728,7 +828,21 @@ theorem Finset.sum.arg_f.HasAdjointUpdate_simp_rule'
       (fun f : I → X => A.sum f)
       (fun k f i => f i + (A : Set I).indicator (fun _ => k) i) := by
   constructor
-  case adjoint => intro f y; simp[Inner.inner]; sorry_proof -- missing API
+  case adjoint =>
+    intro x' f y
+    show ⟪A.sum f, y⟫[K]
+         = (∑ᴵ i, ⟪f i, x' i + (A : Set I).indicator (fun _ => y) i⟫[K])
+           - ∑ᴵ i, ⟪f i, x' i⟫[K]
+    classical
+    have h : ∀ i : I, ⟪f i, x' i + (A : Set I).indicator (fun _ => y) i⟫[K] - ⟪f i, x' i⟫[K]
+             = if i ∈ A then ⟪f i, y⟫[K] else 0 := by
+      intro i
+      rw [AdjointSpace.inner_add_right]
+      by_cases hi : i ∈ A <;> simp [hi]
+    rw [SciLean.IndexType.sum_eq_finset_sum, SciLean.IndexType.sum_eq_finset_sum,
+      ← Finset.sum_sub_distrib]
+    simp only [h]
+    rw [Finset.sum_ite_mem, Finset.univ_inter, AdjointSpace.sum_inner]
   case is_linear => fun_prop
 
 

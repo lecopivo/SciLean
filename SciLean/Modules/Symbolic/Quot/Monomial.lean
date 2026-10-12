@@ -413,11 +413,11 @@ namespace AltMonomial
 
 end AltMonomial
 
-def m : FreeMonomial Int Nat := ⟦⟨⟨1, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
-def p : SymMonomial Int Nat := ⟦⟨⟨2, ⟨[0,2,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
-def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, sorry_proof⟩⟧
-def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, sorry_proof⟩⟧
-def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, sorry_proof⟩⟧
+def m : FreeMonomial Int Nat := ⟦⟨⟨1, ⟨[0,2,0,3]⟩⟩, rawLvl, by intro; rw [QForm.redform_zero]; trivial⟩⟧
+def p : SymMonomial Int Nat := ⟦⟨⟨2, ⟨[0,2,0,3]⟩⟩, rawLvl, by intro; rw [QForm.redform_zero]; trivial⟩⟧
+def w : AltMonomial Int Nat := ⟦⟨⟨2, ⟨[1,0,3]⟩⟩, rawLvl, by intro; rw [QForm.redform_zero]; trivial⟩⟧
+def w' : AltMonomial Int Nat := ⟦⟨⟨0, ⟨[5,2]⟩⟩, rawLvl, by intro; rw [QForm.redform_zero]; trivial⟩⟧
+def w'' : AltMonomial Int Nat := ⟦⟨⟨3, ⟨[5,2]⟩⟩, rawLvl, by intro; rw [QForm.redform_zero]; trivial⟩⟧
 
 
 example : (m |> toString) = "1*[0]⊗[2]⊗[0]⊗[3]" := by native_decide

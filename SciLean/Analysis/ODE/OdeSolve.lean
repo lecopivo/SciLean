@@ -200,7 +200,15 @@ theorem odeSolve.arg_x₀.HasAdjoint_rule
         let y := odeSolve (fun s y => - f' s y) t t₀ x'
         let y := x₀' y
         y) := by
-  sorry_proof
+  -- follows from `odeSolve.arg_x₀.IsContinuousLinearMap_rule` and `odeSolve.arg_x₀.adjoint_rule`
+  have hS := odeSolve.arg_x₀.IsContinuousLinearMap_rule f t₀ t x₀
+    (fun s => (hf s).is_linear) hx₀.is_linear
+  constructor
+  · intro w y
+    rw [adjoint_ex _ hS, odeSolve.arg_x₀.adjoint_rule f t₀ t x₀ (fun s => (hf s).is_linear)
+      hx₀.is_linear]
+    simp only [holdLet, adjoint_from_hasAdjoint (hf _), adjoint_from_hasAdjoint hx₀]
+  · exact hS
 
 @[data_synth]
 theorem odeSolve.arg_x₀.HasAdjointAupdate_rule

@@ -63,4 +63,6 @@ abbrev_data_synth logsumexp in x :
       (w, fun dk dx' =>
         let dx := dx' + ((starRingEnd R) dk) • x'
         dx))) by
-  sorry_proof
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv => apply HasRevFDeriv.toHasRevFDerivUpdate; data_synth
+  case simp => rfl

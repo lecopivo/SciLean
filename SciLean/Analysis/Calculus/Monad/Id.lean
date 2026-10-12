@@ -49,15 +49,26 @@ variable
 instance : DifferentiableMonad K Id' where
   DifferentiableM f := Differentiable K (fun x => (f x).run)
   DifferentiableM_pure := by simp[pure]
-  DifferentiableM_bind := by intros; simp[bind]; sorry_proof
+  DifferentiableM_bind := by
+    intro X Y Z _ _ _ _ _ _ f g hf hg
+    exact hf.comp hg
   DifferentiableM_pair y := by intros; simp[bind,pure]; fun_prop
 
 noncomputable
 instance : FwdFDerivMonad K Id' Id' where
   fwdFDerivM f := fun x dx => pure (fwdFDeriv K (fun x => (f x).run) x dx)
   fwdFDerivM_pure f := by simp[pure]
-  fwdFDerivM_bind := by simp[Bind.bind]; sorry_proof
-  fwdFDerivM_pair y := by intros; simp; sorry_proof
+  fwdFDerivM_bind := by
+    intro X Y Z _ _ _ _ _ _ f g hf hg
+    show (fun x dx => pure (fwdFDeriv K (fun x => (f (g x).run).run) x dx)) = _
+    rw [fwdFDeriv.comp_rule (fun y => (f y).run) (fun x => (g x).run) hf hg]
+    rfl
+  fwdFDerivM_pair := by
+    intro X Y _ _ _ _ f hf
+    show (fun x dx => pure (fwdFDeriv K (fun x => (x, (f x).run)) x dx)) = _
+    rw [Prod.mk.arg_fstsnd.fwdFDeriv_rule (fun x => x) (by fun_prop) (fun x => (f x).run) hf]
+    simp only [fwdFDeriv.id_rule]
+    rfl
 
 noncomputable
 instance : RevFDerivMonad K Id' Id' where
@@ -65,8 +76,19 @@ instance : RevFDerivMonad K Id' Id' where
     let ydf := revFDeriv K (fun x => (f x).run) x
     pure (ydf.1, fun dy => pure (ydf.2 dy))
   revFDerivM_pure f := by simp[pure]
-  revFDerivM_bind := by simp[Bind.bind]; sorry_proof
-  revFDerivM_pair y := by intros; simp; sorry_proof
+  revFDerivM_bind := by
+    intro X _ _ _ Y _ _ _ Z _ _ _ f g hf hg
+    show (fun x => let ydf := revFDeriv K (fun x => (f (g x).run).run) x;
+            pure (ydf.1, fun dy => pure (ydf.2 dy))) = _
+    rw [revFDeriv.comp_rule K (fun y => (f y).run) (fun x => (g x).run) hf hg]
+    rfl
+  revFDerivM_pair := by
+    intro X _ _ _ Y _ _ _ f hf
+    show (fun x => let ydf := revFDeriv K (fun x => (x, (f x).run)) x;
+            pure (ydf.1, fun dy => pure (ydf.2 dy))) = _
+    rw [Prod.mk.arg_fstsnd.revFDeriv_rule (fun x => x) (fun x => (f x).run) (by fun_prop) hf]
+    simp only [revFDeriv.id_rule]
+    rfl
 
 instance : HasRevFDerivMonad K Id' Id' where
   HasRevFDerivM f f' :=
@@ -74,8 +96,13 @@ instance : HasRevFDerivMonad K Id' Id' where
       (fun x => (f x).run)
       (fun x => let ydf := (f' x).run; (ydf.1, fun dy => (ydf.2 dy).run))
   HasRevFDerivM_pure f := by simp[pure]
-  HasRevFDerivM_bind := by intros; simp[Bind.bind]; sorry_proof
-  HasRevFDerivM_pair y := by intros; simp; sorry_proof
+  HasRevFDerivM_bind := by
+    intro X _ _ Y _ _ Z _ _ g g' hg f f' hf
+    exact HasRevFDeriv.comp_rule _ _ hg hf
+  HasRevFDerivM_pair := by
+    intro X _ _ Y _ _ f f' hf
+    exact Prod.mk.arg_a0a1.HasRevFDeriv_comp_rule _ _ (HasRevFDeriv.id_rule (K:=K))
+      hf.toHasRevFDerivUpdate
 
 end SciLean
 open SciLean
@@ -120,15 +147,33 @@ theorem Id'.run.arg_x.revFDeriv_rule [CompleteSpace X] [CompleteSpace Y] (a : X 
        fun dy => (xda.2 dy).run) := by rfl
 
 
+-- The following two statements are false: they claim that the value of the constant function
+-- `fun _ => y` is `0` rather than `y.run`, which contradicts the `val` field of `HasRevFDeriv`
+-- (take e.g. `y = pure 1`). They are replaced by the corrected versions below.
+-- @[data_synth]
+-- theorem Id'.HasRevFDerivM_const_rule (y : Id' Y) :
+--     HasRevFDerivM K (fun _ : X => y) (fun _ => pure (0, fun _ => pure 0)) := by
+--   sorry_proof
+
+-- @[data_synth]
+-- theorem Id'.HasRevFDerivUpdateM_const_rule (y : Id' Y) :
+--     HasRevFDerivUpdateM K (fun _ : X => y) (fun _ => pure (0, fun _ dx => pure dx)) := by
+--   sorry_proof
+
+/-- Reverse derivative of a constant monadic value. Compared to the original statement the value
+component is `y.run` instead of `0`, as required by the definition of `HasRevFDeriv`. -/
 @[data_synth]
 theorem Id'.HasRevFDerivM_const_rule (y : Id' Y) :
-    HasRevFDerivM K (fun _ : X => y) (fun _ => pure (0, fun _ => pure 0)) := by
-  sorry_proof
+    HasRevFDerivM K (fun _ : X => y) (fun _ => pure (y.run, fun _ => pure 0)) :=
+  HasRevFDeriv.const_rule _
 
+/-- Reverse derivative of a constant monadic value, update version. Compared to the original
+statement the value component is `y.run` instead of `0`. -/
 @[data_synth]
 theorem Id'.HasRevFDerivUpdateM_const_rule (y : Id' Y) :
-    HasRevFDerivUpdateM K (fun _ : X => y) (fun _ => pure (0, fun _ dx => pure dx)) := by
-  sorry_proof
+    HasRevFDerivUpdateM K (fun _ : X => y) (fun _ => pure (y.run, fun _ dx => pure dx)) where
+  deriv := HasRevFDeriv.const_rule (K:=K) (X:=X) y.run
+  eq := by intros; simp
 
 set_option linter.unusedVariables false in
 @[data_synth]
@@ -139,6 +184,6 @@ theorem Id'.run.arg_x.HasRevFDeriv_rule
         let ydf ← f' x
         pure (ydf.1, fun dy => Id'.run do
           let dx ← ydf.2 dy
-          pure dx)) := sorry_proof
+          pure dx)) := hf
 
 end OnAdjointSpace

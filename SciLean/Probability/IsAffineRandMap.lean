@@ -21,9 +21,16 @@ def IsAffineRandMap (f : X → Rand Y) : Prop :=
 
 @[fun_prop]
 theorem IsAffineRandMap.const_rule (y : Rand Y) :
-    IsAffineRandMap (fun _ : X => y) := by sorry_proof
+    IsAffineRandMap (fun _ : X => y) := by
+  -- the integral does not depend on `x` at all, hence it is a constant and therefore affine
+  intro φ _
+  exact IsAffineMap.const_rule _
 
 set_option linter.unusedVariables false
+-- note: as stated this rule cannot be proved, it is false: since `(pure y).ℙ` is `Measure.dirac y`
+-- the integral in `IsAffineRandMap` is just `φ (f x)`, so the conclusion asks for `φ ∘ f` to be
+-- affine for *every* integrable `φ` - e.g. `X = Y = ℝ`, `f = id` and `φ = fun x => x^2` is a
+-- counterexample. The rule would need `φ` to be affine as well.
 @[fun_prop]
 theorem _root_.Pure.pure.arg_a0.IsAffineRandMap (f : X → Y) (hf : IsAffineMap ℝ f) :
     IsAffineRandMap (fun x => pure (f x)) := by sorry_proof

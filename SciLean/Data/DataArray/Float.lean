@@ -18,7 +18,7 @@ local instance : Coe (Float64Array) (DataArray Float) := ⟨fun x => cast sorry_
 
 instance : LevelOneData (DataArray Float) Float Float where
   size x := x.size
-  get x i := if i < x.size then x.get ⟨i.toUSize,sorry_proof⟩ else 0
+  get x i := if h : i < x.size then x.get ⟨i.toUSize, usize_toNat_ofNat_lt h⟩ else 0
   dot N X offX incX Y offY incY := ddot N.toUSize X offX.toUSize incX.toUSize Y offY.toUSize incY.toUSize
   nrm2 N X offX incX := dnrm2 N.toUSize X offX.toUSize incX.toUSize
   asum N X offX incX := dasum N.toUSize X offX.toUSize incX.toUSize

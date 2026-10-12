@@ -174,7 +174,11 @@ by
     rw[revFDerivM_bind f' (fun x => pure (g' x)) hf (DifferentiableM_pure g' hg')]
     simp[revFDerivM_pure (K:=K) g' hg']
     -- fun_trans; simp
-  sorry_proof
+  have h : ∀ x, (revFDeriv K g' x).2 = fun dxy => dxy.1 + (revFDeriv K g x).2 dxy.2 := by
+    intro x; simp only [g']; fun_trans
+  funext x
+  simp [h, map_eq_bind_pure_comp, f']
+  rfl
 
 end revFDerivM
 

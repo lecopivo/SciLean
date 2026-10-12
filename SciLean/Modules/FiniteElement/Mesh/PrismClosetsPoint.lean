@@ -83,7 +83,7 @@ The output is pair (f, y) where `f` is the face of `P` on which the closest poin
 def closestPoint (P : Prism) (x : P.Space) (fromRef toRef : P.Space → P.Space) : (f : Face P) × ℝ^{f.dim} :=
   match P with
   | ⟨.point, _⟩ =>
-    Sigma.mk ⟨.point, sorry_proof, sorry_proof⟩ 0
+    Sigma.mk ⟨.point, rfl, rfl⟩ 0
 
   | ⟨.cone .point, _⟩ =>
     let y : ℝ^{1} := toRef x

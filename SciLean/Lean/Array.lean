@@ -17,9 +17,9 @@ do
   let mut ids : Array (Sum Nat Nat) := #[]
   let mut i := 0
   let mut j := 0
-  let mut idx := 0
-  for a in as do
-    if ← p ⟨idx, sorry_proof⟩ a then
+  for h : idx in [0:as.size] do
+    let a := as[idx]'h.2.1
+    if ← p ⟨idx, h.2.1⟩ a then
       bs := bs.push a
       ids := ids.push (.inl i)
       i := i + 1
@@ -27,7 +27,6 @@ do
       cs := cs.push a
       ids := ids.push (.inr j)
       j := j + 1
-    idx := idx + 1
   return (bs, cs, ids)
 
 def splitM {α : Type _} {m : Type _ → Type _} [Monad m] (as : Array α) (p : α → m Bool) : m (Array α × Array α) :=
@@ -51,14 +50,17 @@ def riffle (xs ys : Array α) : Array α := Id.run do
   let mut zs : Array α := .mkEmpty (xs.size + ys.size)
   let m := min xs.size ys.size
   let M := max xs.size ys.size
-  for i in [0:m] do
-    have : i < xs.size := sorry_proof
-    have : i < ys.size := sorry_proof
+  for h : i in [0:m] do
+    have : i < xs.size := Nat.lt_of_lt_of_le h.2.1 (Nat.min_le_left _ _)
+    have : i < ys.size := Nat.lt_of_lt_of_le h.2.1 (Nat.min_le_right _ _)
     zs := zs.push xs[i]
     zs := zs.push ys[i]
   let xys := if xs.size < ys.size then ys else xs
-  for i in [m:M] do
-    have : i < xys.size := sorry_proof
+  for h : i in [m:M] do
+    have : i < xys.size := by
+      have := h.2.1
+      simp only [xys, M] at *
+      split <;> omega
     zs := zs.push xys[i]
   zs
 
@@ -72,9 +74,9 @@ def joinl [Inhabited β] (xs : Array α) (map : α → β) (op : β → β → �
   xs.joinlM map op
 
 def joinrM [Monad m] [Inhabited β] (xs : Array α) (map : α → m β) (op : β → β → m β) : m β := do
-  if _h : 0 < xs.size then
+  if h : 0 < xs.size then
     let n := xs.size - 1
-    have : n < xs.size := sorry_proof
+    have : n < xs.size := by omega
     xs[0:n].foldrM (init:=(← map xs[n])) λ x acc => do op (← map x) acc
   else
     pure default
@@ -88,13 +90,14 @@ def joinr [Inhabited β] (xs : Array α) (map : α → β) (op : β → β → �
 Ordering by size then by lexicographical ordering(left to right).
   -/
 def lexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
-  match compare as.size bs.size with
+  match hs : compare as.size bs.size with
   | .lt => return .lt
   | .gt => return .gt
   | .eq =>
-    for i in [0:as.size] do
-      have : i < as.size := sorry_proof
-      have : i < bs.size := sorry_proof
+    have hsize : as.size = bs.size := Nat.compare_eq_eq.mp hs
+    for h : i in [0:as.size] do
+      have : i < as.size := h.2.1
+      have : i < bs.size := hsize ▸ h.2.1
       match compare as[i] bs[i] with
       | .lt => return .lt
       | .gt => return .gt
@@ -105,14 +108,18 @@ def lexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
 Ordering by size then by colexicographical ordering(right to left).
   -/
 def colexOrd {α} [Ord α] (as bs : Array α) : Ordering := Id.run do
-  match compare as.size bs.size with
+  match hs : compare as.size bs.size with
   | .lt => return .lt
   | .gt => return .gt
   | .eq =>
-    for i in [0:as.size] do
+    have hsize : as.size = bs.size := Nat.compare_eq_eq.mp hs
+    for h : i in [0:as.size] do
+      have hi : as.size - i - 1 < as.size := by
+        have hi0 : i < as.size := h.2.1
+        omega
       let i := as.size - i - 1
-      have : i < as.size := sorry_proof
-      have : i < bs.size := sorry_proof
+      have hi' : i < as.size := hi
+      have : i < bs.size := hsize ▸ hi'
       match compare as[i] bs[i] with
       | .lt => return .lt
       | .gt => return .gt

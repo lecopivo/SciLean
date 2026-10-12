@@ -103,29 +103,29 @@ instance [∀ i, UniformSpace (EI i)] [∀ j, UniformSpace (FJ j)] (i : I ⊕ J)
   uniformity := match i with
                 | .inl _ => UniformSpace.uniformity
                 | .inr _ => UniformSpace.uniformity
-  symm := sorry_proof
-  comp := sorry_proof
-  nhds_eq_comap_uniformity := sorry_proof
+  symm := by cases i <;> exact UniformSpace.symm
+  comp := by cases i <;> exact UniformSpace.comp
+  nhds_eq_comap_uniformity := by cases i <;> exact UniformSpace.nhds_eq_comap_uniformity
 
 @[reducible]
 instance [∀ i, MetricSpace (EI i)] [∀ j, MetricSpace (FJ j)] (i : I ⊕ J) :
     MetricSpace (Sum.rec EI FJ i) where
-  dist_self := sorry_proof
-  dist_comm := sorry_proof
-  dist_triangle := sorry_proof
+  dist_self := (by aesop)
+  dist_comm := by cases i <;> exact dist_comm
+  dist_triangle := by cases i <;> exact dist_triangle
   edist :=
     match i with
     | .inl _ => edist
     | .inr _ => edist
-  edist_dist := sorry_proof
+  edist_dist := by cases i <;> exact edist_dist
   toUniformSpace := by infer_instance
-  uniformity_dist := sorry_proof
+  uniformity_dist := by cases i <;> exact PseudoMetricSpace.uniformity_dist
   toBornology :=
     match i with
     | .inl _ => by infer_instance
     | .inr _ => by infer_instance
-  cobounded_sets := sorry_proof
-  eq_of_dist_eq_zero := sorry_proof
+  cobounded_sets := by cases i <;> exact PseudoMetricSpace.cobounded_sets
+  eq_of_dist_eq_zero := (by aesop)
 
 @[reducible]
 instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J) :
@@ -134,7 +134,7 @@ instance [∀ i, AddCommGroup (EI i)] [∀ j, AddCommGroup (FJ j)] (i : I ⊕ J)
 @[reducible]
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] (i : I ⊕ J) :
     NormedAddCommGroup (Sum.rec EI FJ i) where
-  dist_eq := sorry_proof
+  dist_eq := by cases i <;> (intro x y; rw [neg_add_eq_sub]; exact dist_eq_norm' x y)
 
 
 @[reducible]
@@ -155,15 +155,15 @@ instance [∀ i, Inner K (EI i)] [∀ j, Inner K (FJ j)] (i : I ⊕ J) : Inner K
 instance [∀ i, NormedAddCommGroup (EI i)] [∀ i, AdjointSpace K (EI i)]
          [∀ j, NormedAddCommGroup (FJ j)] [∀ j, AdjointSpace K (FJ j)] (i : I ⊕ J)
   : AdjointSpace K (Sum.rec EI FJ i) where
-  smul_zero := sorry_proof
-  smul_add := sorry_proof
-  add_smul := sorry_proof
-  zero_smul := sorry_proof
-  norm_smul_le := sorry_proof
-  inner_top_equiv_norm := sorry_proof
-  conj_symm := sorry_proof
-  add_left := sorry_proof
-  smul_left := sorry_proof
+  smul_zero := (by aesop)
+  smul_add := (by aesop)
+  add_smul := by cases i <;> exact add_smul
+  zero_smul := (by aesop)
+  norm_smul_le := by cases i <;> exact norm_smul_le
+  inner_top_equiv_norm := by cases i <;> exact AdjointSpace.inner_top_equiv_norm
+  conj_symm := (by aesop)
+  add_left := by cases i <;> exact AdjointSpace.add_left
+  smul_left := by cases i <;> exact AdjointSpace.smul_left
 
 
 -- instance [∀ i, FinVec ι K (EI i)] [∀ j, FinVec ι K (FJ j)] (i : I ⊕ J) :
@@ -190,7 +190,13 @@ class SMulStruct (K X I XI) [StructType X I XI] [SMul K X] [∀ i, SMul K (XI i)
 
 class ModuleStruct (K X I XI) [StructType X I XI] [RCLike K] [AddCommGroup X] [Module K X] [∀ i, AddCommGroup (XI i)] [∀ i, Module K (XI i)] : Prop
   extends ZeroStruct X I XI, AddStruct X I XI, NegStruct X I XI, SMulStruct K X I XI where
-    structProj_neg := sorry_proof -- todo: infer this from `structProj_add` and `structProj_smul`
+    structProj_neg := by
+      intro i x
+      have h := AddStruct.structProj_add (X:=X) (XI:=XI) i (-x) x
+      have h0 := ZeroStruct.structProj_zero (X:=X) (XI:=XI) i
+      rw [neg_add_cancel] at h
+      rw [h0] at h
+      exact (neg_eq_of_add_eq_zero_right h.symm).symm
 
 class TopologicalStruct (X I XI) [StructType X I XI] [TopologicalSpace X] [∀ i, TopologicalSpace (XI i)] : Prop
   where
@@ -270,15 +276,23 @@ instance instSMulStructProd
 
 instance instTopologicalStructDefault
   {X} [TopologicalSpace X] : TopologicalStruct X Unit (fun _ => X) where
-  structProj_continuous := sorry_proof
-  structMake_continuous := sorry_proof
+  structProj_continuous := by intros; exact continuous_id
+  structMake_continuous := by exact continuous_apply ()
 
 instance instTopologicalStructProd
   [TopologicalSpace E] [TopologicalSpace F] [∀ i, TopologicalSpace (EI i)] [∀ j, TopologicalSpace (FJ j)]
   [TopologicalStruct E I EI] [TopologicalStruct F J FJ]
   : TopologicalStruct (E×F) (I⊕J) (Sum.rec EI FJ) where
-  structProj_continuous := sorry_proof
-  structMake_continuous := sorry_proof
+  structProj_continuous := by
+    intro i
+    cases i with
+    | inl a => exact (TopologicalStruct.structProj_continuous a).comp continuous_fst
+    | inr b => exact (TopologicalStruct.structProj_continuous b).comp continuous_snd
+  structMake_continuous := by
+    refine Continuous.prodMk (TopologicalStruct.structMake_continuous.comp ?_)
+      (TopologicalStruct.structMake_continuous.comp ?_)
+    · exact continuous_pi fun a => continuous_apply _
+    · exact continuous_pi fun b => continuous_apply _
 
 
 --------------------------------------------------------------------------------
@@ -492,7 +506,7 @@ class AdjointSpaceStruct (K X I XI) [StructType X I XI] [RCLike K] [IndexType I 
 
 instance {X} [NormedAddCommGroup X] [AdjointSpace K X] :
     AdjointSpaceStruct K X Unit (fun _ => X) where
-  inner_structProj := sorry_proof
+  inner_structProj := (by simp)
 
 
 instance
@@ -500,16 +514,26 @@ instance
   [∀ i, NormedAddCommGroup (EI i)] [∀ j, NormedAddCommGroup (FJ j)] [∀ i, AdjointSpace K (EI i)] [∀ j, AdjointSpace K (FJ j)]
   [IndexType I NI] [IndexType J NJ]
   [AdjointSpaceStruct K E I EI] [AdjointSpaceStruct K F J FJ] :
-  AdjointSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) := sorry_proof
-  -- inner_structProj := sorry_proof
-  -- testFun_structProj := sorry_proof
+  AdjointSpaceStruct K (E×F) (I⊕J) (Sum.rec EI FJ) where
+  inner_structProj := by
+    rintro ⟨x,y⟩ ⟨x',y'⟩
+    show ⟪x,x'⟫[K] + ⟪y,y'⟫[K] = _
+    have hE := (‹AdjointSpaceStruct K E I EI›).inner_structProj x x'
+    have hF := (‹AdjointSpaceStruct K F J FJ›).inner_structProj y y'
+    rw [Fintype.sum_sum_type, hE, hF]
+    rfl
 
 omit [DecidableEq I] in
 @[simp, simp_core]
 theorem inner_oneHot_eq_inner_structProj'' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
     [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
-    ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := sorry_proof
+    ⟪x, oneHot i xi⟫[K] = ⟪structProj x i, xi⟫[K] := by
+  rw [show ⟪x, oneHot i xi⟫[K] = ∑ (j : I), ⟪structProj x j, structProj (oneHot i xi) j⟫[K] from
+        AdjointSpaceStruct.inner_structProj _ _, Finset.sum_eq_single i]
+  · simp [oneHot]
+  · intro j _ hj; simp [oneHot, Ne.symm hj]
+  · simp
 
 
 omit [DecidableEq I] in
@@ -517,7 +541,12 @@ omit [DecidableEq I] in
 theorem inner_oneHot_eq_inner_proj''' [StructType X I XI] [IndexType I NI] [DecidableEq I]
     [∀ i, NormedAddCommGroup (XI i)] [∀ i, AdjointSpace K (XI i)] [NormedAddCommGroup X] [AdjointSpace K X]
     [AdjointSpaceStruct K X I XI] (i : I) (xi : XI i) (x : X) :
-    ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := sorry_proof
+    ⟪oneHot i xi, x⟫[K] = ⟪xi, structProj x i⟫[K] := by
+  rw [show ⟪oneHot i xi, x⟫[K] = ∑ (j : I), ⟪structProj (oneHot i xi) j, structProj x j⟫[K] from
+        AdjointSpaceStruct.inner_structProj _ _, Finset.sum_eq_single i]
+  · simp [oneHot]
+  · intro j _ hj; simp [oneHot, Ne.symm hj]
+  · simp
 
 
 

@@ -134,7 +134,14 @@ theorem pi_rule [Fold ι] [Fold ι] -- these instances have different universes
   unfold revFDeriv
   simp (disch:=fun_prop) only [fderiv.pi_rule_at]
   fun_trans
-  sorry_proof
+  funext x
+  congr 1
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  intro dx dy
+  rw[AdjointSpace.inner_forall_split]
+  simp only [IndexType.sum_eq_finset_sum]
+  rw[AdjointSpace.sum_inner]
+  exact Finset.sum_congr rfl fun i _ => adjoint_inner_left _ (by fun_prop) _ _
 
 
 @[fun_trans]
@@ -184,7 +191,12 @@ theorem pi_rule_at [Fold ι] [Fold ι]
   unfold revFDeriv
   simp (disch:=fun_prop) only [fderiv.pi_rule_at]
   fun_trans
-  sorry_proof
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  intro dx dy
+  rw[AdjointSpace.inner_forall_split]
+  simp only [IndexType.sum_eq_finset_sum]
+  rw[AdjointSpace.sum_inner]
+  exact Finset.sum_congr rfl fun i _ => adjoint_inner_left _ (by fun_prop) _ _
 
 
 end SciLean.revFDeriv

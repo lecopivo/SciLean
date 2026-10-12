@@ -43,14 +43,28 @@ namespace Diffeomorphism
 @[fun_prop]
 theorem id_rule
   : Diffeomorphism K (fun x : X => x)
-  := by sorry_proof
+  := by
+  constructor
+  · exact Function.bijective_id
+  · fun_prop
+  · intro x; simp; exact Function.bijective_id
 
 @[fun_prop]
 theorem comp_rule
   (f : Y → Z) (g : X → Y)
   (hf : Diffeomorphism K f) (hg : Diffeomorphism K g)
   : Diffeomorphism K (fun x => f (g x))
-  := by sorry_proof
+  := by
+  constructor
+  · exact hf.bijective.comp hg.bijective
+  · exact hf.differentiable.comp hg.differentiable
+  · intro x
+    have h : fderiv K (fun x => f (g x)) x
+             = (fderiv K f (g x)).comp (fderiv K g x) :=
+      fderiv_comp x (hf.differentiable (g x)) (hg.differentiable x)
+    rw [h]
+    rw [ContinuousLinearMap.coe_comp]
+    exact (hf.locally_diffeo (g x)).comp (hg.locally_diffeo x)
 
 end SciLean.Diffeomorphism
 
@@ -204,7 +218,14 @@ by
   constructor
   · fun_prop (disch:=assumption)
   · fun_prop (disch:=assumption)
-  · fun_trans (disch:=assumption); sorry_proof --fun_prop (disch:=assumption)
+  · fun_trans (disch:=assumption)
+    intro x
+    have hc : r / r ^ 2 ≠ 0 := div_ne_zero hr (pow_ne_zero 2 hr)
+    have h : (fun dx => (fderiv K f x) dx * r / r ^ 2)
+             = (fun y : K => y * (r / r ^ 2)) ∘ (fderiv K f x) := by
+      funext dx; simp [mul_div_assoc]
+    rw [h]
+    exact (mulRight_bijective₀ _ hc).comp (hf.locally_diffeo x)
 
 
 -- Nat.iterate -------------------------------------------------------------------
@@ -248,7 +269,7 @@ by
   ext x dx
   have H : (fun dx => (fderiv K (f ∘ invFun f) (g x)) dx)
            =
-           id := by simp [show (f ∘ Function.invFun f) = id from sorry_proof]; rfl
+           id := by simp [show (f ∘ Function.invFun f) = id from funext (Function.rightInverse_invFun hf.bijective.surjective)]; rfl
   have q : fderiv K f (invFun f (g x)) (fderiv K (fun x => invFun f (g x)) x dx) = fderiv K g x dx := sorry_proof
   sorry_proof
 
@@ -290,7 +311,7 @@ theorem Function.invFun.arg_f.fderiv_rule'
       let y := invFun (f x) z
       let dfdx_y := (fderiv K (f · y) x dx)
       let df'dy := fderiv K (invFun (f x)) (f x y) (dfdx_y)
-      (-df'dy)) sorry_proof
+      (-df'dy)) (by fun_prop)
   :=
 by
   ext x dx

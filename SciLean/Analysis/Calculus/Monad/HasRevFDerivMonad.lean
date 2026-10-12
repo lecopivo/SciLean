@@ -133,7 +133,14 @@ theorem HasRevFDerivUpdateM.comp_rule
               fun dz dx => do
                 let dy ← zdf.2 dz
                 pure (ydg.2 dy dx))) := by
-  sorry_proof
+  obtain ⟨hval, dg, hd, dg', ha, hupd⟩ := hg.deriv_adjoint
+  constructor
+  case deriv =>
+    simp only [pure_bind, bind_pure, bind_assoc]
+    exact HasRevFDerivM.comp_rule g hg.toHasRevFDeriv f hf
+  case eq =>
+    intro x dy dx
+    simp only [bind_assoc, pure_bind, hupd x _ dx, hupd x _ 0, zero_add]
 
 
 @[fun_trans]
@@ -149,13 +156,18 @@ theorem HasRevFDerivM.let_rule
                 let dyx ← zdf.2 dz
                 let dx := ydg.2 dyx.1 dyx.2
                 pure dx)) := by
-  have hg' : HasRevFDeriv K g (fun x => let ydg := g' x; (ydg.1, fun dy => ydg.2 dy 0)) := sorry_proof
+  have hg' : HasRevFDeriv K g (fun x => let ydg := g' x; (ydg.1, fun dy => ydg.2 dy 0)) :=
+    hg.toHasRevFDeriv
   have h := HasRevFDerivM_bind (m:=m) (m':=m')
     (fun x => pure (g x, x)) (HasRevFDerivM_pure _ (by data_synth)) _ hf
   simp at h
   simp_all
   -- we just need `(g' x).2 a.1 0 + a.2 = (g' x).2 a.1 a.2` and we are done!
-  sorry_proof
+  obtain ⟨hval, df, hd, dfa, ha, hupd⟩ := hg.deriv_adjoint
+  have key : ∀ (x : X) (a : Y × X), (g' x).2 a.1 0 + a.2 = (g' x).2 a.1 a.2 := by
+    intro x a
+    rw [hupd x a.1 0, hupd x a.1 a.2, zero_add, add_comm]
+  simpa only [key] using h
 
 
 @[fun_trans]
@@ -171,7 +183,20 @@ theorem HasRevFDerivUpdateM.let_rule
                 let dyx ← zdf.2 dz (0,dx)
                 let dx := ydg.2 dyx.1 dyx.2
                 pure dx)) := by
-  sorry_proof
+  constructor
+  case deriv =>
+    have h := HasRevFDerivM.let_rule (K:=K) g hg _ hf.deriv
+    simp only [bind_assoc, pure_bind, bind_pure] at h ⊢
+    exact h
+  case eq =>
+    intro x dz dx
+    obtain ⟨hval, df, hd, dfa, ha, hupd⟩ := hg.deriv_adjoint
+    have key := hf.eq ((g' x).1, x) dz (0, dx)
+    have key' := congrArg (fun (w : m (m' (Y×X))) =>
+        (fun v : m' (Y×X) => v >>= fun dyx => pure ((g' x).2 dyx.1 dyx.2)) <$> w) key
+    simp only [map_bind, map_pure, bind_assoc, pure_bind] at key' ⊢
+    rw [key']
+    simp only [Prod.mk_zero_zero, Prod.fst_add, Prod.snd_add, zero_add, hupd, add_assoc]
 
 
 open Lean Meta HasRevFDerivM in
@@ -239,7 +264,14 @@ theorem Pure.pure.arg.HasRevFDerivUpdateM_rule
         let ydf := a0' x
         pure (ydf.1,
               fun dy dx => pure (ydf.2 dy dx))) := by
-  sorry_proof
+  obtain ⟨hval, df, hd, df', ha, hupd⟩ := ha0.deriv_adjoint
+  constructor
+  case deriv =>
+    simp only [pure_bind, bind_pure]
+    exact HasRevFDerivM_pure _ ha0.toHasRevFDeriv
+  case eq =>
+    intro x dy dx
+    simp only [pure_bind, hupd x dy dx, hupd x dy 0, zero_add]
 
 
 --------------------------------------------------------------------------------
@@ -260,7 +292,11 @@ theorem Bind.bind.arg_a0a1.HasRevFDerivM_rule
                 let dxy ← zdf.2 dz
                 let dx ← ydg.2 dxy.2
                 pure (dxy.1 + dx))) := by
-  sorry_proof
+  have h := HasRevFDerivM_bind (m:=m) (m':=m')
+    (fun x => do let y ← a0 x; pure (x,y)) (HasRevFDerivM_pair a0 ha0)
+    (fun xy : X×Y => a1 xy.1 xy.2) ha1
+  simp only [bind_assoc, pure_bind] at h
+  exact h
 
 set_option linter.unusedVariables false in
 @[data_synth]

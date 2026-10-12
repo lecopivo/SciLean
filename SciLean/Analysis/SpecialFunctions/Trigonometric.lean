@@ -32,8 +32,8 @@ theorem add_sin2_cos2_eq_one (x : C) : sin x * sin x + cos x * cos x = 1 :=
 
 open Scalar in
 @[simp, simp_core]
-theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 :=
- sorry_proof
+theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 := by
+  rw [add_comm]; exact add_sin2_cos2_eq_one x
 
 
 --------------------------------------------------------------------------------

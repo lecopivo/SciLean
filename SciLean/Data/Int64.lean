@@ -20,5 +20,7 @@ def Int64.toUSize (x : Int64) : USize := x.toISize.toUSize
 
 instance : Preorder Int64 where
   le_refl := by bv_decide
-  le_trans := sorry_proof
-  lt_iff_le_not_ge := sorry_proof
+  le_trans _ _ _ := Int64.le_trans
+  lt_iff_le_not_ge a b := by
+    simp only [Int64.le_iff_toInt_le, Int64.lt_iff_toInt_lt]
+    omega

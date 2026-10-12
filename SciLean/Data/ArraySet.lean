@@ -5,6 +5,7 @@ public import Batteries.Data.List.Basic
 
 public import SciLean.Lean.Array
 public import SciLean.Util.SorryProof
+public import Aesop
 
 @[expose] public section
 
@@ -58,41 +59,53 @@ namespace ArraySet
   instance : HasSubset (ArraySet α) where
     Subset as bs := (List.Subset as.toList bs.toList)
 
-  -- TODO: This needs lawful Ord
-  instance (a b : ArraySet α) : Decidable (a ⊆ b) := Id.run do
-    let mut j := 0
-    for h : i in [0:b.size] do
-      if _h' : (a.size - j) > (b.size - i) then
-        return isFalse sorry_proof
-      if h' : j < a.size then
-        have _ := h.2
-        match compare b[i] a[j] with
-        | .eq =>
-          j := j + 1
-          continue
-        | .lt =>
-          continue
-        | .gt =>
-          return isFalse sorry_proof
-      else
-        -- we have exhausted whole as
-        return isTrue sorry_proof
+  -- Inclusion of array sets is inclusion of the underlying lists, which is decidable as soon as
+  -- the elements have decidable equality. The previous hand written loop is kept below, it relies
+  -- on `Ord α` being lawful which is not assumed anywhere.
+  instance instDecidableSubsetArraySet [DecidableEq α] (a b : ArraySet α) : Decidable (a ⊆ b) :=
+    inferInstanceAs (Decidable (a.toList ⊆ b.toList))
 
-    if j = a.size then
-      isTrue sorry_proof
-    else
-      isFalse sorry_proof
+  -- -- TODO: This needs lawful Ord
+  -- instance (a b : ArraySet α) : Decidable (a ⊆ b) := Id.run do
+  --   let mut j := 0
+  --   for h : i in [0:b.size] do
+  --     if _h' : (a.size - j) > (b.size - i) then
+  --       return isFalse sorry_proof
+  --     if h' : j < a.size then
+  --       have _ := h.2
+  --       match compare b[i] a[j] with
+  --       | .eq =>
+  --         j := j + 1
+  --         continue
+  --       | .lt =>
+  --         continue
+  --       | .gt =>
+  --         return isFalse sorry_proof
+  --     else
+  --       -- we have exhausted whole as
+  --       return isTrue sorry_proof
+  --
+  --   if j = a.size then
+  --     isTrue sorry_proof
+  --   else
+  --     isFalse sorry_proof
 
-  instance (a b : ArraySet α) [DecidableEq α] : Decidable (a = b) := Id.run do
-    if h : a.size = b.size then
-      for h' : i in [0:a.size] do
-        have : i < a.size := h'.2.1
-        have : i < b.size := h ▸ h'.2.1
-        if a[i] ≠ b[i] then
-          return isFalse sorry_proof
-      return isTrue sorry_proof
-    else
-      return isFalse sorry_proof
+  -- Two array sets are equal exactly when their underlying arrays are, so we can simply decide
+  -- the equality of the underlying arrays. The previous hand written loop is kept below as it
+  -- could not be given a proof of the positive case.
+  instance instDecidableEqArraySet (a b : ArraySet α) [DecidableEq α] : Decidable (a = b) :=
+    decidable_of_iff (a.data = b.data) (by cases a; cases b; simp)
+
+  -- instance (a b : ArraySet α) [DecidableEq α] : Decidable (a = b) := Id.run do
+  --   if h : a.size = b.size then
+  --     for h' : i in [0:a.size] do
+  --       have : i < a.size := h'.2.1
+  --       have : i < b.size := h ▸ h'.2.1
+  --       if a[i] ≠ b[i] then
+  --         return isFalse sorry_proof
+  --     return isTrue sorry_proof
+  --   else
+  --     return isFalse sorry_proof
 
   meta def lexOrd [Ord α] (a b : ArraySet α) : Ordering := a.data.lexOrd b.data
 

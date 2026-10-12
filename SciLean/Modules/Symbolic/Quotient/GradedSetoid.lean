@@ -32,7 +32,7 @@ structure GradedSetoid.Repr (α : Type u) {Lvl : Type v} [BoundedLattice Lvl] [G
 instance instSetoidGradedSetoidRepr (α : Type u) {Lvl : Type v} [BoundedLattice Lvl] [GradedSetoid α Lvl] (maxLvl : Lvl)
   : Setoid (GradedSetoid.Repr α maxLvl) where
   r x y := x.1 ≈ y.1
-  iseqv := sorry_proof
+  iseqv := ⟨fun _ => Setoid.refl _, Setoid.symm, Setoid.trans⟩
 
 class GradedSetoid.Morphism {α : Type u} {β : Type v} {Lvl : Type w} [BoundedLattice Lvl] [GradedSetoid α Lvl] [GradedSetoid β Lvl]
   (f : α → β) extends Setoid.Morphism f : Prop where
@@ -58,12 +58,14 @@ namespace GradedSetoid
 
   variable {α : Type u} [GradedSetoid α Lvl]
 
-  instance : Setoid.Morphism (λ a : GradedSetoid.Repr α lvl => a.1) := sorry_proof
+  instance : Setoid.Morphism (λ a : GradedSetoid.Repr α lvl => a.1) := ⟨fun _ _ h => h⟩
 
   def reduceToLvl (lvl : Lvl) [Reduce α lvl] (a : α) : GradedSetoid.Repr α lvl :=
-    ⟨Reduce.reduce lvl a, lvl, Reduce.reduce_lvl a, sorry_proof⟩
+    ⟨Reduce.reduce lvl a, lvl, Reduce.reduce_lvl a, le_refl _⟩
 
-  instance (lvl : Lvl) [Reduce α lvl] : Setoid.Morphism (λ a : α => reduceToLvl lvl a) := sorry_proof
+  instance (lvl : Lvl) [Reduce α lvl] : Setoid.Morphism (λ a : α => reduceToLvl lvl a) :=
+    ⟨fun a a' h => show Reduce.reduce lvl a ≈ Reduce.reduce lvl a' from
+      Setoid.trans (Reduce.reduce_sound a) (Setoid.trans h (Setoid.symm (Reduce.reduce_sound a')))⟩
 
 end GradedSetoid
 
@@ -79,7 +81,13 @@ namespace GradedSetoid.Repr
       ⟨Reduce.reduce (lvl ⊓ maxLvl) a.1, (lvl ⊓ maxLvl), Reduce.reduce_lvl a.1, sorry_proof⟩
 
   instance (lvl : Lvl) [Reduce α (lvl ⊓ maxLvl)]
-    : Setoid.Morphism (λ (a : GradedSetoid.Repr α maxLvl) => a.reduce lvl) := sorry_proof
+    : Setoid.Morphism (λ (a : GradedSetoid.Repr α maxLvl) => a.reduce lvl) :=
+    have key : ∀ b : GradedSetoid.Repr α maxLvl, (b.reduce lvl).1 ≈ b.1 := by
+      intro b; unfold reduce; split
+      · exact Setoid.refl _
+      · exact Reduce.reduce_sound _
+    ⟨fun a a' h => show (a.reduce lvl).1 ≈ (a'.reduce lvl).1 from
+      Setoid.trans (key a) (Setoid.trans h (Setoid.symm (key a')))⟩
 
   abbrev normalize [inst : Reduce α ⊥] (a : GradedSetoid.Repr α maxLvl) : GradedSetoid.Repr α maxLvl :=
     have h : ⊥ = (⊥ ⊓ maxLvl : Lvl) := sorry_proof
@@ -100,11 +108,11 @@ namespace GradedSetoid.Morphism
 
   instance comp_is_mor (f : β → γ) [Morphism f] (g : α → β) [Morphism g]
     : Morphism (λ x : α => f (g x)) where
-    preserves_level := sorry_proof
+    preserves_level := fun a l h => Morphism.preserves_level (f := f) _ l (Morphism.preserves_level (f := g) a l h)
 
   instance scomb_is_mor (f : α → β → γ) [Morphism₂ f] (g : α → β) [Morphism g]
     : Morphism (λ x : α => f x (g x)) where
-    preserves_level := sorry_proof
+    preserves_level := fun a l h => Morphism₂.preserves_level (f := f) a _ l h (Morphism.preserves_level (f := g) a l h)
 
 
 end GradedSetoid.Morphism
@@ -126,19 +134,19 @@ instance : LT TwoLevel where
 instance : DecidableRel (. ≤ . : TwoLevel → TwoLevel → Prop) :=
   λ x y => match x, y with
            | .any, .canonical => isFalse (by simp[LE.le]; done)
-           | _, _ => isTrue (by simp[LE.le]; sorry_proof)
+           | .any, .any | .canonical, .any | .canonical, .canonical => isTrue trivial
 
 instance : DecidableRel (. < . : TwoLevel → TwoLevel → Prop) :=
   λ x y => match x, y with
            | .canonical, .any => isTrue (by simp[LT.lt]; done)
-           | _, _ => isFalse (by simp[LT.lt]; sorry_proof)
+           | .any, .any | .any, .canonical | .canonical, .canonical => isFalse nofun
 
 instance : LinearOrder TwoLevel where
-  le_refl := sorry_proof
-  le_trans := sorry_proof
-  lt_iff_le_not_le := sorry_proof
-  le_antisymm := sorry_proof
-  le_total := sorry_proof
+  le_refl := by intro a; cases a <;> simp [LE.le]
+  le_trans := by intro a b c; cases a <;> cases b <;> cases c <;> simp [LE.le]
+  lt_iff_le_not_le := by intro a b; cases a <;> cases b <;> simp [LE.le, LT.lt]
+  le_antisymm := by intro a b; cases a <;> cases b <;> simp [LE.le]
+  le_total := by intro a b; cases a <;> cases b <;> simp [LE.le]
   decidable_eq := by infer_instance
   decidable_le := by infer_instance
   decidable_lt := by infer_instance

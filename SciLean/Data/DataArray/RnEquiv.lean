@@ -53,21 +53,53 @@ instance : GetElem' (X^[I]) (Idx (nI*nJ)) R where
   getElem x i _ := (toRn x).linGet i
 
 instance : InjectiveGetElem (X^[I]) (Idx (nI*nJ)) where
-  getElem_injective := sorry_proof
+  -- linear indices are exactly the indices `toIdx (i,j)`, so this follows from the injectivity
+  -- of the element access on `R^[I×J]` and the injectivity of `toRn`
+  getElem_injective := by
+    intro x y h
+    have h' : ∀ i : Idx (nI*nJ), (toRn x).linGet i = (toRn y).linGet i := fun i => congrFun h i
+    have hxy : toRn (I:=I×J) x = toRn y := by
+      apply InjectiveGetElem.getElem_injective (idx := I×J)
+      funext i
+      exact h' (toIdx i)
+    have h2 := congrArg (fromRn (X := X^[I])) hxy
+    exact (DataArrayEquiv.left_inv x).symm.trans (h2.trans (DataArrayEquiv.left_inv y))
 
 instance : SetElem' (X^[I]) (Idx (nI*nJ)) R where
   setElem x i v _ := fromRn ((toRn x).linSet i v)
-  setElem_valid := sorry_proof
+  setElem_valid := by rfl
 
 instance : LawfulSetElem (X^[I]) (Idx (nI*nJ)) where
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
+  -- `toRn` undoes `fromRn` and then this is the `fromByteArray_toByteArray` law
+  getElem_setElem_eq := by
+    intro x i v _
+    show (toRn (fromRn (X := X^[I]) ((toRn x).linSet i v))).linGet i = v
+    rw [show (toRn (fromRn (X := X^[I]) ((toRn x).linSet i v))) = (toRn x).linSet i v from
+      DataArrayEquiv.right_inv _]
+    exact PlainDataType.btype.fromByteArray_toByteArray v _ _ _ _
+  -- as above, then this is the law of `R^[I×J]` at the indices `fromIdx i`, `fromIdx j`
+  getElem_setElem_neq := by
+    intro x i j v _ _ hij
+    show (toRn (fromRn (X := X^[I]) ((toRn x).linSet i v))).linGet j = (toRn x).linGet j
+    rw [show (toRn (fromRn (X := X^[I]) ((toRn x).linSet i v))) = (toRn x).linSet i v from
+      DataArrayEquiv.right_inv _]
+    have h := getElem_setElem_neq (toRn x) (fromIdx i : I×J) (fromIdx j) v .intro .intro
+      (fun h => hij (by simpa using congrArg toIdx h))
+    change ((toRn x).linSet (toIdx (fromIdx i : I×J)) v).linGet (toIdx (fromIdx j : I×J))
+      = (toRn x).linGet (toIdx (fromIdx j : I×J)) at h
+    rwa [IndexType.toIdx_fromIdx, IndexType.toIdx_fromIdx] at h
 
 instance : OfFn (X^[I]) (Idx (nI*nJ)) R where
-  ofFn f := fromRn ((ofFn f : R^[nI*nJ]).reshape (I×J) sorry_proof)
+  ofFn f := fromRn ((ofFn f : R^[nI*nJ]).reshape (I×J) (by rfl))
 
 instance : LawfulOfFn (X^[I]) (Idx (nI*nJ)) where
-  getElem_ofFn := sorry_proof
+  -- `toRn` undoes `fromRn` and then this is the law of `R^[nI*nJ]`
+  getElem_ofFn := by
+    intro f i
+    show (toRn (fromRn (X := X^[I]) ((ofFn f : R^[nI*nJ]).reshape (I×J) (by rfl)))).linGet i = f i
+    rw [show toRn (fromRn (X := X^[I]) ((ofFn f : R^[nI*nJ]).reshape (I×J) (by rfl)))
+      = (ofFn f : R^[nI*nJ]).reshape (I×J) (by rfl) from DataArrayEquiv.right_inv _]
+    exact getElem_ofFn (coll := R^[nI*nJ]) f i
 
 abbrev rget (x : X^[I]) (i : Idx (nI*nJ)) : R := x[i]
 abbrev rset (x : X^[I]) (i : Idx (nI*nJ)) (v : R) : X^[I] := setElem x i v .intro
@@ -137,24 +169,42 @@ variable (X : Type*)
 
 /-- Transfers `AddCommGroup` structure from `R^[I]` to `X` together with all operations. -/
 @[instance_reducible, inline]
-def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
+def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X :=
+  letI := Add.ofRnEquiv X
+  letI := Zero.ofRnEquiv X
+  have zero_add : ∀ x : X, 0 + x = x := sorry_proof
+  have add_comm : ∀ x y : X, x + y = y + x := sorry_proof
+  have nsmul_zero : ∀ x : X, (NSMul.ofRnEquiv X).1 0 x = 0 := sorry_proof
+  have nsmul_succ : ∀ (n : ℕ) (x : X),
+      (NSMul.ofRnEquiv X).1 (n + 1) x = (NSMul.ofRnEquiv X).1 n x + x := sorry_proof
+  {
   toAdd := Add.ofRnEquiv X
   toSub := Sub.ofRnEquiv X
   toNeg := Neg.ofRnEquiv X
   toZero := Zero.ofRnEquiv X
 
   add_assoc := sorry_proof
-  zero_add := sorry_proof
-  add_zero := sorry_proof
+  zero_add := zero_add
+  add_zero := fun x => (add_comm x 0).trans (zero_add x)
   nsmul := (NSMul.ofRnEquiv X).1
-  nsmul_zero := sorry_proof
-  nsmul_succ := sorry_proof
+  nsmul_zero := nsmul_zero
+  nsmul_succ := nsmul_succ
   zsmul := (ZSMul.ofRnEquiv X).1
-  zsmul_zero' := sorry_proof
-  zsmul_succ' := sorry_proof
+  zsmul_zero' := fun x => by
+    have h := nsmul_zero x
+    change fromRn (⟨BLAS.LevelOneData.scal nI ((0:ℕ):R) (toRn x).1 0 1, _⟩ : R^[I]) = 0 at h
+    change fromRn (⟨BLAS.LevelOneData.scal nI ((0:ℤ):R) (toRn x).1 0 1, _⟩ : R^[I]) = 0
+    simp only [Nat.cast_zero] at h; simpa only [Int.cast_zero] using h
+  zsmul_succ' := fun n x => by
+    have h := nsmul_succ n x
+    change fromRn (⟨BLAS.LevelOneData.scal nI ((n+1:ℕ):R) (toRn x).1 0 1, _⟩ : R^[I])
+      = fromRn (⟨BLAS.LevelOneData.scal nI ((n:ℕ):R) (toRn x).1 0 1, _⟩ : R^[I]) + x at h
+    change fromRn (⟨BLAS.LevelOneData.scal nI ((n.succ:ℤ):R) (toRn x).1 0 1, _⟩ : R^[I])
+      = fromRn (⟨BLAS.LevelOneData.scal nI ((n:ℤ):R) (toRn x).1 0 1, _⟩ : R^[I]) + x
+    simpa only [Int.cast_natCast, Nat.succ_eq_add_one] using h
   zsmul_neg' := sorry_proof
   neg_add_cancel := sorry_proof
-  add_comm := sorry_proof
+  add_comm := add_comm
   sub_eq_add_neg := sorry_proof
 
   toNorm := Norm.ofRnEquiv X
@@ -165,15 +215,25 @@ def _root_.NormedAddCommGroup.ofRnEquiv : NormedAddCommGroup X := {
 }
 
 @[instance_reducible, inline]
-def _root_.AdjointSpace.ofRnEquiv [NormedAddCommGroup X] : AdjointSpace R X := {
+def _root_.AdjointSpace.ofRnEquiv [NormedAddCommGroup X] : AdjointSpace R X :=
+  letI := SMul.ofRnEquiv (R:=R) X
+  have smul_add : ∀ (r : R) (x y : X), r • (x + y) = r • x + r • y := sorry_proof
+  have add_smul : ∀ (r s : R) (x : X), (r + s) • x = r • x + s • x := sorry_proof
+  {
   toSMul := SMul.ofRnEquiv X
   toInner := Inner.ofRnEquiv X
   one_smul := sorry_proof
   mul_smul := sorry_proof
-  smul_zero := sorry_proof
-  smul_add := sorry_proof
-  add_smul := sorry_proof
-  zero_smul := sorry_proof
+  smul_zero := fun r => by
+    have h := smul_add r 0 0
+    rw [add_zero] at h
+    exact left_eq_add.mp h
+  smul_add := smul_add
+  add_smul := add_smul
+  zero_smul := fun x => by
+    have h := add_smul 0 0 x
+    rw [add_zero] at h
+    exact left_eq_add.mp h
   norm_smul_le := sorry_proof
   inner_top_equiv_norm := sorry_proof
   conj_symm := sorry_proof

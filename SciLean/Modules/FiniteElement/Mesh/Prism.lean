@@ -55,7 +55,7 @@ def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool :=
   match P with
   | ⟨.point, _⟩ => x = 0
   | ⟨.cone Q, _⟩ =>
-    let Q : Prism := ⟨Q, sorry_proof⟩
+    let Q : Prism := ⟨Q, PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
     let x : ℝ^{Q.dim' + 1} := cast sorry_proof x
     let t : ℝ := x[⟨Q.dim', sorry_proof⟩]
     let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1, sorry_proof⟩]
@@ -64,8 +64,8 @@ def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool :=
     else
       Q.inPrism (1/(1-t) • y)
   | ⟨.prod P₁ P₂, _⟩ =>
-    let P₁ : Prism := ⟨P₁, sorry_proof⟩
-    let P₂ : Prism := ⟨P₂, sorry_proof⟩
+    let P₁ : Prism := ⟨P₁, PrismRepr.IsCanonical_prod_fst _ _ ‹_›⟩
+    let P₂ : Prism := ⟨P₂, PrismRepr.IsCanonical_prod_snd _ _ ‹_›⟩
     let x₁ : ℝ^{P₁.dim'} := ⊞ i, x[⟨i.1, sorry_proof⟩]
     let x₂ : ℝ^{P₂.dim'} := ⊞ i, x[⟨P₁.dim' + i.1, sorry_proof⟩]
     (P₁.inPrism x₁) ∧ (P₂.inPrism x₂)
@@ -73,14 +73,14 @@ def inPrism (P : Prism) (x : ℝ^{P.dim'}) : Bool :=
 def InPrism (P : Prism) (x : ℝ^{P.dim'}) : Prop := (P.inPrism x = true)
 
 @[match_pattern]
-def point : Prism := ⟨.point, sorry_proof⟩
+def point : Prism := ⟨.point, by decide⟩
 @[match_pattern]
-def segment : Prism := ⟨.cone .point, sorry_proof⟩
+def segment : Prism := ⟨.cone .point, by decide⟩
 
 @[match_pattern]
-def triangle : Prism := ⟨.cone (.cone .point), sorry_proof⟩
+def triangle : Prism := ⟨.cone (.cone .point), by decide⟩
 @[match_pattern]
-def square   : Prism := ⟨.prod (.cone .point) (.cone .point), sorry_proof⟩
+def square   : Prism := ⟨.prod (.cone .point) (.cone .point), by decide⟩
 
 @[match_pattern]
 def tet     : Prism := triangle.cone
@@ -204,41 +204,41 @@ def primePrismFromNat : Nat → Prism
 def prismToFin (P : Prism) : Fin (prismCount P.dim) :=
   match P with
   -- 0D
-  | ⟨.point, _⟩ => ⟨0, sorry_proof⟩
+  | ⟨.point, _⟩ => ⟨0, by simp only [dim]; decide⟩
   -- 1D
-  | ⟨.cone .point, _⟩ => ⟨0, sorry_proof⟩
+  | ⟨.cone .point, _⟩ => ⟨0, by simp only [dim]; decide⟩
   -- 2D
-  | ⟨.cone (.cone .point), _⟩ => ⟨0, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone .point), _⟩ => ⟨1, sorry_proof⟩
+  | ⟨.cone (.cone .point), _⟩ => ⟨0, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone .point), _⟩ => ⟨1, by simp only [dim]; decide⟩
   -- 3D
-  | ⟨.cone (.cone (.cone .point)), _⟩ => ⟨0, sorry_proof⟩
-  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨1, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨2, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨3, sorry_proof⟩
+  | ⟨.cone (.cone (.cone .point)), _⟩ => ⟨0, by simp only [dim]; decide⟩
+  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨1, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨2, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨3, by simp only [dim]; decide⟩
   -- 4D
-  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨0, sorry_proof⟩
-  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨1, sorry_proof⟩
-  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨2, sorry_proof⟩
-  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨3, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨4, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨5, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨6, sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨7, sorry_proof⟩
-  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨8, sorry_proof⟩
+  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨0, by simp only [dim]; decide⟩
+  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨1, by simp only [dim]; decide⟩
+  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨2, by simp only [dim]; decide⟩
+  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨3, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨4, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨5, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨6, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨7, by simp only [dim]; decide⟩
+  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨8, by simp only [dim]; decide⟩
 
   | P =>
-    have : Inhabited (Fin (prismCount P.dim)) := cast sorry_proof (⟨0, sorry_proof⟩ : Fin 1)
+    have : Inhabited (Fin (prismCount P.dim)) := cast sorry_proof (⟨0, Nat.one_pos⟩ : Fin 1)
     panic! "Getting prism from Fin n is not implemented for dim > 4!"
 
 
 def firstFace (P : Prism) (n : Option Nat := none) : Option (Face P n) :=
   match n with
-  | none => match P.1.first 0 with
-    | some f => ⟨f, sorry_proof, sorry_proof⟩ |> some
+  | none => match h : P.1.first 0 with
+    | some f => ⟨f, (PrismRepr.first_spec _ _ _ h).1, rfl⟩ |> some
     | none => none
   | some n =>
-  match P.1.first n with
-  | some f => ⟨f, sorry_proof, sorry_proof⟩ |> some
+  match h : P.1.first n with
+  | some f => ⟨f, (PrismRepr.first_spec _ _ _ h).1, (PrismRepr.first_spec _ _ _ h).2⟩ |> some
   | none => none
 
 
@@ -246,7 +246,7 @@ def firstFace (P : Prism) (n : Option Nat := none) : Option (Face P n) :=
 def prodSplit (P : Prism) : List (Prism) :=
   if P.1 = .point
   then []
-  else P.1.prodSplit.map (λ Pi => ⟨Pi, sorry_proof⟩)
+  else P.1.prodSplit.attach.map (λ Pi => ⟨Pi.1, PrismRepr.IsCanonical_of_mem_prodSplit _ _ P.2 Pi.2⟩)
 
 
 opaque prodTally (P : Prism) : List (Prism × Nat) :=
@@ -285,19 +285,19 @@ def primePowers (P : Prism) : Vector Nat (primePrismCumCount P.dim) :=
   | ⟨.prod (.cone .point) (.cone .point), _⟩ => ⟨#[2,0], by simp[dim]⟩
   -- 3D
   | ⟨.cone (.cone (.cone .point)), _⟩ => ⟨#[0,0,1,0], by simp[dim]⟩
-  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[0,0,0,1], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨#[1,1,0,0], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[3,0,0,0], sorry_proof⟩
+  | ⟨.cone (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[0,0,0,1], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.cone .point)), _⟩ => ⟨#[1,1,0,0], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone .point)), _⟩ => ⟨#[3,0,0,0], by simp only [dim]; decide⟩
   -- 4D
-  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,1,0,0,0], sorry_proof⟩
-  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,1,0,0], sorry_proof⟩
-  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,1,0], sorry_proof⟩
-  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,0,1], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨#[1,0,1,0,0,0,0,0], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[1,0,0,1,0,0,0,0], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[2,1,0,0,0,0,0,0], sorry_proof⟩
-  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[4,0,0,0,0,0,0,0], sorry_proof⟩
-  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨#[0,2,0,0,0,0,0,0], sorry_proof⟩
+  | ⟨.cone (.cone (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,1,0,0,0], by simp only [dim]; decide⟩
+  | ⟨.cone (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,1,0,0], by simp only [dim]; decide⟩
+  | ⟨.cone (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,1,0], by simp only [dim]; decide⟩
+  | ⟨.cone (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[0,0,0,0,0,0,0,1], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.cone (.cone .point))), _⟩ => ⟨#[1,0,1,0,0,0,0,0], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.cone (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[1,0,0,1,0,0,0,0], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.cone (.cone .point))), _⟩ => ⟨#[2,1,0,0,0,0,0,0], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone .point) (.prod (.cone .point) (.prod (.cone .point) (.cone .point))), _⟩ => ⟨#[4,0,0,0,0,0,0,0], by simp only [dim]; decide⟩
+  | ⟨.prod (.cone (.cone .point)) (.cone (.cone .point)), _⟩ => ⟨#[0,2,0,0,0,0,0,0], by simp only [dim]; decide⟩
   | _ => panic! "PrimePowers is not implemented for prisms of dimension larger then four!"
 
 
@@ -335,15 +335,29 @@ theorem comp_dim (f : Face P n) (g : Face f.toPrism m)
   : (f.comp g).dim = g.dim := by simp[comp,dim]
 
 def tip (P : Prism) : Face (P.cone) (some 0) := ⟨.tip P.repr, by simp[FaceRepr.ofPrism,Prism.cone], by simp[FaceRepr.dim, FaceRepr.toPrism]⟩
-def cone (f : Face P n) : Face (P.cone) (n.map (·+1)) := ⟨.cone f.repr, by simp[FaceRepr.ofPrism,Prism.cone, f.2], sorry_proof⟩
-def base (f : Face P n) : Face (P.cone) n := ⟨.base f.repr, sorry_proof, sorry_proof⟩
+def cone (f : Face P n) : Face (P.cone) (n.map (·+1)) := ⟨.cone f.repr, by simp[FaceRepr.ofPrism,Prism.cone, f.2],
+  by
+    have h : f.repr.dim = n.getD f.repr.dim := f.3
+    show f.repr.dim + 1 = (n.map (·+1)).getD (f.repr.dim + 1)
+    cases n <;> simp_all⟩
+def base (f : Face P n) : Face (P.cone) n := ⟨.base f.repr, by show f.repr.ofPrism.cone = P.repr.cone; rw [f.2], f.3⟩
 
 local instance : Add (Option Nat) := ⟨λ n m => match n, m with | some n, some m => n+m | _, _ => none⟩
-def prod (f : Face P n) (g : Face Q m) : Face (P.prod Q) (n+m) := ⟨f.repr.prod g.repr |>.toCanonical, sorry_proof, sorry_proof⟩
+def prod (f : Face P n) (g : Face Q m) : Face (P.prod Q) (n+m) := ⟨f.repr.prod g.repr |>.toCanonical, sorry_proof, by
+  have hf : f.repr.dim = n.getD f.repr.dim := f.3
+  have hg : g.repr.dim = m.getD g.repr.dim := g.3
+  rw [FaceRepr.toCanonical_dim]
+  simp only [FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at hf hg ⊢
+  cases n <;> cases m
+  · rfl
+  · rfl
+  · rfl
+  · simp only [Option.getD_some] at hf hg; rw [hf, hg]; rfl⟩
 
 def next (f : Face P n) : Option (Face P n) :=
-  match f.repr.next with
-  | some f' => ⟨f', sorry_proof, sorry_proof⟩ |> some
+  match h : f.repr.next with
+  | some f' => ⟨f', (FaceRepr.next_spec _ _ h).1.trans f.2,
+      by rw [(FaceRepr.next_spec _ _ h).2]; exact f.3⟩ |> some
   | none =>
     match n with
     | some _ => none
@@ -361,7 +375,11 @@ instance (P : Prism) (n)
 }
 
 
-def toFin (f : Face P (some n)) : Fin (P.faceCount n) := ⟨f.repr.index, sorry_proof⟩
+def toFin (f : Face P (some n)) : Fin (P.faceCount n) := ⟨f.repr.index, by
+  have h := FaceRepr.index_numberOfFaces f.repr
+  have h3 : f.repr.dim = n := f.3
+  rw [f.2, h3] at h
+  exact h⟩
 def fromFin (P : Prism) (n : Nat) (i : Fin (P.faceCount n)) : Face P (some n) := ⟨FaceRepr.fromIndex P.1 n i, sorry_proof, sorry_proof⟩
 
 instance : Enumtype (Face P (some n)) where
@@ -374,12 +392,12 @@ instance : Enumtype (Face P (some n)) where
   next_toFin    := sorry_proof
 
 
-def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β → m (ForInStep β)) : m (ForInStep β) := do
+def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β → m (ForInStep β)) : m (ForInStep β) :=
   match P, n with
-  | ⟨.point, _⟩, 0 => f ⟨.point, sorry_proof, sorry_proof⟩ init
+  | ⟨.point, _⟩, 0 => f ⟨.point, rfl, rfl⟩ init
   | ⟨.point, _⟩, n+1 => pure (.yield init)
   | ⟨.cone P', _⟩, 0 => do
-      let P' : Prism := ⟨P', sorry_proof⟩
+      let P' : Prism := ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
 
       let b ← Face.forIn P' 0 init (λ q b => (f q.base b))
       match b with
@@ -387,20 +405,20 @@ def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β �
       | .yield b => f (Face.tip P') b
 
   | ⟨.cone P', _⟩, n+1 => do
-      let b ← Face.forIn ⟨P', sorry_proof⟩ (n+1) init (λ q b => (f q.base b))
+      let b ← Face.forIn ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩ (n+1) init (λ q b => (f q.base b))
 
       match b with
       | .done b => return .done b
       | .yield b =>
-        Face.forIn ⟨P', sorry_proof⟩ n b (λ q b => (f q.cone b))
+        Face.forIn ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩ n b (λ q b => (f q.cone b))
 
   | ⟨.prod P Q, _⟩, n => do
-      let P : Prism := ⟨P, sorry_proof⟩
-      let Q : Prism := ⟨Q, sorry_proof⟩
+      let P : Prism := ⟨P, PrismRepr.IsCanonical_prod_fst _ _ ‹_›⟩
+      let Q : Prism := ⟨Q, PrismRepr.IsCanonical_prod_snd _ _ ‹_›⟩
 
       let mut b := ForInStep.yield init
 
-      for i in [0:n+1] do
+      for h : i in [0:n+1] do
         let j := n - i
 
         match b with
@@ -408,7 +426,12 @@ def forIn {m} [Monad m] (P : Prism) (n : Nat) (init : β) (f : Face P n → β �
         | .yield b' =>
           b ← Face.forIn Q j b' λ q b =>
                  Face.forIn P i b λ p b =>
-                   f ⟨p.repr.prod q.repr, sorry_proof, sorry_proof⟩ b
+                   f ⟨p.repr.prod q.repr, congrArg₂ PrismRepr.prod p.2 q.2, by
+                     have hp : p.repr.dim = i := p.3
+                     have hq : q.repr.dim = n - i := q.3
+                     have hi : i < n + 1 := h.upper
+                     show p.repr.dim + q.repr.dim = n
+                     omega⟩ b
 
       pure b
 
@@ -539,7 +562,7 @@ def decomposeBy (P P₁ : Prism) : PrismDecomposition P :=
     | [],  _ => Unit.unit
     | [n], [i] => ⟨i % n, sorry_proof⟩
     | n :: _ :: _, i :: j :: is => (⟨i % n, sorry_proof⟩, fromList (j :: is))
-    | _, _ => absurd (a:=True) sorry_proof sorry_proof
+    | _, _ => absurd (a:=True) trivial sorry_proof
 
   fromList (pt'.map (·.2))
 
@@ -562,8 +585,8 @@ def subprismCount (P Q : Prism) : Nat :=
     subprismCount P' Q
 
   | ⟨.prod P₁ P₂, _⟩, _ =>
-    let P₁ : Prism := ⟨P₁, sorry_proof⟩
-    let P₂ : Prism := ⟨P₂, sorry_proof⟩
+    let P₁ : Prism := ⟨P₁, PrismRepr.IsCanonical_prod_fst _ _ ‹_›⟩
+    let P₂ : Prism := ⟨P₂, PrismRepr.IsCanonical_prod_snd _ _ ‹_›⟩
     Enumtype.sum λ dec : (PrismDecomposition Q) => subprismCount P₁ dec.fst * subprismCount P₂ dec.snd
 
 
@@ -571,29 +594,37 @@ def subprismCount (P Q : Prism) : Nat :=
 def barycentricInterpolate {P : Prism} {X} [Vec X] (f : Inclusion point P → X) (x : ℝ^{P.dim'}) : X :=
   match P with
   | ⟨.point, h⟩ =>
-    let ι : Inclusion point _ := ⟨.point, sorry_proof, sorry_proof⟩
+    let ι : Inclusion point _ := ⟨.point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩
     f ι
   | ⟨.cone P', _⟩ =>
     let x : ℝ^{P'.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
     let t : ℝ := x[⟨P'.dim' ,sorry_proof⟩]
 
-    let P' : Prism := ⟨P', sorry_proof⟩
-    let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, sorry_proof, sorry_proof⟩) ((1/(1-t))•x)
+    let P' : Prism := ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
+    let f₀ := P'.barycentricInterpolate (λ ι => f ⟨ι.1.base, congrArg PrismRepr.cone ι.2, ι.3⟩) ((1/(1-t))•x)
 
-    let f₁ := f ⟨.tip P'.1, sorry_proof, sorry_proof⟩
+    let f₁ := f ⟨.tip P'.1, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩
 
     (1-t) • f₀ + t • f₁
     -- f₁ + (1-t) * (f₀ - f₁)
     -- f₀ + t * (f₁-f₀)
   | ⟨.prod P Q, _⟩ =>
-    let P : Prism := ⟨P, sorry_proof⟩
-    let Q : Prism := ⟨Q, sorry_proof⟩
+    let P : Prism := ⟨P, PrismRepr.IsCanonical_prod_fst _ _ ‹_›⟩
+    let Q : Prism := ⟨Q, PrismRepr.IsCanonical_prod_snd _ _ ‹_›⟩
     let x : ℝ^{P.dim'} := ⊞ i, x[⟨i.1,sorry_proof⟩]
     let y : ℝ^{Q.dim'} := ⊞ i, x[⟨i.1+P.dim',sorry_proof⟩]
 
     P.barycentricInterpolate (x:=x) (λ ιP =>
       Q.barycentricInterpolate (x:=y) (λ ιQ =>
-        f ⟨ιP.1.prod ιQ.1, sorry_proof, sorry_proof⟩))
+        f ⟨ιP.1.prod ιQ.1, congrArg₂ PrismRepr.prod ιP.2 ιQ.2, by
+          have hA : ιP.1.toPrism.toCanonical = .point := ιP.3
+          have hB : ιQ.1.toPrism.toCanonical = .point := ιQ.3
+          show (PrismRepr.prod ιP.1.toPrism ιQ.1.toPrism).toCanonical = .point
+          generalize ιP.1.toPrism = A at hA ⊢
+          cases A with
+          | point => rw [PrismRepr.toCanonical]; exact hB
+          | cone A => rw [PrismRepr.toCanonical] at hA; cases hA
+          | prod A₁ A₂ => rw [PrismRepr.toCanonical, hA] <;> first | exact hB | simp⟩))
 
 end Prism
 
@@ -621,57 +652,59 @@ def split (ι : Inclusion Q P) (Pdec : PrismDecomposition P)
     let ι₂ : Inclusion Qdec.snd Pdec.snd := ⟨g, sorry_proof, sorry_proof⟩
     Sigma.mk Qdec (ι₁,ι₂) --, ι₂)
   | _ =>
-    absurd (a := True) sorry_proof sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
+    absurd (a := True) trivial sorry_proof /- fromCanonical (P * Q) has to be always a face of type .prod f g -/
 
 
-def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P → β → m (ForInStep β)) : m (ForInStep β) := do
+def forIn {m} [Monad m] (P : Prism) (Q : Prism) (init : β) (f : Inclusion Q P → β → m (ForInStep β)) : m (ForInStep β) :=
   match P, Q with
-  | ⟨.point, _⟩, ⟨.point, _⟩ => f ⟨.point, sorry_proof, sorry_proof⟩ init
+  | ⟨.point, _⟩, ⟨.point, _⟩ => f ⟨.point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩ init
   | ⟨.point, _⟩, _ => pure (.yield init)
   | ⟨.cone P', _⟩, ⟨.point, _⟩ => do
-      let P' : Prism := ⟨P', sorry_proof⟩
+      let P' : Prism := ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
 
       let b ←
         Inclusion.forIn P' Prism.point init (λ q b =>
-          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+          let q : Inclusion _ _ := ⟨q.repr.base, by exact congrArg PrismRepr.cone q.2, by exact q.3⟩
           f q b)
 
       match b with
       | .done b => return (.done b)
       | .yield b =>
-        let q : Inclusion _ _ := ⟨.tip P'.repr, sorry_proof, sorry_proof⟩
+        let q : Inclusion _ _ := ⟨.tip P'.repr, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩
         f q b
 
   | ⟨.cone P', _⟩, ⟨.cone Q', _⟩ => do
-      let P' : Prism := ⟨P', sorry_proof⟩
-      let Q' : Prism := ⟨Q', sorry_proof⟩
+      let P' : Prism := ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
+      let Q' : Prism := ⟨Q', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
 
       let b ←
         Inclusion.forIn P' Q'.cone init (λ q b =>
-          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+          let q : Inclusion _ _ := ⟨q.repr.base, by exact congrArg PrismRepr.cone q.2, by exact q.3⟩
           (f q b))
 
       match b with
       | .done b => return .done b
       | .yield b =>
         Inclusion.forIn P' Q' b (λ q b =>
-          let q : Inclusion _ _ := ⟨q.repr.cone, sorry_proof, sorry_proof⟩
+          let q : Inclusion _ _ := ⟨q.repr.cone, by exact congrArg PrismRepr.cone q.2, by
+            show (PrismRepr.cone q.repr.toPrism).toCanonical = PrismRepr.cone Q'.repr
+            rw [PrismRepr.toCanonical, q.3]⟩
           (f q b))
 
 
   | ⟨.cone P', _⟩, ⟨.prod Q₁ Q₂, _⟩ => do
-      let P' : Prism := ⟨P', sorry_proof⟩
+      let P' : Prism := ⟨P', PrismRepr.IsCanonical_base_of_cone _ ‹_›⟩
 
       let b ←
-        Inclusion.forIn P' Q init (λ q b =>
-          let q : Inclusion _ _ := ⟨q.repr.base, sorry_proof, sorry_proof⟩
+        Inclusion.forIn P' ⟨.prod Q₁ Q₂, ‹_›⟩ init (λ q b =>
+          let q : Inclusion _ _ := ⟨q.repr.base, by exact congrArg PrismRepr.cone q.2, by exact q.3⟩
           f q b)
 
       pure b
 
   | ⟨.prod P₁ P₂, _⟩, _ => do
-      let P₁ : Prism := ⟨P₁, sorry_proof⟩
-      let P₂ : Prism := ⟨P₂, sorry_proof⟩
+      let P₁ : Prism := ⟨P₁, PrismRepr.IsCanonical_prod_fst _ _ ‹_›⟩
+      let P₂ : Prism := ⟨P₂, PrismRepr.IsCanonical_prod_snd _ _ ‹_›⟩
 
       let mut b := ForInStep.yield init
 
@@ -701,15 +734,15 @@ end Inclusion
 namespace Prism
 
 
-def segment.point0 : Inclusion point segment := ⟨.base .point, sorry_proof, sorry_proof⟩
-def segment.point1 : Inclusion point segment := ⟨.tip .point, sorry_proof, sorry_proof⟩
+def segment.point0 : Inclusion point segment := ⟨.base .point, rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, point]⟩
+def segment.point1 : Inclusion point segment := ⟨.tip .point, rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, point]⟩
 
-def triangle.point0 : Inclusion point triangle := ⟨.base (.base .point), sorry_proof, sorry_proof⟩
-def triangle.point1 : Inclusion point triangle := ⟨.base (.tip .point), sorry_proof, sorry_proof⟩
-def triangle.point2 : Inclusion point triangle := ⟨.tip (.cone .point), sorry_proof, sorry_proof⟩
-def triangle.edge0 : Inclusion segment triangle := ⟨.base (.cone .point), sorry_proof, sorry_proof⟩
-def triangle.edge1 : Inclusion segment triangle := ⟨.cone (.base .point), sorry_proof, sorry_proof⟩
-def triangle.edge2 : Inclusion segment triangle := ⟨.cone (.tip .point), sorry_proof, sorry_proof⟩
+def triangle.point0 : Inclusion point triangle := ⟨.base (.base .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, point]⟩
+def triangle.point1 : Inclusion point triangle := ⟨.base (.tip .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, point]⟩
+def triangle.point2 : Inclusion point triangle := ⟨.tip (.cone .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, point]⟩
+def triangle.edge0 : Inclusion segment triangle := ⟨.base (.cone .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, segment]⟩
+def triangle.edge1 : Inclusion segment triangle := ⟨.cone (.base .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, segment]⟩
+def triangle.edge2 : Inclusion segment triangle := ⟨.cone (.tip .point), rfl, by simp [FaceRepr.toPrism, PrismRepr.toCanonical, segment]⟩
 
 
 end Prism
@@ -732,7 +765,17 @@ end Prism
     IO.println s!"{dec.fst} | {dec.snd} | {d.toList} {d.toListComplement}"
 
     for e in Prism.square.faces (some 1) do
-      let i : Inclusion Prism.segment Prism.square := ⟨e.1, sorry_proof, sorry_proof⟩
+      let i : Inclusion Prism.segment Prism.square := ⟨e.1, e.repr_ofPrism, by
+        have hpt : ∀ f : FaceRepr, f.ofPrism = .point → f = .point := by
+          intro f h; cases f <;> simp_all [FaceRepr.ofPrism]
+        obtain ⟨f, h1, h2⟩ := e
+        rcases f with _ | P | f | f | ⟨f, g⟩ <;> simp [FaceRepr.ofPrism, Prism.square] at h1
+        obtain ⟨hf, hg⟩ := h1
+        rcases f with _ | P | f | f | _ <;> rcases g with _ | Q | g | g | _ <;>
+          simp [FaceRepr.ofPrism, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at hf hg h2 ⊢
+        all_goals try obtain rfl := hpt _ hf
+        all_goals try obtain rfl := hpt _ hg
+        all_goals simp_all [FaceRepr.toPrism, PrismRepr.dim, PrismRepr.toCanonical, Prism.segment]⟩
       let split := i.split dec
       IO.println s!"{split.2.1.repr} | {split.2.2.repr}"
 
@@ -743,6 +786,12 @@ end Prism
     IO.println s!"{dec.fst} | {dec.snd} | {d.toList} {d.toListComplement}"
 
     for e in Prism.segment.faces (some 0) do
-      let i : Inclusion Prism.point Prism.segment := ⟨e.1, sorry_proof, sorry_proof⟩
+      let i : Inclusion Prism.point Prism.segment := ⟨e.1, e.repr_ofPrism, by
+        obtain ⟨f, h1, h2⟩ := e
+        rcases f with _ | P | f | f | ⟨f, g⟩ <;>
+          simp [FaceRepr.ofPrism, Prism.segment, FaceRepr.dim, FaceRepr.toPrism, PrismRepr.dim] at h1 h2 ⊢
+        · simp [PrismRepr.toCanonical, Prism.point]
+        · rcases f with _ | _ | _ | _ | _ <;> simp [FaceRepr.ofPrism] at h1
+          simp [FaceRepr.toPrism, PrismRepr.toCanonical, Prism.point]⟩
       let split := i.split dec
       IO.println s!"{split.2.1.repr} | {split.2.2.repr}"

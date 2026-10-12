@@ -13,6 +13,7 @@ public import SciLean.Tactic.LetNormalize
 public import SciLean.Util.SorryProof
 
 public import Batteries.Data.Array.Merge
+public import Aesop
 public meta import Batteries.Data.Array.Merge
 
 @[expose] public section
@@ -83,7 +84,42 @@ theorem decompose_has_unique_solution {Xs Ys Zs : Type _} [Nonempty Xs] [Nonempt
   : HasUniqueSolution P
     ↔
     HasUniqueSolution fun ys => Q₂ ys (solve zs, Q₁ ys zs)
-  := by sorry_proof
+  := by
+  have hg : ∀ ys, Q₁ ys (solve zs, Q₁ ys zs) := fun ys => by
+    have h := unique ys
+    simp only [solveFun, h, ↓reduceDIte]
+    exact Classical.choose_spec h.ex
+  have hu : ∀ ys zs, Q₁ ys zs → zs = solve zs, Q₁ ys zs := fun ys zs h =>
+    (unique ys).uniq _ _ h (hg ys)
+  have hinj : ∀ y z y' z', f y z = f y' z' → y = y' ∧ z = z' := fun y z y' z' h => by
+    have := @hf.1 (y, z) (y', z') h
+    simpa using this
+  have hsurj : ∀ x, ∃ y z, f y z = x := fun x => by
+    obtain ⟨⟨y, z⟩, h⟩ := hf.2 x
+    exact ⟨y, z, h⟩
+  constructor
+  · intro ⟨⟨x, hx⟩, huniq⟩
+    obtain ⟨y, z, rfl⟩ := hsurj x
+    have h := (equiv y z).2 hx
+    refine ⟨⟨y, ?_⟩, ?_⟩
+    · have := hu y z h.1
+      subst this
+      exact h.2
+    · intro a b ha hb
+      have e := huniq _ _ ((equiv a _).1 ⟨hg a, ha⟩) ((equiv b _).1 ⟨hg b, hb⟩)
+      exact (hinj _ _ _ _ e).1
+  · intro ⟨⟨y, hy⟩, huniq⟩
+    refine ⟨⟨f y _, (equiv y _).1 ⟨hg y, hy⟩⟩, ?_⟩
+    have key : ∀ x, P x → x = f y (solve zs, Q₁ y zs) := fun x hx => by
+      obtain ⟨a, b, rfl⟩ := hsurj x
+      have h := (equiv a b).2 hx
+      have hb := hu a b h.1
+      have ha : Q₂ a (solve zs, Q₁ a zs) := hb ▸ h.2
+      have := huniq a y ha hy
+      subst this
+      rw [hb]
+    intro x x' hx hx'
+    exact (key x hx).trans (key x' hx').symm
 
 
 
@@ -319,7 +355,7 @@ theorem solve_as_invFun_rhs {α β : Type _} [Nonempty α] (f : α → β) (b : 
   : (solve x, b = f x)
     =
     invFun f b
-  := sorry_proof
+  := by grind only [solve_as_invFun_lhs]
 
 
 macro "solve_as_inv" : conv => `(conv| (conv => pattern (solveFun _); first | rw[solve_as_invFun_lhs] | rw[solve_as_invFun_rhs] | rw[solve_as_invFun]))
@@ -334,9 +370,10 @@ error: 'pattern' conv tactic failed, pattern was not found
 #check
   (solve (a b c : Int), a+b+c=1 ∧ a-b+c=1 ∧ a-b-c=1)
   rewrite_by
-    solve_for b from 2 := sorry_proof
+    solve_for b from 2 := fun a c => ⟨⟨a - c - 1, by show a - (a - c - 1) - c = 1; omega⟩,
+      fun b b' (hb : a - b - c = 1) (hb' : a - b' - c = 1) => by omega⟩
     solve_as_inv
-    solve_for a from 0 := sorry_proof
+    solve_for a from 0 := (by rfl)
     solve_as_inv
     solve_as_inv
 
@@ -350,4 +387,5 @@ let a := a' b;
 #check
   (solve (a b : Nat), (∀ c, a + b + c = c) ∧ (∀ c, a + c = c))
   rewrite_by
-    solve_for a from 1 := sorry_proof
+    solve_for a from 1 := fun _ => ⟨⟨0, Nat.zero_add⟩, fun a a' ha ha' => by
+      have := ha 0; have := ha' 0; omega⟩

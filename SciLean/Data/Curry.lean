@@ -27,8 +27,10 @@ instance (priority := low) {X Xs Y F : Sort _} [fn : FunNArgs n F Xs Y] : FunNAr
   curry := λ (f : X×Xs → Y) (x : X) => fn.curry (n:=n) (fun xs => f (x,xs))
   is_equiv :=
     by constructor
-       . funext x xs; simp; sorry_proof
-       . funext f (x,xs); simp; sorry_proof
+       . funext f; funext x
+         exact congrFun fn.is_equiv.1 (f x)
+       . funext f; funext (x,xs)
+         exact congrFun (congrFun fn.is_equiv.2 (fun xs => f (x,xs))) xs
 
 
 --------------------------------------------------------------------------------

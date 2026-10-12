@@ -82,3 +82,60 @@ instance {R} [RCLike R] [NormedAddCommGroup M₁] [NormedAddCommGroup M₂] [Adj
   (AdjointSpace.ofEquiv (R:=R) (simple_proxy_equiv% (ProdMatrixCol M₁ M₂)))
   rewrite_by
     simp[ProdMatrixCol.simpleProxyTypeEquiv,AdjointSpace.ofEquiv]
+
+
+----------------------------------------------------------------------------------------------------
+-- Linearity of projections and of the constructor --------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+section Linearity
+
+variable
+  {R : Type*} [RCLike R]
+  {M₁ : Type*} [NormedAddCommGroup M₁] [NormedSpace R M₁]
+  {M₂ : Type*} [NormedAddCommGroup M₂] [NormedSpace R M₂]
+  {X : Type*} [NormedAddCommGroup X] [NormedSpace R X]
+
+@[fun_prop]
+theorem ProdMatrixCol.A₁.arg_A.IsContinuousLinearMap_rule :
+    IsContinuousLinearMap R (fun A : ProdMatrixCol M₁ M₂ => A.A₁) := by
+  constructor
+  · constructor
+    · intro A B; rfl
+    · intro c A; rfl
+  · have h : LipschitzWith 1 (fun A : ProdMatrixCol M₁ M₂ => A.A₁) := by
+      apply LipschitzWith.of_dist_le_mul
+      intro A B
+      show dist A.A₁ B.A₁ ≤ 1 * (dist A.A₁ B.A₁ ⊔ dist A.A₂ B.A₂)
+      rw [one_mul]; exact le_sup_left
+    exact h.continuous
+
+@[fun_prop]
+theorem ProdMatrixCol.A₂.arg_A.IsContinuousLinearMap_rule :
+    IsContinuousLinearMap R (fun A : ProdMatrixCol M₁ M₂ => A.A₂) := by
+  constructor
+  · constructor
+    · intro A B; rfl
+    · intro c A; rfl
+  · have h : LipschitzWith 1 (fun A : ProdMatrixCol M₁ M₂ => A.A₂) := by
+      apply LipschitzWith.of_dist_le_mul
+      intro A B
+      show dist A.A₂ B.A₂ ≤ 1 * (dist A.A₁ B.A₁ ⊔ dist A.A₂ B.A₂)
+      rw [one_mul]; exact le_sup_right
+    exact h.continuous
+
+theorem ProdMatrixCol.isometry_mk :
+    Isometry (fun p : M₁ × M₂ => (⟨p.1,p.2⟩ : ProdMatrixCol M₁ M₂)) :=
+  Isometry.of_dist_eq (fun _ _ => rfl)
+
+@[fun_prop]
+theorem ProdMatrixCol.mk.arg_A₁A₂.IsContinuousLinearMap_rule (f : X → M₁) (g : X → M₂)
+    (hf : IsContinuousLinearMap R f) (hg : IsContinuousLinearMap R g) :
+    IsContinuousLinearMap R (fun x => (⟨f x, g x⟩ : ProdMatrixCol M₁ M₂)) := by
+  constructor
+  · constructor
+    · intro x y; show ProdMatrixCol.mk _ _ = _; rw [hf.1.map_add, hg.1.map_add]; rfl
+    · intro c x; show ProdMatrixCol.mk _ _ = _; rw [hf.1.map_smul, hg.1.map_smul]; rfl
+  · exact ProdMatrixCol.isometry_mk.continuous.comp (hf.2.prodMk hg.2)
+
+end Linearity

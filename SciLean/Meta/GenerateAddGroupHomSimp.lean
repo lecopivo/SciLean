@@ -80,8 +80,9 @@ theorem _root_.IsAddGroupHom.neg_pull (x : X)
 
 theorem _root_.IsAddGroupHom.app_zero
   : f 0 = 0 := by
-  have := hf
-  sorry_proof
+  have h := hf.map_add 0 0
+  simp only [add_zero] at h
+  exact left_eq_add.mp h
 
 variable {g : X → Y → Z} (hg : IsAddGroupHom fun xy : X×Y => g xy.1 xy.2)
 
@@ -128,8 +129,9 @@ by
 theorem _root_.IsAddGroupHom.app_zero₂
   : g 0 0 = 0 :=
 by
-  have := hg
-  sorry_proof
+  have h := hg.map_add (0,0) (0,0)
+  simp only [Prod.mk_add_mk, add_zero] at h
+  exact left_eq_add.mp h
 
 
 end HelperTheorems

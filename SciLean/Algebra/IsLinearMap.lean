@@ -375,13 +375,19 @@ variable
 
 set_option linter.defProp false in
 def Inner.inner.arg_a0.IsLinearMap_rule' (y : X) :
-    IsLinearMap R (fun x : X => ⟪x,y⟫[R]) := sorry_proof
+    IsLinearMap R (fun x : X => ⟪x,y⟫[R]) := by
+  constructor
+  · intro a b; exact AdjointSpace.inner_add_left _ _ _
+  · intro c x; rw [AdjointSpace.inner_smul_left, conj_for_real_scalar, smul_eq_mul]
 
 #generate_linear_map_simps Inner.inner.arg_a0.IsLinearMap_rule'
 
 set_option linter.defProp false in
 def Inner.inner.arg_a1.IsLinearMap_rule' (y : X) :
-    IsLinearMap R (fun x : X => ⟪y,x⟫[R]) := sorry_proof
+    IsLinearMap R (fun x : X => ⟪y,x⟫[R]) := by
+  constructor
+  · intro a b; exact AdjointSpace.inner_add_right _ _ _
+  · intro c x; rw [AdjointSpace.inner_smul_right, smul_eq_mul]
 
 #generate_linear_map_simps Inner.inner.arg_a1.IsLinearMap_rule'
 

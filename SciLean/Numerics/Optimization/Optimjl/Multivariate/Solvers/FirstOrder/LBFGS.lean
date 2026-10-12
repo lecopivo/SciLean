@@ -147,6 +147,17 @@ def twoloop (g : X) (k : ℤ) (m : ℕ)
   return - s
 
 
+/-- The history index `i % m` of an iteration `i` in the window `[k-m, k-1]` is a valid index.
+
+Note that the existence of such an `i` already forces `m` to be positive. -/
+theorem lbfgs_history_index_lt {k : ℤ} {m : ℕ} (i : Set.Icc (k-(m:ℤ)) (k-1)) :
+    (i.1 % (m:ℤ)).toNat < m := by
+  obtain ⟨hl,hr⟩ := Set.mem_Icc.mp i.2
+  have hm : (0:ℤ) < (m:ℤ) := by omega
+  have h1 : 0 ≤ i.1 % (m:ℤ) := Int.emod_nonneg _ (by omega)
+  have h2 : i.1 % (m:ℤ) < (m:ℤ) := Int.emod_lt_of_pos _ hm
+  omega
+
 open Set in
 def updateSearchDirection (method : LBFGS R m) (state : State R X m) : State R X m :=  Id.run do
   let mut state := state
@@ -154,15 +165,15 @@ def updateSearchDirection (method : LBFGS R m) (state : State R X m) : State R X
   let k : ℤ := state.pseudo_iteration
 
   let ρ : Icc (k-m) (k-1) → R := fun i =>
-    let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
+    let i : Fin m := ⟨(i.1%m).toNat, lbfgs_history_index_lt i⟩
     state.ρ[i.toIdx]
 
   let dx : Icc (k-m) (k-1) → X := fun i =>
-    let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
+    let i : Fin m := ⟨(i.1%m).toNat, lbfgs_history_index_lt i⟩
     state.dx_history[i]
 
   let dg : Icc (k-m) (k-1) → X := fun i =>
-    let i : Fin m := ⟨(i.1%m).toNat, by sorry_proof⟩
+    let i : Fin m := ⟨(i.1%m).toNat, lbfgs_history_index_lt i⟩
     state.dg_history[i]
 
   state.s := twoloop state.g k m ρ dx dg -- method.scaleinvH0 precon
@@ -287,10 +298,11 @@ def updateH (state : State R X m)  :
     return state
 
   let k := state.pseudo_iteration
-  let i : Fin m := ⟨(k%m).toNat, by sorry_proof⟩
-  state.dx_history[i] := state.dx
-  state.dg_history[i] := state.dg
-  state.ρ[i.toIdx] := ρ
+  if h : (k%m).toNat < m then
+    let i : Fin m := ⟨(k%m).toNat, h⟩
+    state.dx_history[i] := state.dx
+    state.dg_history[i] := state.dg
+    state.ρ[i.toIdx] := ρ
 
   state.pseudo_iteration += 1
 

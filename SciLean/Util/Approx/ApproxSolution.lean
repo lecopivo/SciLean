@@ -51,8 +51,10 @@ theorem approx_consistency {N} {lN : Filter N} [T2Space α] {spec : α → Prop}
 by
   induction approx
   case exact impl h =>
-    simp[ApproxSolution.val]
-    sorry_proof
+    -- the limit of a constant along the non-trivial filter `⊤ : Filter Unit` is the constant
+    intro a ha
+    rw [ha]
+    simpa [ApproxSolution.val] using h
     -- intro a h'
     -- have : Filter.NeBot (⊤ : Filter Unit) := sorry_proof
     -- rw[tendsto_nhds_unique (a:=a) (b:=impl) h']

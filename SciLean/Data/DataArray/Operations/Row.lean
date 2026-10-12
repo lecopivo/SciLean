@@ -10,8 +10,8 @@ public import SciLean.Data.ArrayOperations.Operations.GetElem
 namespace SciLean.DataArrayN
 
 
-data_array_fun_prop row X R in x : IsLinearMap R by sorry_proof
-data_array_fun_prop row X R in x : Continuous by sorry_proof
+data_array_fun_prop row X R in x : IsLinearMap R by unfold row; fun_prop
+data_array_fun_prop row X R in x : Continuous by unfold row; fun_prop
 data_array_fun_prop row X R in x : IsContinuousLinearMap R by constructor <;> fun_prop
 data_array_fun_prop row X R in x : Differentiable R by fun_prop
 
@@ -37,7 +37,16 @@ data_array_data_synth_abbrev DataArrayN.row X R in x : HasAdjointUpdate R by
                              A)
   apply hasAdjointUpdate_from_hasAdjoint
   case adjoint => data_synth
-  case simp => intros; simp; ext ⟨i,j⟩; sorry_proof --simp[uncurry_getElem]; sorry_proof
+  case simp =>
+    intro y A; simp
+    have h1 : setElem A.curry i (A.curry[i] + y) .intro = A.curry + setElem 0 i y .intro := by
+      ext i' : 1
+      by_cases h : i' = i
+      · simp [h]
+      · simp [getElem_setElem_neq _ _ _ _ _ _ (Ne.symm h)]
+    have h2 : ∀ B : X^[I,J], B.curry.uncurry = B := by simp [curry, uncurry]
+    have h3 : ∀ B : X^[J]^[I], B.uncurry.curry = B := by simp [curry, uncurry]
+    rw [h1, ← h2 (A + _), (curry.arg_x.IsLinearMap_rule (R:=R)).map_add, h3]
 
 data_array_data_synth_abbrev DataArrayN.row X R in x : HasRevFDeriv R by
   apply hasRevFDeriv_from_hasFDerivAt_hasAdjoint

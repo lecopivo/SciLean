@@ -62,7 +62,7 @@ namespace Setoid
   --   quotBracket := Quotient.lift (λ x : α => ⟦f x⟧) sorry_proof
 
   @[simp]
-  theorem quotient_of_id (x : Quotient SA) : ⟦x.repr⟧ = x := sorry_proof   -- How do I prove this??
+  theorem quotient_of_id (x : Quotient SA) : ⟦x.repr⟧ = x := Classical.choose_spec x.exists_rep   -- How do I prove this??
 
   @[simp]
   theorem quotient_of_morphism (f : α → β) [m : Morphism f] (x : α)
