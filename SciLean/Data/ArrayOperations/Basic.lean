@@ -1,7 +1,12 @@
-import Mathlib.Logic.Function.Defs
-import SciLean.Meta.SimpAttr
-import SciLean.Lean.Expr
-import SciLean.Util.SorryProof
+module
+
+public import Mathlib.Logic.Function.Defs
+public import SciLean.Meta.SimpAttr
+public import SciLean.Lean.Expr
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -205,18 +210,23 @@ instance [SetElem' α ι γ] [SetElem' β κ γ]
          [GetElem' α ι γ] [GetElem' β κ γ]
          [LawfulSetElem α ι] [LawfulSetElem β κ] :
     LawfulSetElem (α×β) (ι⊕κ) where
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
+  getElem_setElem_eq := by
+    intro (x,y) i v _
+    cases i
+    · exact getElem_setElem_eq x _ v .intro
+    · exact getElem_setElem_eq y _ v .intro
+  getElem_setElem_neq := by
+    intro (x,y) i j v _ _ hij
+    cases i <;> cases j
+    · exact getElem_setElem_neq x _ _ v .intro .intro (fun h => hij (by rw [h]))
+    · rfl
+    · rfl
+    · exact getElem_setElem_neq y _ _ v .intro .intro (fun h => hij (by rw [h]))
 
 
 instance [OfFn α ι γ] [OfFn β κ γ] :
     OfFn (α×β) (ι⊕κ) γ where
   ofFn f := (ofFn (fun i => f (.inl i)), ofFn (fun j => f (.inr j)))
-
-instance [GetElem' α ι γ] [GetElem' β κ γ]
-    [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
-    LawfulOfFn (α×β) (ι⊕κ) where
-  getElem_ofFn := by intro f i; cases i <;> simp[getElem]
 
 @[simp, simp_core]
 theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
@@ -225,6 +235,15 @@ theorem getElem_prod_inl [GetElem' α ι γ] [GetElem' β κ γ]
 @[simp, simp_core]
 theorem getElem_prod_inr [GetElem' α ι γ] [GetElem' β κ γ]
         (x : α) (y : β) (j : κ) : (x,y)[Sum.inr (α:=ι) j] = y[j] := by rfl
+
+instance [GetElem' α ι γ] [GetElem' β κ γ]
+    [OfFn α ι γ] [OfFn β κ γ] [LawfulOfFn α ι] [LawfulOfFn β κ] :
+    LawfulOfFn (α×β) (ι⊕κ) where
+  getElem_ofFn := by
+    intro f i
+    cases i
+    · simp [ofFn, getElem_ofFn]
+    · simp [ofFn, getElem_ofFn]
 
 
 ----------------------------------------------------------------------------------------------------

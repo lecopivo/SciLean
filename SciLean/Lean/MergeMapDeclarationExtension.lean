@@ -1,6 +1,13 @@
-import Batteries.Data.RBMap.Alter
-import Lean
-import SciLean.Lean.Array
+module
+
+public import Lean
+
+public meta import Lean
+public import SciLean.Lean.Array
+public meta import SciLean.Lean.Array
+
+@[expose] public meta section
+
 
 open Lean
 
@@ -18,18 +25,26 @@ Similar to `MapDeclarationExtension` but it allows you have insert declarations 
 However, you have to provide how to merge the values and to guarantee consistency i.e. merging should be associative and commutative.
 -/
 def MergeMapDeclarationExtension (α)
-  := PersistentEnvExtension (Name × α) (Name × α) (Batteries.RBMap Name α Name.quickCmp)
+  := PersistentEnvExtension (Name × α) (Name × α) (NameMap α)
 
 open MergeMapDeclarationExtension in
 def mkMergeMapDeclarationExtension [Inhabited α] (merge : Merge α) (name : Name := by exact decl_name%)
   : IO (MergeMapDeclarationExtension α) :=
   registerPersistentEnvExtension {
     name          := name
-    mkInitial     := pure default
-    addImportedFn := fun s =>
-      let m := (s.map λ s' => .ofArray s' _) |>.joinl id λ a b => .mergeWith merge.1 a b
+    mkInitial     := pure {}
+    addImportedFn := fun s => do
+      let mut m : NameMap α := {}
+      for s' in s do
+        for (n, val') in s' do
+          match m.find? n with
+          | some val => m := m.insert n (merge.1 n val val')
+          | none => m := m.insert n val'
       pure m
-    addEntryFn    := fun s (n,val') => (s.alter n (λ val? => match val? with | .some val => merge.1 n val val' | none => val'))
+    addEntryFn    := fun s (n, val') =>
+      match s.find? n with
+      | some val => s.insert n (merge.1 n val val')
+      | none => s.insert n val'
     exportEntriesFn := fun s => s.toList.toArray
   }
 

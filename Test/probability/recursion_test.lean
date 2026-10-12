@@ -1,10 +1,15 @@
-import SciLean.Probability.Distributions.Flip
-import SciLean.Probability.Tactic
-import SciLean.Tactic.ConvInduction
+module
 
-import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Probability.Distributions.Flip
+public import SciLean.Probability.Tactic
+public import SciLean.Tactic.ConvInduction
 
-import Mathlib.Tactic.FieldSimp
+public import SciLean.Analysis.Scalar.FloatAsReal
+
+public import Mathlib.Tactic.FieldSimp
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

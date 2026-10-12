@@ -1,9 +1,14 @@
-import Mathlib.Topology.Order
+module
 
-import SciLean.Util.SorryProof
-import SciLean.Data.IndexType.Init
-import SciLean.Data.Idx.Basic
-import SciLean.Data.Int64
+public import Mathlib.Topology.Order
+
+public import SciLean.Util.SorryProof
+public import SciLean.Data.IndexType.Init
+public import SciLean.Data.Idx.Basic
+public import SciLean.Data.Int64
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -23,10 +28,10 @@ theorem Idx2.val_eq_of_eq {a b} {i j : Idx2 a b} (h : Eq i j) : Eq i.val j.val :
 
 instance {a b} : DecidableEq (Idx2 a b) :=
   fun i j =>
-    if i.val == j.val then
-      .isTrue sorry_proof
+    if h : i.val = j.val then
+      .isTrue (Idx2.eq_of_val_eq h)
     else
-      .isFalse sorry_proof
+      .isFalse (fun h' => h (Idx2.val_eq_of_eq h'))
     -- probably too slow
     -- match decEq i.val j.val with
     -- | isTrue h  => isTrue (Idx.eq_of_val_eq h)
@@ -39,16 +44,42 @@ instance {a b} : LE (Idx2 a b) where
   le a b := LE.le a.val b.val
 
 instance Idx2.decLt {a b} (i j : Idx2 a b) : Decidable (LT.lt i j) := -- Nat.decLt .. -- too slow
-  if i.val < j.val then
-    .isTrue sorry_proof
+  if h : i.val < j.val then
+    .isTrue h
   else
-    .isFalse sorry_proof
+    .isFalse h
 instance Idx2.decLe {a b} (i j : Idx2 a b) : Decidable (LE.le i j) :=  -- Nat.decLe .. -- too slow
-  if i.val ≤ j.val then
-    .isTrue sorry_proof
+  if h : i.val ≤ j.val then
+    .isTrue h
   else
-    .isFalse sorry_proof
+    .isFalse h
 
+
+/-- The offset `i - a` (computed in `Int64`, clamped at `0`) is below the size of `Idx2 a b`.
+This holds even when `i - a` wraps around. -/
+theorem Idx2.toNatClampNeg_sub_lt {a b : ℤ} (i : Idx2 a b) :
+    (i.1 - a.toInt64).toNatClampNeg < (b-a+1).toNat := by
+  have h := i.2
+  simp only [Int64.toNatClampNeg, Int64.toInt_sub, Int.toInt64, Int64.toInt_ofInt, Int64.size]
+  rw [Int.bmod_def, Int.bmod_def]
+  split_ifs <;> omega
+
+/-- The offset `i - a` (computed in `Int64`, converted to `USize`) is below the size of `Idx2 a b`.
+This holds even when `i - a` wraps around. -/
+theorem Idx2.toUSize_sub_lt {a b : ℤ} (i : Idx2 a b) :
+    (i.1 - a.toInt64).toUSize.toNat < (b-a+1).toNat := by
+  have h := i.2
+  have hu : ∀ x : Int64, (x.toUSize.toNat : Int) = x.toInt % 2 ^ System.Platform.numBits := by
+    intro x
+    show ((BitVec.signExtend _ x.toBitVec).toNat : Int) = _
+    rw [BitVec.signExtend, BitVec.toNat_ofInt, Int64.toInt_toBitVec, Int.toNat_of_nonneg]
+    · norm_cast
+    · exact Int.emod_nonneg _ (by simp)
+  have hx := hu (i.1 - a.toInt64)
+  simp only [Int64.toInt_sub, Int.toInt64, Int64.toInt_ofInt, Int64.size] at hx ⊢
+  generalize (i.1 - Int64.ofInt a).toUSize.toNat = n at hx ⊢
+  rw [Int.bmod_def, Int.bmod_def] at hx
+  rcases System.Platform.numBits_eq with hn | hn <;> rw [hn] at hx <;> split_ifs at hx <;> omega
 
 /--
 `Idx2 a b` is equivalent to `Fin n`
@@ -56,7 +87,7 @@ instance Idx2.decLe {a b} (i j : Idx2 a b) : Decidable (LE.le i j) :=  -- Nat.de
 This is blatanly false but we treat `Idx2 a b` as `Fin n`, see documentation of `Idx2 a b`.
 -/
 def Idx2.finEquiv (a b : ℤ) : Idx2 a b ≃ Fin ((b - a + 1).toNat) where
-  toFun x := ⟨(x.1 - a.toInt64).toNatClampNeg, sorry_proof⟩
+  toFun x := ⟨(x.1 - a.toInt64).toNatClampNeg, Idx2.toNatClampNeg_sub_lt x⟩
   invFun x := ⟨x.1.toInt64 + a.toInt64, sorry_proof⟩
   left_inv := sorry_proof
   right_inv := sorry_proof
@@ -64,10 +95,10 @@ def Idx2.finEquiv (a b : ℤ) : Idx2 a b ≃ Fin ((b - a + 1).toNat) where
 -- The rest of the file is direct copy of `Init.Data.Fin.Basic`
 namespace Idx2
 
-def toFin (i : Idx2 a b) : Fin (b-a+1).toNat := ⟨(i.1 - a.toInt64).toNatClampNeg, sorry_proof⟩
+def toFin (i : Idx2 a b) : Fin (b-a+1).toNat := ⟨(i.1 - a.toInt64).toNatClampNeg, toNatClampNeg_sub_lt i⟩
 def _root_.Fin.toIdx2 {a b : ℤ} (i : Fin (b-a+1).toNat) : Idx2 a b := ⟨i.1.toInt64 + a.toInt64, sorry_proof⟩
 
-def toIdx (i : Idx2 a b) : Idx (b-a+1).toNat := ⟨(i.1 - a.toInt64).toUSize, sorry_proof⟩
+def toIdx (i : Idx2 a b) : Idx (b-a+1).toNat := ⟨(i.1 - a.toInt64).toUSize, toUSize_sub_lt i⟩
 def _root_.SciLean.Idx.toIdx2 {a b : ℤ} (i : Idx (b-a+1).toNat) : Idx2 a b := ⟨i.1.toInt64 + a.toInt64, sorry_proof⟩
 
 instance coeToUSize : CoeOut (Idx2 a b) Int64 :=
@@ -91,8 +122,8 @@ instance : Size' (Idx2 a b) (b - a + 1).toNat where
 
 instance : FirstLast (Idx2 a b) (Idx2 a b) where
   firstLast? :=
-    if a ≤ b then
-      some (⟨a.toInt64,sorry_proof⟩, ⟨b.toInt64, sorry_proof⟩)
+    if h : (a ≤ a.toInt64.toInt ∧ a.toInt64.toInt ≤ b) ∧ (a ≤ b.toInt64.toInt ∧ b.toInt64.toInt ≤ b) then
+      some (⟨a.toInt64, h.1⟩, ⟨b.toInt64, h.2⟩)
     else
       none
 

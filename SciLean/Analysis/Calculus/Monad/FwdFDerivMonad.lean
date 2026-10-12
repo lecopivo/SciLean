@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+module
+
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -166,7 +171,7 @@ by
     rw[fwdFDerivM_bind f' (fun x => pure (g' x)) hf (DifferentiableM_pure g' hg')]
     simp[fwdFDerivM_pure (K:=K) g' hg']
     fun_trans
-    simp
+    skip
 
 
 end fwdFDerivM

@@ -1,6 +1,15 @@
-import Lean.Elab.Command
-import Lean.Elab.MatchExpr
-import Lean.Meta.Instances
+module
+
+public import Lean.Elab.Command
+
+public meta import Lean.Elab.Command
+public import Lean.Elab.MatchExpr
+public meta import Lean.Elab.MatchExpr
+public import Lean.Meta.Instances
+public meta import Lean.Meta.Instances
+
+@[expose] public meta section
+
 
 /-!
 # Specify the synthesization order for instances

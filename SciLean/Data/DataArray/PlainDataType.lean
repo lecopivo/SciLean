@@ -1,8 +1,13 @@
-import SciLean.Util.SorryProof
-import SciLean.Data.IndexType
-import SciLean.Data.ByteArray
-import SciLean.Data.Idx
-import SciLean.Data.IndexType.Fold
+module
+
+public import SciLean.Util.SorryProof
+public import SciLean.Data.IndexType
+public import SciLean.Data.ByteArray
+public import SciLean.Data.Idx
+public import SciLean.Data.IndexType.Fold
+
+@[expose] public section
+
 -- import LeanColls.Classes.Ops.Fold
 
 namespace SciLean
@@ -101,6 +106,7 @@ def PlainDataType.toByteArray {α : Type*} (pd : PlainDataType α) (data : ByteA
   --   byteType.toByteArray data (i.toUSize*byteType.bytes) sorry_proof v
 
 /-- Translate `PlainDataType X` along equivalence `f : X ≃ Y` to `PlainDataType Y` -/
+@[instance_reducible]
 def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : PlainDataType Y where
   btype := {
       bytes := pd.btype.bytes
@@ -113,9 +119,11 @@ def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : P
         let vx := f.symm vy
         let b := pd.btype.toByteArray b i h vx
         b
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
-      fromByteArray_toByteArray_other := sorry_proof
+      toByteArray_size := fun b i h a => pd.btype.toByteArray_size b i h (f.symm a)
+      fromByteArray_toByteArray := fun a b i h h' => by
+        simp [pd.btype.fromByteArray_toByteArray]
+      fromByteArray_toByteArray_other := fun a b i j h hij =>
+        pd.btype.fromByteArray_toByteArray_other (f.symm a) b i j h hij
       : ByteType Y }
 
     -- match pd.btype with
@@ -152,6 +160,31 @@ def PlainDataType.ofEquiv {X Y : Type*} [pd : PlainDataType X] (f : X ≃ Y) : P
 --------------- Prod -------------------------------------------------
 ----------------------------------------------------------------------
 
+private theorem ByteArray.getElem_uset (a : ByteArray) (j k : USize) (v : UInt8) (h h') :
+    (a.uset j v h)[k]'h' = if j.toNat = k.toNat then v else a[k]'(by simpa using h') :=
+  Array.getElem_set (h:=h')
+
+private theorem Nat.two_mul_add_one_mod_ne (a : Nat) :
+    (2*a+1) % 2^System.Platform.numBits ≠ 2*a % 2^System.Platform.numBits := by
+  rcases System.Platform.numBits_eq with h | h <;> rw [h] <;> omega
+
+/-- Reading back the byte written at position `2*i` before writing position `2*i+1`. -/
+private theorem ByteArray.getElem_uset_two_fst (arr : ByteArray) (i : USize) (x y : UInt8)
+    {h1 h2 h3} : ((arr.uset (2*i) x h1).uset (2*i+1) y h2)[2*i]'h3 = x := by
+  simp [ByteArray.getElem_uset, Nat.two_mul_add_one_mod_ne]
+
+/-- Reading back the byte written at position `2*i+1`. -/
+private theorem ByteArray.getElem_uset_two_snd (arr : ByteArray) (i : USize) (x y : UInt8)
+    {h1 h2 h4} : ((arr.uset (2*i) x h1).uset (2*i+1) y h2)[2*i+1]'h4 = y := by
+  simp [ByteArray.getElem_uset]
+
+private theorem USize.lt_add_one_or_add_one_add_le (i B : USize) : i < i+1 ∨ i+1+B ≤ i := by
+  rw [USize.lt_iff_toNat_lt, USize.le_iff_toNat_le]
+  simp only [USize.toNat_add, USize.toNat_one]
+  have hi := i.toNat_lt_two_pow_numBits
+  have hb := B.toNat_lt_two_pow_numBits
+  rcases System.Platform.numBits_eq with h | h <;> rw [h] at * <;> omega
+
 @[inline]
 def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α × β) ⊕ ByteType (α × β) :=
   if h : ta.bits + tb.bits ≤ 8 then
@@ -179,7 +212,7 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
   else
     .inr {
       bytes := 2
-      h_size := by sorry_proof
+      h_size := by rw [USize.lt_iff_toNat_lt]; simp
 
       fromByteArray := λ b i _ =>
         let aByte := b[2*i]'sorry_proof
@@ -189,8 +222,11 @@ def Prod.bitTypeProd {α β} (ta : BitType α) (tb : BitType β) : BitType (α �
         arr |>.uset (2*i) (ta.toByte a) sorry_proof
             |>.uset (2*i+1) (tb.toByte b) sorry_proof
 
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
+      toByteArray_size := by intro b i h a; simp
+      fromByteArray_toByteArray := by
+        rintro ⟨a, b⟩ arr i h h'
+        simp only [ByteArray.getElem_uset_two_fst, ByteArray.getElem_uset_two_snd,
+          ta.fromByte_toByte, tb.fromByte_toByte]
       fromByteArray_toByteArray_other := sorry_proof
     }
 
@@ -202,13 +238,18 @@ def Prod.bitTypeByteTypeProd {α β} (ta : BitType α) (tb : ByteType β) : Byte
 
     fromByteArray := λ arr i _ =>
       let aByte := arr[i]'sorry_proof
-      (ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof)
+      (ta.fromByte aByte, tb.fromByteArray arr (i+1) (by grind))
     toByteArray := λ arr i _ (a,b) =>
-      arr |>.uset i (ta.toByte a) sorry_proof
-          |> (tb.toByteArray · (i+1) sorry_proof b)
+      tb.toByteArray (arr.uset i (ta.toByte a) sorry_proof) (i+1)
+        (by rw [ByteArray.size_uset]; grind) b
 
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
+    toByteArray_size := by intro b i h a; simp [tb.toByteArray_size]
+    fromByteArray_toByteArray := by
+      rintro ⟨a, b⟩ arr i h h'
+      refine Prod.ext ?_ (tb.fromByteArray_toByteArray ..)
+      show ta.fromByte (ByteArray.uget _ i _) = a
+      rw [tb.fromByteArray_toByteArray_other _ _ _ _ _ (USize.lt_add_one_or_add_one_add_le i tb.bytes)]
+      simp [ByteArray.uget, ByteArray.uset, ta.fromByte_toByte]
     fromByteArray_toByteArray_other := sorry_proof
   }
 
@@ -225,7 +266,7 @@ def Prod.byteTypeBitTypeProd {α β} (ta : ByteType α) (tb : BitType β) : Byte
       arr |> (ta.toByteArray · i sorry_proof a)
           |>.uset (i + ta.bytes) (tb.toByte b) sorry_proof
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ta.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -238,12 +279,12 @@ def Prod.byteTypeProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType (
 
     fromByteArray := λ arr i _ =>
       (ta.fromByteArray arr i sorry_proof,
-       tb.fromByteArray arr (i+ta.bytes) sorry_proof)
+       tb.fromByteArray arr (i+ta.bytes) (by grind))
     toByteArray := λ arr i _ (a,b) =>
-      arr |> (ta.toByteArray · (i) sorry_proof a)
-          |> (tb.toByteArray · (i+ta.bytes) sorry_proof b)
+      tb.toByteArray (ta.toByteArray arr i sorry_proof a) (i+ta.bytes)
+        (by rw [ta.toByteArray_size]; grind) b
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ta.toByteArray_size, tb.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -306,7 +347,7 @@ def Sigma.bitTypeSigma {α β} (ta : BitType α) (tb : BitType β) : BitType ((_
   else
     .inr {
       bytes := 2
-      h_size := by sorry_proof
+      h_size := by rw [USize.lt_iff_toNat_lt]; simp
 
       fromByteArray := λ b i _ =>
         let aByte := b[2*i]'sorry_proof
@@ -316,8 +357,11 @@ def Sigma.bitTypeSigma {α β} (ta : BitType α) (tb : BitType β) : BitType ((_
         arr |>.uset (2*i) (ta.toByte a) sorry_proof
             |>.uset (2*i+1) (tb.toByte b) sorry_proof
 
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
+      toByteArray_size := by intro b i h a; simp
+      fromByteArray_toByteArray := by
+        rintro ⟨a, b⟩ arr i h h'
+        simp only [ByteArray.getElem_uset_two_fst, ByteArray.getElem_uset_two_snd,
+          ta.fromByte_toByte, tb.fromByte_toByte]
       fromByteArray_toByteArray_other := sorry_proof
     }
 
@@ -329,13 +373,18 @@ def Sigma.bitTypeByteTypeSigma {α β} (ta : BitType α) (tb : ByteType β) : By
 
     fromByteArray := λ arr i _ =>
       let aByte := arr[i]'sorry_proof
-      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof⟩
+      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) (by grind)⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
-      arr |>.uset i (ta.toByte a) sorry_proof
-          |> (tb.toByteArray · (i+1) sorry_proof b)
+      tb.toByteArray (arr.uset i (ta.toByte a) sorry_proof) (i+1)
+        (by rw [ByteArray.size_uset]; grind) b
 
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
+    fromByteArray_toByteArray := by
+      rintro ⟨a, b⟩ arr i h h'
+      show (⟨ta.fromByte (ByteArray.uget _ i _), tb.fromByteArray _ (i+1) _⟩ : (_ : α) × β) = ⟨a, b⟩
+      rw [tb.fromByteArray_toByteArray,
+        tb.fromByteArray_toByteArray_other _ _ _ _ _ (USize.lt_add_one_or_add_one_add_le i tb.bytes)]
+      simp [ByteArray.uget, ByteArray.uset, ta.fromByte_toByte]
     fromByteArray_toByteArray_other := sorry_proof
   }
 
@@ -352,7 +401,7 @@ def Sigma.byteTypeBitTypeSigma {α β} (ta : ByteType α) (tb : BitType β) : By
       arr |> (ta.toByteArray · i sorry_proof a)
           |>.uset (i + ta.bytes) (tb.toByte b) sorry_proof
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -365,14 +414,14 @@ def Sigma.byteTypeSigma {α β} (ta : ByteType α) (tb : ByteType β) : ByteType
 
     fromByteArray := λ arr i _ =>
       let a := ta.fromByteArray arr i sorry_proof
-      let b := tb.fromByteArray arr (i+ta.bytes) sorry_proof
+      let b := tb.fromByteArray arr (i+ta.bytes) (by grind)
       ⟨a, b⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
       let arr := (ta.toByteArray arr (i) sorry_proof a)
-      let arr := (tb.toByteArray arr (i+ta.bytes) sorry_proof b)
+      let arr := (tb.toByteArray arr (i+ta.bytes) (by simp only [arr, ta.toByteArray_size]; grind) b)
       arr
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -436,7 +485,7 @@ def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MP
   else
     .inr {
       bytes := 2
-      h_size := by sorry_proof
+      h_size := by rw [USize.lt_iff_toNat_lt]; simp
 
       fromByteArray := λ b i _ =>
         let aByte := b[2*i]'sorry_proof
@@ -446,8 +495,11 @@ def MProd.bitTypeMProd {α β} (ta : BitType α) (tb : BitType β) : BitType (MP
         arr |>.uset (2*i) (ta.toByte a) sorry_proof
             |>.uset (2*i+1) (tb.toByte b) sorry_proof
 
-      toByteArray_size := sorry_proof
-      fromByteArray_toByteArray := sorry_proof
+      toByteArray_size := by intro b i h a; simp
+      fromByteArray_toByteArray := by
+        rintro ⟨a, b⟩ arr i h h'
+        simp only [ByteArray.getElem_uset_two_fst, ByteArray.getElem_uset_two_snd,
+          ta.fromByte_toByte, tb.fromByte_toByte]
       fromByteArray_toByteArray_other := sorry_proof
     }
 
@@ -459,13 +511,18 @@ def MProd.bitTypeByteTypeMProd {α β} (ta : BitType α) (tb : ByteType β) : By
 
     fromByteArray := λ arr i _ =>
       let aByte := arr[i]'sorry_proof
-      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) sorry_proof⟩
+      ⟨ta.fromByte aByte, tb.fromByteArray arr (i+1) (by grind)⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
-      arr |>.uset i (ta.toByte a) sorry_proof
-          |> (tb.toByteArray · (i+1) sorry_proof b)
+      tb.toByteArray (arr.uset i (ta.toByte a) sorry_proof) (i+1)
+        (by rw [ByteArray.size_uset]; grind) b
 
-    toByteArray_size := sorry_proof
-    fromByteArray_toByteArray := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
+    fromByteArray_toByteArray := by
+      rintro ⟨a, b⟩ arr i h h'
+      show (⟨ta.fromByte (ByteArray.uget _ i _), tb.fromByteArray _ (i+1) _⟩ : MProd α β) = ⟨a, b⟩
+      rw [tb.fromByteArray_toByteArray,
+        tb.fromByteArray_toByteArray_other _ _ _ _ _ (USize.lt_add_one_or_add_one_add_le i tb.bytes)]
+      simp [ByteArray.uget, ByteArray.uset, ta.fromByte_toByte]
     fromByteArray_toByteArray_other := sorry_proof
   }
 
@@ -482,7 +539,7 @@ def MProd.byteTypeBitTypeMProd {α β} (ta : ByteType α) (tb : BitType β) : By
       arr |> (ta.toByteArray · i sorry_proof a)
           |>.uset (i + ta.bytes) (tb.toByte b) sorry_proof
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -495,12 +552,12 @@ def MProd.byteTypeMProd {α β} (ta : ByteType α) (tb : ByteType β) : ByteType
 
     fromByteArray := λ arr i _ =>
       ⟨ta.fromByteArray arr i sorry_proof,
-       tb.fromByteArray arr (i+ta.bytes) sorry_proof⟩
+       tb.fromByteArray arr (i+ta.bytes) (by grind)⟩
     toByteArray := λ arr i _ ⟨a,b⟩ =>
-      arr |> (ta.toByteArray · (i) sorry_proof a)
-          |> (tb.toByteArray · (i+ta.bytes) sorry_proof b)
+      tb.toByteArray (ta.toByteArray arr i sorry_proof a) (i+ta.bytes)
+        (by rw [ta.toByteArray_size]; grind) b
 
-    toByteArray_size := sorry_proof
+    toByteArray_size := by intro b i h a; simp [ByteType.toByteArray_size]
     fromByteArray_toByteArray := sorry_proof
     fromByteArray_toByteArray_other := sorry_proof
   }
@@ -544,10 +601,13 @@ def Fin.byteSize (n : Nat) : Nat := (Fin.bitSize n + 7) / 8
 @[inline]
 def Fin.bitType (n : Nat) (_ : n ≤ 256) : BitType (Fin n) where
   bits := (bitSize n).toUInt8
-  h_size := sorry_proof
+  h_size := (by decide +kernel : ∀ m < 257, (bitSize m).toUInt8 ≤ 8) n (Nat.lt_succ_of_le ‹_›)
   fromByte b := ⟨b.toNat % n, sorry_proof⟩ --- The modulo here is just in case to remove junk bit values, also we need `n≠0` for consistency
   toByte   b := b.1.toUInt8
-  fromByte_toByte := sorry_proof
+  fromByte_toByte a := Fin.ext (by
+    simp only [Nat.toUInt8_eq, UInt8.toNat_ofNat']
+    have : a.1 < 256 := Nat.lt_of_lt_of_le a.2 ‹_›
+    rw [Nat.mod_eq_of_lt (a := a.1) (by omega), Nat.mod_eq_of_lt a.2])
 
 @[inline]
 def Fin.byteType (n : Nat) : ByteType (Fin n) where
@@ -712,7 +772,7 @@ instance (n) : PlainDataType (Fin n) where
 @[inline]
 def Float.byteType : ByteType Float where
   bytes := 8
-  h_size := sorry_proof
+  h_size := by rw [USize.lt_iff_toNat_lt]; simp
 
   fromByteArray arr i _ := arr.ugetFloatAtByte i sorry_proof
   toByteArray arr i _ a :=

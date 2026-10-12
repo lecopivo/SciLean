@@ -1,4 +1,10 @@
-import SciLean.Algebra.TensorProduct.Basic
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 set_option linter.unusedSectionVars false
 
@@ -87,7 +93,17 @@ theorem tswapLeft_apply (a : A) (b : B) (c : C) :
 
 @[simp, simp_core]
 theorem tswapLeft_tswapLeft (x : (A⊗B)⊗C) :
-  tswapLeft (tswapLeft x) = x := sorry_proof
+  tswapLeft (tswapLeft x) = x := by
+  have hl : IsLinearMap 𝕜 (fun x : (A⊗B)⊗C => tswapLeft (tswapLeft x)) := by
+    unfold tswapLeft; fun_prop
+  have key : (fun x : (A⊗B)⊗C => tswapLeft (tswapLeft x)) = fun x => x := by
+    apply tmul_ext (R:=𝕜) (Y:=A⊗B) (X:=C) hl (by fun_prop)
+    intro ab c
+    refine congrFun (tmul_ext (R:=𝕜) (Y:=A) (X:=B)
+      (f := fun ab : A⊗B => tswapLeft (tswapLeft (ab ⊗ c))) (g := fun ab => ab ⊗ c)
+      ?_ (by fun_prop) (fun a b => by simp)) ab
+    unfold tswapLeft; fun_prop
+  exact congrFun key x
 
 end SwapLeft
 
@@ -106,7 +122,7 @@ variable_tprod[𝕜] A ⊗' (C ⊗ B)
 
 noncomputable
 def tswapRight [TensorProductGetRXY 𝕜 A BC ABC] : A⊗(B⊗C) → A⊗(C⊗B) :=
-  tmap (fun x : A =>L[𝕜] x) (fun x : BC =>L[𝕜]'(sorry_proof) tswap x)
+  tmap (fun x : A =>L[𝕜] x) (fun x : BC =>L[𝕜]'(by fun_prop) tswap x)
 
 @[simp, simp_core]
 theorem tswapRigh_apply (a : A) (b : B) (c : C) :
@@ -114,6 +130,16 @@ theorem tswapRigh_apply (a : A) (b : B) (c : C) :
 
 @[simp, simp_core]
 theorem tswapRight_tswapRight (x : A⊗(B⊗C)) :
-  tswapRight (tswapRight x) = x := sorry_proof
+  tswapRight (tswapRight x) = x := by
+  have hl : IsLinearMap 𝕜 (fun x : A⊗(B⊗C) => tswapRight (tswapRight x)) := by
+    unfold tswapRight; fun_prop
+  have key : (fun x : A⊗(B⊗C) => tswapRight (tswapRight x)) = fun x => x := by
+    apply tmul_ext (R:=𝕜) (Y:=A) (X:=B⊗C) hl (by fun_prop)
+    intro a bc
+    refine congrFun (tmul_ext (R:=𝕜) (Y:=B) (X:=C)
+      (f := fun bc : B⊗C => tswapRight (tswapRight (a ⊗ bc))) (g := fun bc => a ⊗ bc)
+      ?_ (by fun_prop) (fun b c => by simp)) bc
+    unfold tswapRight; fun_prop
+  exact congrFun key x
 
 end SwapRight

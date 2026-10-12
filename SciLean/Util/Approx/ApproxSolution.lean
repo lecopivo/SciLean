@@ -1,7 +1,12 @@
-import Mathlib.Topology.Basic
-import Mathlib.Order.Filter.Basic
+module
 
-import SciLean.Util.Limit
+public import Mathlib.Topology.Basic
+public import Mathlib.Order.Filter.Basic
+
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 
@@ -46,8 +51,10 @@ theorem approx_consistency {N} {lN : Filter N} [T2Space α] {spec : α → Prop}
 by
   induction approx
   case exact impl h =>
-    simp[ApproxSolution.val]
-    sorry_proof
+    -- the limit of a constant along the non-trivial filter `⊤ : Filter Unit` is the constant
+    intro a ha
+    rw [ha]
+    simpa [ApproxSolution.val] using h
     -- intro a h'
     -- have : Filter.NeBot (⊤ : Filter Unit) := sorry_proof
     -- rw[tendsto_nhds_unique (a:=a) (b:=impl) h']
@@ -56,7 +63,7 @@ by
   case approx specₙ lN lM consistent convergence impl hn =>
     simp[ApproxSolution.val]
     -- intro h
-    let aₙ := λ n => lim (lM.map λ m => (impl n).val m)
+    let aₙ := λ n => Filter.lim (lM.map λ m => (impl n).val m)
     sorry_proof
     -- have haₙ : ∀ n, specₙ n (aₙ n) := λ n => hn n ((hasLimit_split h).1 n)
     -- simp[limit_split h]

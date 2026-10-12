@@ -1,6 +1,11 @@
-import SciLean.Data.Idx.Basic
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.ArrayOperations.Basic
+module
+
+public import SciLean.Data.Idx.Basic
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.ArrayOperations.Basic
+
+@[expose] public section
+
 
 
 namespace SciLean

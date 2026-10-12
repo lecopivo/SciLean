@@ -6,7 +6,12 @@ Authors: Siddharth Bhat
 Riemannian Gradient Descent on S¹.
 -/
 
-import SciLean
+module
+
+public import SciLean
+
+@[expose] public section
+
 open Lean
 open SciLean
 

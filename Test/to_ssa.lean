@@ -1,5 +1,10 @@
-import SciLean.Lean.ToSSA
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Lean.ToSSA
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 
 

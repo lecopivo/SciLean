@@ -1,6 +1,11 @@
-import SciLean.Analysis.ODE.OdeSolve
-import SciLean.Meta.Notation.Do
-import SciLean.Util.Limit
+module
+
+public import SciLean.Analysis.ODE.OdeSolve
+public import SciLean.Meta.Notation.Do
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 

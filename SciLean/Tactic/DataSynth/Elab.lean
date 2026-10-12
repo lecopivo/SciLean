@@ -1,13 +1,23 @@
-import Lean.Elab.Tactic.Conv
-import SciLean.Tactic.DataSynth.Main
-import SciLean.Tactic.DataSynth.Simproc
-import SciLean.Tactic.DataSynth.Types
+module
+
+public import Lean.Elab.Tactic.Conv
+
+public meta import Lean.Elab.Tactic.Conv
+public import SciLean.Tactic.DataSynth.Main
+public meta import SciLean.Tactic.DataSynth.Main
+public import SciLean.Tactic.DataSynth.Simproc
+public meta import SciLean.Tactic.DataSynth.Simproc
+public import SciLean.Tactic.DataSynth.Types
+public meta import SciLean.Tactic.DataSynth.Types
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic.DataSynth
 
 open Lean Meta Elab Tactic
 
-declare_config_elab elabDataSynthConfig Config
+declare_config_elab_legacy elabDataSynthConfig Config
 
 
 open Parser.Tactic in

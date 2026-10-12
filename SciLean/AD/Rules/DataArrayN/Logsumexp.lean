@@ -1,12 +1,17 @@
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Data.DataArray.TensorOperations
+module
 
-import SciLean.AD.Rules.Common
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Data.DataArray.TensorOperations
 
-import SciLean.AD.Rules.Log
-import SciLean.AD.Rules.Exp
+public import SciLean.AD.Rules.Common
 
-import SciLean.Tactic.UnsafeAD
+public import SciLean.AD.Rules.Log
+public import SciLean.AD.Rules.Exp
+
+public import SciLean.Tactic.UnsafeAD
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -58,4 +63,6 @@ abbrev_data_synth logsumexp in x :
       (w, fun dk dx' =>
         let dx := dx' + ((starRingEnd R) dk) • x'
         dx))) by
-  sorry_proof
+  apply hasRevFDerivUpdate_from_hasRevFDerivUpdate
+  case deriv => apply HasRevFDeriv.toHasRevFDerivUpdate; data_synth
+  case simp => rfl

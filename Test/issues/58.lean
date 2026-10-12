@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Analysis.Calculus.HasRevFDeriv
+module
+
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+
+@[expose] public section
+
 
 open SciLean
 

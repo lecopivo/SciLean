@@ -1,3 +1,8 @@
-import SciLean.Data.Quotient.Setoid
-import SciLean.Data.Quotient.GradedSetoid
-import SciLean.Data.Quotient.GradedQuotient
+module
+
+public import SciLean.Data.Quotient.Setoid
+public import SciLean.Data.Quotient.GradedSetoid
+public import SciLean.Data.Quotient.GradedQuotient
+
+@[expose] public section
+

@@ -1,6 +1,11 @@
-import SciLean.Numerics.Optimization.ArgMin
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
-import SciLean.Util.Limit
+module
+
+public import SciLean.Numerics.Optimization.ArgMin
+public import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+public import SciLean.Util.Limit
+
+@[expose] public section
+
 
 /-! Port of Optim.jl, file src/multivariate/optimize/optimize.jl
 
@@ -25,7 +30,7 @@ def optimizeM
     (x₀ : X) :
     IO (MultivariateOptimizationResults R X) := do
 
-  let options := getOptions X method
+  let options := getOptions (R:=R) X method
 
   let t₀ ← IO.monoNanosNow
   --  tr = OptimizationTrace{typeof(value(d)), typeof(method)}()
@@ -173,7 +178,7 @@ def optimize
     (x₀ : X) :
     MultivariateOptimizationResults R X := Id.run do
 
-  let options := getOptions X method
+  let options := getOptions (R:=R) X method
 
   --  tr = OptimizationTrace{typeof(value(d)), typeof(method)}()
   -- tracing = options.store_trace || options.show_trace || options.extended_trace || options.callback !== nothing

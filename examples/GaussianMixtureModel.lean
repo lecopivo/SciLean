@@ -1,7 +1,12 @@
-import SciLean
-import SciLean.Data.DataArray.Operations.Simps
-import SciLean.Lean.Meta.Basic
-import SciLean.Tactic.StructureDecomposition
+module
+
+public import SciLean
+public import SciLean.Data.DataArray.Operations.Simps
+public import SciLean.Lean.Meta.Basic
+public import SciLean.Tactic.StructureDecomposition
+
+@[expose] public section
+
 
 open SciLean Scalar SciLean.Meta
 

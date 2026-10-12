@@ -1,17 +1,22 @@
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Data.Real.Basic
-import Mathlib.Analysis.Complex.Exponential
-import Mathlib.Analysis.Complex.Basic
-import Mathlib.Analysis.SpecialFunctions.Pow.Complex
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
-import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
-import Mathlib.Analysis.Normed.Lp.WithLp
-import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Scalar.Notation
+public import Mathlib.Analysis.RCLike.Basic
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Analysis.Complex.Basic
+public import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+public import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
+public import Mathlib.Analysis.Normed.Lp.WithLp
+public import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Scalar.Notation
+
+@[expose] public section
+
 -- import SciLean.Util.SorryProof
 
 namespace SciLean
@@ -136,7 +141,7 @@ def RealScalar.pi [RealScalar R] : R := RealScalar.acos (-1)
 
 scoped notation "π" => @RealScalar.pi defaultScalar% inferInstance
 
-@[app_unexpander RealScalar.pi] def unexpandPi : Lean.PrettyPrinter.Unexpander
+@[app_unexpander RealScalar.pi] meta def unexpandPi : Lean.PrettyPrinter.Unexpander
   | `($_) => `(π)
 
 
@@ -145,10 +150,10 @@ instance {R} [RealScalar R] : MetricSpace (WithLp p R) :=
 
 noncomputable
 instance {R} [RealScalar R] : AdjointSpace ℝ R where
-  inner_top_equiv_norm := sorry_proof
-  conj_symm := sorry_proof
-  add_left := sorry_proof
-  smul_left := sorry_proof
+  inner_top_equiv_norm := ⟨1, 1, by norm_num, by norm_num, by intro x; simp⟩
+  conj_symm := by intro x y; simp [real_inner_comm]
+  add_left := by intro x y z; exact inner_add_left _ _ _
+  smul_left := by intro x y r; simp [real_inner_smul_left]
 
 -- can we provide this without messing with instance for `MeasureSpace ℝ`?
 -- open MeasureTheory in
@@ -177,7 +182,7 @@ open ComplexConjugate
 
 @[simp, simp_core]
 theorem conj_for_real_scalar {R} [RealScalar R] (r : R)
-  : conj r = r := sorry_proof
+  : conj r = r := RCLike.conj_eq_iff_im.2 (RealScalar.is_real r)
 
 
 
@@ -194,7 +199,11 @@ instance : Scalar ℝ ℂ where
   ofComplex x := x
 
   make x y := ⟨x,y⟩
-  make_def := by intros; simp; sorry_proof
+  make_def := by
+    intros
+    have h : ¬ (∀ y : ℂ, Complex.im y = 0) := fun h => by simpa using h Complex.I
+    simp
+    exact fun hc => absurd hc h
 
   real x := x.re
   real_def := by intros; simp
@@ -221,7 +230,11 @@ instance : Scalar ℝ ℂ where
   tanh_def := by intros; simp
 
   sqrt x := x.cpow (1/2)
-  sqrt_def := by simp; sorry_proof
+  sqrt_def := by
+    intros
+    have h : ¬ (∀ y : ℂ, Complex.im y = 0) := fun h => by simpa using h Complex.I
+    simp
+    exact fun hc => absurd hc h
 
   pow x y := x.cpow y
   pow_def := by intros; simp
@@ -255,13 +268,16 @@ noncomputable instance : RealScalar ℝ where
   imag_def := by intros; simp
 
   sin x := x.sin
-  sin_def := by intros; simp[Real.sin]; sorry_proof
+  sin_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, ← Complex.ofReal_sin]; rfl
 
   cos x := x.cos
-  cos_def := by intros; simp[Real.cos]; sorry_proof
+  cos_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, ← Complex.ofReal_cos]; rfl
 
   tan x := x.tan
-  tan_def := by intros; simp[Real.tan]; sorry_proof
+  tan_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, ← Complex.ofReal_tan]; rfl
 
   asin x := x.arcsin
   asin_def := by intros; simp
@@ -273,13 +289,15 @@ noncomputable instance : RealScalar ℝ where
   atan_def := by intros; simp
 
   exp x := x.exp
-  exp_def := by intros; simp[Real.exp]; sorry_proof
+  exp_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, ← Complex.ofReal_exp]; rfl
 
   log x := x.log
   log_def := by intros; simp[Real.log]; sorry_proof
 
   tanh x := x.tanh
-  tanh_def := by intros; simp[Real.tanh]; sorry_proof
+  tanh_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, ← Complex.ofReal_tanh]; rfl
 
   sqrt x := x.sqrt
   sqrt_def := by intros; simp
@@ -288,13 +306,19 @@ noncomputable instance : RealScalar ℝ where
   pow_def := by intros; simp; rfl
 
   abs x := abs x
-  abs_def := by intros; sorry_proof
+  abs_def := by
+    intro x
+    rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, Complex.norm_real, Real.norm_eq_abs]
 
   tgamma x := x.Gamma
-  tgamma_def := by intros;sorry_proof
+  tgamma_def := by
+    intro x; rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, Complex.Gamma_ofReal]; rfl
 
   lgamma x := |x.Gamma|.log
-  lgamma_def := by intros; simp; sorry_proof
+  lgamma_def := by
+    intro x
+    rw [show (⟨x,0⟩ : ℂ) = (x:ℂ) from rfl, Complex.Gamma_ofReal, Complex.norm_real,
+        Real.norm_eq_abs]
 
   is_real := by intros; simp
 
@@ -326,35 +350,33 @@ theorem normalize_real_smul (R) [RealScalar R] [Ring X] [Module R X] [Module ℝ
 
 variable {R} [RealScalar R]
 
-@[simp, simp_core]
-theorem scalar_abs_one : Scalar.abs (1 : R) = 1 := by sorry_proof
+-- note: `scalar_abs_one` is proved below, after `Scalar.toReal_one` which its proof uses
+
+-- note: `scalar_abs_zero` and `scalar_abs_neg` are proved below, after `Scalar.toComplex_eq_toReal`
+-- which their proofs use
 
 @[simp, simp_core]
-theorem scalar_abs_zero : Scalar.abs (0 : R) = 0 := by sorry_proof
+theorem scalar_div_one (x : R) : x / 1 = x := by
+  simp
+
+-- note: `scalar_sqrt_one` and `scalar_sqrt_zero` are proved below, after
+-- `Scalar.toComplex_eq_toReal` which their proofs use
 
 @[simp, simp_core]
-theorem scalar_abs_neg (r : R) : Scalar.abs (- r) = Scalar.abs r := by sorry_proof
+theorem scalar_max_one_zero  : max (1 : R) (0 : R) = 1 := by simp
 
 @[simp, simp_core]
-theorem scalar_div_one (x : R) : x / 1 = x := by sorry_proof
+theorem scalar_max_zero_one  : max (0 : R) (1 : R) = 1 := by
+  rw [max_comm]
+  simp
 
 @[simp, simp_core]
-theorem scalar_sqrt_one  : Scalar.sqrt (1 : R) = 1 := by sorry_proof
+theorem scalar_min_one_zero  : min (1 : R) (0 : R) = 0 := by simp
 
 @[simp, simp_core]
-theorem scalar_sqrt_zero  : Scalar.sqrt (0 : R) = 0 := by sorry_proof
-
-@[simp, simp_core]
-theorem scalar_max_one_zero  : max (1 : R) (0 : R) = 1 := by sorry_proof
-
-@[simp, simp_core]
-theorem scalar_max_zero_one  : max (0 : R) (1 : R) = 1 := by sorry_proof
-
-@[simp, simp_core]
-theorem scalar_min_one_zero  : min (1 : R) (0 : R) = 0 := by sorry_proof
-
-@[simp, simp_core]
-theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by sorry_proof
+theorem scalar_min_zero_one  : min (0 : R) (1 : R) = 0 := by
+  rw [min_comm]
+  simp
 
 
 ----------------------------------------------------------------------------------------------------
@@ -372,27 +394,55 @@ theorem Scalar.toReal_ofReal {R K} [Scalar R K] (x : ℝ)  :
     Scalar.toReal (K:=K) (Scalar.ofReal (K:=K) x) = x :=
   sorry_proof
 
-@[simp, simp_core]
-theorem Scalar.ofReal_zero :
-  Scalar.ofReal R (0 : ℝ) = (0:R) := sorry_proof
-
-@[simp, simp_core]
-theorem Scalar.ofReal_one :
-  Scalar.ofReal R (1 : ℝ) = (1:R) := sorry_proof
-
-@[simp, simp_core]
-theorem Scalar.toReal_zero :
-  Scalar.toReal R (0:R) = 0 := sorry_proof
-
-@[simp, simp_core]
-theorem Scalar.toReal_one :
-  Scalar.toReal R (1:R) = 1 := sorry_proof
+theorem Scalar.ofReal_eq_algebraMap {R} [RealScalar R] (r : ℝ) :
+    Scalar.ofReal R r = algebraMap ℝ R r := by
+  have h := normalize_real_smul R (X:=R) r 1
+  rw [smul_eq_mul, mul_one, Algebra.smul_def, mul_one] at h
+  exact h.symm
 
 @[simp_core ↓]
 theorem Scalar.ofReal_mul (x y : ℝ) :
     Scalar.ofReal (K:=R) (x * y)
     =
-    Scalar.ofReal (K:=R) x * Scalar.ofReal (K:=R) y := sorry_proof
+    Scalar.ofReal (K:=R) x * Scalar.ofReal (K:=R) y := by
+  rw [Scalar.ofReal_eq_algebraMap, Scalar.ofReal_eq_algebraMap, Scalar.ofReal_eq_algebraMap, map_mul]
+
+@[simp, simp_core]
+theorem Scalar.ofReal_zero :
+  Scalar.ofReal R (0 : ℝ) = (0:R) := by
+  rw [← zero_mul (Scalar.toReal R 0), Scalar.ofReal_mul, Scalar.oftoReal, mul_zero]
+
+@[simp, simp_core]
+theorem Scalar.ofReal_one :
+  Scalar.ofReal R (1 : ℝ) = (1:R) := by
+  rw [← mul_one (Scalar.ofReal R 1), ← Scalar.oftoReal (1:R), ← Scalar.ofReal_mul, one_mul]
+
+@[simp, simp_core]
+theorem Scalar.toReal_zero :
+  Scalar.toReal R (0:R) = 0 := by
+  rw [← Scalar.ofReal_zero (R:=R), Scalar.toReal_ofReal]
+
+@[simp, simp_core]
+theorem Scalar.toReal_one :
+  Scalar.toReal R (1:R) = 1 := by
+  rw [← Scalar.ofReal_one (R:=R), Scalar.toReal_ofReal]
+
+/-- Since every element of `R` is real, `Scalar.make x 0` has complex value `⟨toReal x, 0⟩`. -/
+theorem Scalar.toComplex_make_zero (x : R) :
+    Scalar.toComplex (Scalar.make x (0:R) : R) = ⟨Scalar.toReal R x, 0⟩ := by
+  have h := Scalar.make_def (K:=R) x (0:R)
+  simpa [RealScalar.is_real] using h
+
+@[simp, simp_core]
+theorem Scalar.toComplex_one : Scalar.toComplex (1:R) = 1 := by
+  rw [← scalar_make_one (R:=R) (K:=R), Scalar.toComplex_make_zero]
+  simp [Complex.ext_iff]
+
+@[simp, simp_core]
+theorem scalar_abs_one : Scalar.abs (1 : R) = 1 := by
+  have h := Scalar.abs_def (R:=R) (K:=R) (1:R)
+  rw [Scalar.toComplex_one, norm_one] at h
+  rw [← Scalar.oftoReal (R:=R) (Scalar.abs (1:R)), h, Scalar.ofReal_one]
 
 @[simp, simp_core]
 theorem Scalar.ofReal_ite (c : Prop) [Decidable c] (t e : ℝ) :
@@ -439,29 +489,39 @@ theorem Scalar.oftoENNReal (x : R) :
 theorem Scalar.ofReal_toReal (x : ENNReal) :
     Scalar.ofReal R x.toReal
     =
-    Scalar.ofENNReal x := sorry_proof
+    Scalar.ofENNReal x := by rfl
 
 @[simp, simp_core]
 theorem Scalar.ofENNReal_one :
-  Scalar.ofENNReal (1 : ENNReal) = (1:R) := sorry_proof
+  Scalar.ofENNReal (1 : ENNReal) = (1:R) := by
+  show Scalar.ofReal R (1 : ENNReal).toReal = 1
+  rw [ENNReal.toReal_one, Scalar.ofReal_one]
 
 @[simp, simp_core]
 theorem Scalar.ofENNReal_zero :
-  Scalar.ofENNReal (0 : ENNReal) = (0:R) := sorry_proof
+  Scalar.ofENNReal (0 : ENNReal) = (0:R) := by
+  show Scalar.ofReal R (0 : ENNReal).toReal = 0
+  rw [ENNReal.toReal_zero, Scalar.ofReal_zero]
 
 @[simp, simp_core]
 theorem Scalar.toENNReal_one :
-  Scalar.toENNReal (1:R) = 1 := sorry_proof
+  Scalar.toENNReal (1:R) = 1 := by
+  show ENNReal.ofReal (Scalar.toReal R 1) = 1
+  rw [Scalar.toReal_one, ENNReal.ofReal_one]
 
 @[simp, simp_core]
 theorem Scalar.toENNReal_zero :
-  Scalar.toENNReal (0:R) = 0 := sorry_proof
+  Scalar.toENNReal (0:R) = 0 := by
+  show ENNReal.ofReal (Scalar.toReal R 0) = 0
+  rw [Scalar.toReal_zero, ENNReal.ofReal_zero]
 
 @[simp_core ↓]
 theorem ofENNReal_mul (x y : ENNReal) :
     Scalar.ofENNReal (R:=R) (x * y)
     =
-    Scalar.ofENNReal (R:=R) x * Scalar.ofENNReal (R:=R) y := sorry_proof
+    Scalar.ofENNReal (R:=R) x * Scalar.ofENNReal (R:=R) y := by
+  show Scalar.ofReal R (x * y).toReal = Scalar.ofReal R x.toReal * Scalar.ofReal R y.toReal
+  rw [ENNReal.toReal_mul, Scalar.ofReal_mul]
 
 @[simp ↓, simp_core ↓]
 theorem Scalar.ofENNReal_ite (c : Prop) [Decidable c] (t e : ENNReal) :
@@ -514,16 +574,101 @@ section ScalarSMul
 instance {R} [RealScalar R] : ScalarSMul R R where
   smul_eq_mul_make := sorry_proof
 
-instance {R} [RealScalar R] : ScalarInner R R where
-  inner_eq_inner_re_im := sorry_proof
+/-- For real scalars `Scalar.make x 0 = x`; this is the law of the instance `ScalarSMul R R`. -/
+theorem Scalar.make_zero_eq_self {R} [RealScalar R] (x : R) : Scalar.make x 0 = x := by
+  have h := ScalarSMul.smul_eq_mul_make (R:=R) (K:=R) x 1
+  rw [mul_one, smul_eq_mul, mul_one] at h
+  exact h.symm
 
-instance (priority:=low) instModuleScalarSMul {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : Module R K where
-  one_smul := sorry_proof
+theorem Scalar.toComplex_eq_toReal {R} [RealScalar R] (x : R) :
+    Scalar.toComplex x = (Scalar.toReal R x : ℂ) := by
+  have h := Scalar.toComplex_make_zero x
+  rw [Scalar.make_zero_eq_self] at h
+  exact h
+
+theorem Scalar.toReal_injective {R} [RealScalar R] : Function.Injective (Scalar.toReal R) := by
+  intro x y h; rw [← Scalar.oftoReal x, h, Scalar.oftoReal]
+
+theorem Scalar.toReal_algebraMap {R} [RealScalar R] (r : ℝ) :
+    Scalar.toReal R (algebraMap ℝ R r) = r := by
+  rw [← Scalar.ofReal_eq_algebraMap, Scalar.toReal_ofReal]
+
+theorem Scalar.algebraMap_toReal {R} [RealScalar R] (x : R) :
+    algebraMap ℝ R (Scalar.toReal R x) = x := by
+  rw [← Scalar.ofReal_eq_algebraMap, Scalar.oftoReal]
+
+theorem Scalar.toReal_mul {R} [RealScalar R] (x y : R) :
+    Scalar.toReal R (x * y) = Scalar.toReal R x * Scalar.toReal R y := by
+  rw [← Scalar.algebraMap_toReal x, ← Scalar.algebraMap_toReal y, ← map_mul,
+    Scalar.toReal_algebraMap, Scalar.toReal_algebraMap, Scalar.toReal_algebraMap]
+
+theorem Scalar.real_eq_self {R} [RealScalar R] (x : R) : Scalar.real x = x := by
+  apply Scalar.toReal_injective
+  rw [Scalar.real_def, Scalar.toComplex_eq_toReal]; simp
+
+theorem Scalar.toReal_rpow {R} [RealScalar R] (x y : R) :
+    Scalar.toReal R (x ^ y) = Scalar.toReal R x ^ Scalar.toReal R y := by
+  have h := Scalar.pow_def (K:=R) x y
+  simp only [RealScalar.is_real, implies_true, ↓reduceIte] at h
+  rw [Scalar.real_eq_self, Scalar.toComplex_eq_toReal, Scalar.toComplex_eq_toReal] at h
+  rw [Real.rpow_def]
+  exact h
+
+instance {R} [RealScalar R] : ScalarInner R R where
+  inner_eq_inner_re_im := by
+    intro x y
+    have hi : ∀ z : R, Scalar.imag z = 0 := fun z => by
+      apply Scalar.toReal_injective
+      rw [Scalar.imag_def, Scalar.toComplex_eq_toReal, Scalar.toReal_zero]; simp
+    rw [Scalar.real_eq_self, Scalar.real_eq_self, hi, hi, mul_zero, add_zero]
+    show inner R x y = x * y
+    simp [inner, mul_comm]
+
+@[simp, simp_core]
+theorem scalar_abs_zero {R} [RealScalar R] : Scalar.abs (0 : R) = 0 := by
+  apply Scalar.toReal_injective
+  rw [Scalar.abs_def, Scalar.toComplex_eq_toReal, Scalar.toReal_zero]; simp
+
+@[simp, simp_core]
+theorem scalar_abs_neg {R} [RealScalar R] (r : R) : Scalar.abs (- r) = Scalar.abs r := by
+  apply Scalar.toReal_injective
+  have hn : Scalar.toReal R (-r) = - Scalar.toReal R r := by
+    conv_lhs => rw [← Scalar.algebraMap_toReal r, ← map_neg, Scalar.toReal_algebraMap]
+  rw [Scalar.abs_def, Scalar.abs_def, Scalar.toComplex_eq_toReal, Scalar.toComplex_eq_toReal, hn]
+  simp
+
+@[simp, simp_core]
+theorem scalar_sqrt_one {R} [RealScalar R] : Scalar.sqrt (1 : R) = 1 := by
+  apply Scalar.toReal_injective
+  have h := Scalar.sqrt_def (K:=R) 1
+  simp only [RealScalar.is_real, implies_true, ↓reduceIte, Scalar.toComplex_eq_toReal,
+    RCLike.re_to_complex, Complex.ofReal_re] at h
+  rw [h, Scalar.toReal_one, Real.sqrt_one]
+
+@[simp, simp_core]
+theorem scalar_sqrt_zero {R} [RealScalar R] : Scalar.sqrt (0 : R) = 0 := by
+  apply Scalar.toReal_injective
+  have h := Scalar.sqrt_def (K:=R) 0
+  simp only [RealScalar.is_real, implies_true, ↓reduceIte, Scalar.toComplex_eq_toReal,
+    RCLike.re_to_complex, Complex.ofReal_re] at h
+  rw [h, Scalar.toReal_zero, Real.sqrt_zero]
+
+instance (priority:=low) instModuleScalarSMul {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : Module R K :=
+  have add_smul : ∀ (r s : R) (x : K), (r + s) • x = r • x + s • x := sorry_proof
+  {
+  one_smul := by intro x; rw [ScalarSMul.smul_eq_mul_make, scalar_make_one, one_mul]
   mul_smul := sorry_proof
-  smul_zero := sorry_proof
-  smul_add := sorry_proof
-  add_smul := sorry_proof
-  zero_smul := sorry_proof
+  smul_zero := by intro r; rw [ScalarSMul.smul_eq_mul_make, mul_zero]
+  smul_add := by
+    intro r x y
+    rw [ScalarSMul.smul_eq_mul_make, ScalarSMul.smul_eq_mul_make, ScalarSMul.smul_eq_mul_make,
+      mul_add]
+  add_smul := add_smul
+  zero_smul := fun x => by
+    have h := add_smul 0 0 x
+    rw [add_zero] at h
+    exact left_eq_add.mp h
+  }
 
 instance (priority:=low) instNormedSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] :
     NormedSpace R K where
@@ -532,16 +677,29 @@ instance (priority:=low) instNormedSpaceRK {R K} {_ : RealScalar R} {_ : Scalar 
 instance (priority:=low) instInnerProductSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [ScalarInner R K] :
     InnerProductSpace R K where
   norm_sq_eq_re_inner := sorry_proof
-  conj_inner_symm := sorry_proof
+  conj_inner_symm := by
+    intro x y
+    rw [ScalarInner.inner_eq_inner_re_im, ScalarInner.inner_eq_inner_re_im,
+      conj_for_real_scalar]
+    ring
   add_left := sorry_proof
   smul_left := sorry_proof
 
 instance (priority:=low) instAdjointSpaceRK {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [ScalarInner R K] :
     AdjointSpace R K where
-  inner_top_equiv_norm := sorry_proof
-  conj_symm := sorry_proof
-  add_left := sorry_proof
-  smul_left := sorry_proof
+  -- the norm of `K` is induced by the inner product, so `c = d = 1` works
+  inner_top_equiv_norm :=
+    ⟨1, 1, by norm_num, by norm_num, by
+      intro x
+      rw [one_smul, InnerProductSpace.norm_sq_eq_re_inner (𝕜:=R) x]
+      exact ⟨le_refl _, le_refl _⟩⟩
+  conj_symm := by
+    intro x y
+    rw [ScalarInner.inner_eq_inner_re_im, ScalarInner.inner_eq_inner_re_im,
+      conj_for_real_scalar]
+    ring
+  add_left := InnerProductSpace.add_left
+  smul_left := InnerProductSpace.smul_left
 
 instance (priority:=low) {R K X} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] [AddCommGroup X] [Module K X] [Module R X] :
     IsScalarTower R K X where
@@ -557,12 +715,22 @@ instance (priority:=low) {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R
   -- map_mul' := sorry_proof
   -- map_zero' := sorry_proof
   -- map_add' := sorry_proof
-  algebraMap := ⟨⟨⟨fun r => Scalar.make r 0, sorry_proof⟩, sorry_proof⟩, sorry_proof, sorry_proof⟩
-  commutes' := sorry_proof
-  smul_def' := sorry_proof
+  -- `map_mul'`, `map_zero'` and `map_add'` are the laws of `instModuleScalarSMul` applied to `1`
+  algebraMap := ⟨⟨⟨fun r => Scalar.make r 0, scalar_make_one⟩, fun r s => by
+    have h := (instModuleScalarSMul (R:=R) (K:=K)).mul_smul r s 1
+    simp only [ScalarSMul.smul_eq_mul_make, mul_one] at h
+    exact h⟩, by
+    have h := (instModuleScalarSMul (R:=R) (K:=K)).zero_smul 1
+    simp only [ScalarSMul.smul_eq_mul_make, mul_one] at h
+    exact h, fun r s => by
+    have h := (instModuleScalarSMul (R:=R) (K:=K)).add_smul r s 1
+    simp only [ScalarSMul.smul_eq_mul_make, mul_one] at h
+    exact h⟩
+  commutes' := fun _ _ => mul_comm _ _
+  smul_def' := fun r x => ScalarSMul.smul_eq_mul_make r x
 
 instance (priority:=low) {R K} {_ : RealScalar R} {_ : Scalar R K} [ScalarSMul R K] : NormedAlgebra R K where
-  norm_smul_le := sorry_proof
+  norm_smul_le := norm_smul_le
 
 
 end ScalarSMul

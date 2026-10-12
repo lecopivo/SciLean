@@ -1,5 +1,10 @@
-import SciLean.Probability.PullMean
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Probability.PullMean
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 open SciLean Rand
 

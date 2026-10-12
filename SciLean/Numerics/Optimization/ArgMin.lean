@@ -1,9 +1,14 @@
-import Mathlib.Logic.Function.Basic
-import Mathlib.Order.WellFounded
+module
 
-import SciLean.Util.SolveFun
-import SciLean.Analysis.Scalar.FloatAsReal
-import SciLean.Analysis.AdjointSpace.Adjoint
+public import Mathlib.Logic.Function.Basic
+public import Mathlib.Order.WellFounded
+
+public import SciLean.Util.SolveFun
+public import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -12,7 +17,7 @@ macro (name:=argMinStx) "argmin" xs:funBinder* ", " b:term : term => do
   `(Function.argmin ↿fun $xs* => $b)
 
 @[app_unexpander Function.argmin]
-def unexpandArgMin : Lean.PrettyPrinter.Unexpander
+meta def unexpandArgMin : Lean.PrettyPrinter.Unexpander
   | `($(_) ↿fun $xs* => $b) =>
     `(argmin $xs*, $b)
   | _  => throw ()

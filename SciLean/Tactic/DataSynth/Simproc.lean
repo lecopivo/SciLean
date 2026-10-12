@@ -1,4 +1,11 @@
-import SciLean.Tactic.DataSynth.Main
+module
+
+public import SciLean.Tactic.DataSynth.Main
+
+public meta import SciLean.Tactic.DataSynth.Main
+
+@[expose] public meta section
+
 
 namespace SciLean
 

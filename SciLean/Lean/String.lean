@@ -1,6 +1,12 @@
 
 
+module
+
+@[expose] public meta section
+
 /-- Split a string into substrings that have maximum size in bytes -/
+
+
 partial def String.splitToByteChunks (str : String) (chunkByteSize : Nat) : Array Substring.Raw := Id.run do
   let mut chunks : Array Substring.Raw := #[]
   let mut s : Nat := 0

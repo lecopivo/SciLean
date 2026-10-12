@@ -1,6 +1,11 @@
-import Mathlib.Algebra.Module.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Module.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 inductive Comparison {X : Type u} [LT X] (x y : X) where
   | cpEq (h : x = y) : Comparison x y
@@ -31,7 +36,7 @@ instance : DecidableCp ℕ :=
     then cpEq h
     else if h : x < y
     then cpLt h
-    else cpGt sorry_proof
+    else cpGt (by omega)
 }
 
 abbrev decCp {X} [LT X] [DecidableCp X] (x y : X) : Comparison x y := DecidableCp.compare x y
@@ -80,9 +85,12 @@ namespace FreeMonoid
 
   instance {X} : Monoid (FreeMonoid X) :=
   {
-    mul_assoc := sorry_proof
-    mul_one := sorry_proof
-    one_mul := sorry_proof
+    mul_assoc := by
+      intro a b c
+      show FreeMonoid.mk ((a.vars ++ b.vars) ++ c.vars) = FreeMonoid.mk (a.vars ++ (b.vars ++ c.vars))
+      rw [List.append_assoc]
+    mul_one := by intro a; show FreeMonoid.mk (a.vars ++ []) = a; simp
+    one_mul := by aesop
     -- npow_zero' := sorry_proof
     -- npow_succ' := sorry_proof
   }
@@ -152,12 +160,36 @@ namespace FreeMonoid
       | x :: xs, [] => Ordering.gt
       | [], [] => Ordering.eq
 
+  /-- `gradedLt` agrees with the graded lexicographical ordering `lt`. -/
+  theorem gradedLt_spec {X} [LT X] [DecidableCp X] (l l' : List X) :
+      match gradedLt l l' with
+      | Ordering.lt => lt ⟨l⟩ ⟨l'⟩
+      | Ordering.gt => lt ⟨l'⟩ ⟨l⟩
+      | Ordering.eq => l = l' := by
+    fun_induction gradedLt l l' with
+    | case1 l l' h => exact lt.rank _ _ h
+    | case2 l l' h => exact lt.rank _ _ h
+    | case3 x xs y ys h h' => exact lt.head ⟨xs⟩ ⟨ys⟩ (by simpa [rank] using h) x y h'
+    | case4 x xs y ys h h' => exact lt.head ⟨ys⟩ ⟨xs⟩ (by simpa [rank] using h.symm) y x h'
+    | case5 =>
+      rename_i ih
+      revert ih
+      split <;> intro ih
+      · exact lt.tail _ _ _ ih
+      · exact lt.tail _ _ _ ih
+      · rw [ih]
+    | case6 y ys h => simp at h
+    | case7 x xs h => simp at h
+    | case8 h => rfl
+
   instance {X} [LT X] [DecidableCp X] : DecidableCp (FreeMonoid X) :=
   ⟨ λ x y =>
-    match gradedLt x.1 y.1 with
-    | Ordering.lt => cpLt sorry_proof
-    | Ordering.gt => cpGt sorry_proof
-    | Ordering.eq => cpEq sorry_proof⟩
+    match h : gradedLt x.1 y.1 with
+    | Ordering.lt => cpLt (by have := gradedLt_spec x.1 y.1; rw [h] at this; exact this)
+    | Ordering.gt => cpGt (by have := gradedLt_spec x.1 y.1; rw [h] at this; exact this)
+    | Ordering.eq => cpEq (by
+        have := gradedLt_spec x.1 y.1; rw [h] at this
+        cases x; cases y; simp_all)⟩
 
     --   match m1., m'.1 with
     -- let n  := m.rank

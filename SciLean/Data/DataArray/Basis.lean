@@ -1,5 +1,11 @@
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Data.DataArray.Algebra
+module
+
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Data.DataArray.Algebra
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -13,12 +19,20 @@ instance (priority:=high) : CanonicalBasis I R (R^[I]) where
   dualBasis i := setElem (0 : R^[I]) i 1 .intro
   proj i x := x[i]
   dualProj i x := x[i]
-  basis_complete := by intros; ext i; sorry_proof
-  proj_basis := by sorry_proof --classical intro i j; by_cases i = j <;> aesop
-  dualProj_dualBasis :=  by sorry_proof --classical intro i j; by_cases i = j <;> aesop
-  inner_basis_dualBasis := sorry_proof
-  proj_linear := sorry_proof
-  dualProj_linear := sorry_proof
+  basis_complete := by
+    classical
+    intro x; ext j
+    rw [getElem_finset_sum]
+    simp
+  proj_basis := by classical intro i j; by_cases i = j <;> aesop
+  dualProj_dualBasis := by classical intro i j; by_cases i = j <;> aesop
+  inner_basis_dualBasis := by
+    classical
+    intro i j
+    rw [IsInnerGetElem.inner_eq_sum_getElem (𝕜:=R) (X:=R^[I]) (I:=I) (Y:=R) (n:=nI)]
+    simp [eq_comm (a:=i) (b:=j)]
+  proj_linear := by intro i; fun_prop
+  dualProj_linear := by intro i; fun_prop
 
 
 -- instance

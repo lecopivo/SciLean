@@ -1,4 +1,9 @@
-import SciLean
+module
+
+public import SciLean
+
+@[expose] public section
+
 -- import SciLean.Mechanics
 
 -- import Lean.Meta.Tactic

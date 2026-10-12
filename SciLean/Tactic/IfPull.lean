@@ -1,6 +1,15 @@
-import Lean
-import SciLean.Util.RewriteBy
-import SciLean.Util.SorryProof
+module
+
+public import Lean
+
+public meta import Lean
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+public import SciLean.Util.SorryProof
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace SciLean.Tactic
 

@@ -1,13 +1,29 @@
-import Lean
-import Qq
+module
 
-import Mathlib.Tactic.NormNum.Basic
-import Mathlib.Tactic.NormNum.Result
-import Mathlib.Tactic.FieldSimp
-import Mathlib.Data.UInt
-import Mathlib.Tactic.Ring
+public import Lean
 
-import SciLean.Util.RewriteBy
+public meta import Lean
+public import Qq
+public meta import Qq
+
+public import Mathlib.Tactic.NormNum.Basic
+
+public meta import Mathlib.Tactic.NormNum.Basic
+public import Mathlib.Tactic.NormNum.Result
+public meta import Mathlib.Tactic.NormNum.Result
+public import Mathlib.Tactic.FieldSimp
+public meta import Mathlib.Tactic.FieldSimp
+public import Mathlib.Data.UInt
+public meta import Mathlib.Data.UInt
+public import Mathlib.Tactic.Ring
+public meta import Mathlib.Tactic.Ring
+
+public import SciLean.Util.RewriteBy
+
+public meta import SciLean.Util.RewriteBy
+
+@[expose] public meta section
+
 
 namespace SciLean
 

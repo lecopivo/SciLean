@@ -1,8 +1,13 @@
-import SciLean.Core
-import SciLean.Data.DataArray
-import SciLean.Data.ArrayType
-import SciLean.Data.Prod
-import SciLean.Core.Functions.Exp
+module
+
+public import SciLean.Core
+public import SciLean.Data.DataArray
+public import SciLean.Data.ArrayType
+public import SciLean.Data.Prod
+public import SciLean.Core.Functions.Exp
+
+@[expose] public section
+
 
 namespace SciLean.ML
 

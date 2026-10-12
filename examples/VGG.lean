@@ -1,4 +1,9 @@
-import SciLean.Basic
+module
+
+public import SciLean.Basic
+
+@[expose] public section
+
 
 def conv311 {n m} (k : Nat) (w : NDVector [3,1,1,k]) (x : NDVector [3,n,m]) : NDVector [n,m,k] := sorry
 def conv33  {n m} (k : Nat) (l : Nat) (w : NDVector [3,3,k*l]) (x : NDVector [n,m,k]) : NDVector [n,m,k*l] := sorry

@@ -1,4 +1,9 @@
-import SciLean.Modules.Symbolic.Quot.Basic
+module
+
+public import SciLean.Modules.Symbolic.Quot.Basic
+
+@[expose] public section
+
 
 namespace SciLean.Quot'
 

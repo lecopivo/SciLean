@@ -1,5 +1,10 @@
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Self
+module
+
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.TensorProduct.Self
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -68,15 +73,21 @@ instance
 
 variable [MatrixMulNotation M]
 
-@[simp, simp_core] theorem zero_matVecMul (x : X) : (0 : M) * x = 0 := sorry_proof
-@[simp, simp_core] theorem matVecMul_zero (A : M) : A * (0 : X) = 0 := sorry_proof
-@[simp, simp_core] theorem vecMatMul_zero (y : Y) : y * (0 : M) = 0 := sorry_proof
-@[simp, simp_core] theorem zero_vecMatMul (A : M) : (0 : Y) * A = 0 := sorry_proof
-
 theorem add_matVecMul (A B : M) (x : X) : (A+B)*x = A*x + B*x := sorry_proof
 theorem matVecMul_add (A : M) (x y : X) : A*(x+y) = A*x + A*y := sorry_proof
 theorem vecMatMul_add (A B : M) (y : Y) : y*(A+B) = y*A + y*B := sorry_proof
 theorem add_vecMatMul (A : M) (x y : Y) : (x+y)*A = x*A + y*A := sorry_proof
+
+-- the zero rules follow from additivity: `A*0 = A*(0+0) = A*0 + A*0`
+@[simp, simp_core] theorem zero_matVecMul (x : X) : (0 : M) * x = 0 := by
+  have h := add_matVecMul (0:M) 0 x; rw [add_zero] at h; exact left_eq_add.mp h
+@[simp, simp_core] theorem matVecMul_zero (A : M) : A * (0 : X) = 0 := by
+  have h := matVecMul_add A (0:X) 0; rw [add_zero] at h; exact left_eq_add.mp h
+@[simp, simp_core] theorem vecMatMul_zero (y : Y) : y * (0 : M) = 0 := by
+  have h := vecMatMul_add (0:M) 0 y; rw [add_zero] at h; exact left_eq_add.mp h
+@[simp, simp_core] theorem zero_vecMatMul (A : M) : (0 : Y) * A = 0 := by
+  have h := add_vecMatMul A (0:Y) 0; rw [add_zero] at h; exact left_eq_add.mp h
+
 theorem matVecMul_smul_assoc (a : R) (A : M) (x : X) : (a•A)*x = a•(A*x) := sorry_proof
 theorem vecMatMul_smul_assoc (a : R) (y : Y) (A : M) : y*(a•A) = a•(y*A) := sorry_proof
 
@@ -88,8 +99,12 @@ variable
 
 set_default_scalar R
 
-@[simp, simp_core] theorem identityMatrix_matVecMul (x : X) : 𝐈[X] * x = x := sorry_proof
-@[simp, simp_core] theorem vecMatMul_identityMatrix (x : X) : x * 𝐈[X] = x := sorry_proof
+-- this is exactly the defining property `identityMatrix_spec` of `TensorProductSelf`
+@[simp, simp_core] theorem identityMatrix_matVecMul (x : X) : 𝐈[X] * x = x :=
+  TensorProductSelf.identityMatrix_spec x
+@[simp, simp_core] theorem vecMatMul_identityMatrix (x : X) : x * 𝐈[X] = x := by
+  show vecMatMulAdd (1:R) x 𝐈[X] 0 0 = x
+  rw [vecMatMulAdd_identityMatrix, one_smul, zero_smul, add_zero]
 
 @[simp, simp_core]
 theorem smul_identityMatrix_matVecMul (a : R) (x : X) : (a • 𝐈[X]) * x = a•x := by

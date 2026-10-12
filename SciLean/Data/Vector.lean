@@ -1,8 +1,13 @@
-import Mathlib.Algebra.Group.Defs
-import Mathlib.Algebra.Module.Defs
+module
 
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Util.SorryProof
+public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Algebra.Module.Defs
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -13,7 +18,10 @@ instance : GetElem' (Vector α n) (Fin n) α where
   getElem xs i h := xs[i]
 
 instance : InjectiveGetElem (Vector α n) (Fin n) where
-  getElem_injective := sorry_proof
+  getElem_injective := by
+    intro x y h
+    ext i hi
+    exact congrFun h ⟨i,hi⟩
 
 instance : DefaultIndex (Vector α n) (Fin n) where
 
@@ -22,8 +30,14 @@ instance : SetElem' (Vector α n) (Fin n) α where
   setElem_valid := by simp
 
 instance : LawfulSetElem (Vector α n) (Fin n) where
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
+  getElem_setElem_eq := by
+    intro xs i v _
+    simp only [getElem, setElem, Vector.get, Fin.val_cast]
+    exact Vector.getElem_set_self _
+  getElem_setElem_neq := by
+    intro xs i j v _ _ hij
+    simp only [getElem, setElem, Vector.get, Fin.val_cast]
+    exact Vector.getElem_set_ne i.isLt j.isLt (Fin.val_ne_of_ne hij)
 
 instance : OfFn (Vector α n) (Fin n) α where
   ofFn := Vector.ofFn
@@ -49,11 +63,11 @@ instance [Zero X] : Zero (Vector X n) := ⟨⟨Array.replicate n (0:X), by simp�
 
 @[simp, simp_core]
 theorem Vector.getElem_add [Add X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x + y)[i] = x[i] + y[i] := by
-  simp[getElem,HAdd.hAdd,Add.add]; unfold Vector.get; simp
+  simp [HAdd.hAdd, Add.add, Vector.getElem_mapFinIdx]
 
 @[simp, simp_core]
 theorem Vector.getElem_sub [Sub X] (x y : Vector X n) (i : ℕ) (h : i < n) : (x - y)[i] = x[i] - y[i] := by
-  simp[getElem,HSub.hSub,Sub.sub]; unfold Vector.get; simp
+  simp [HSub.hSub, Sub.sub, Vector.getElem_mapFinIdx]
 
 @[simp, simp_core]
 theorem Vector.getElem_neg [Neg X] (x : Vector X n) (i : ℕ) (h : i < n) : (-x)[i] = -x[i] := by
@@ -75,12 +89,12 @@ instance [AddCommGroup X] : AddCommGroup (Vector X n) where
   zero_add := by intros; ext i; simp[zero_add]
   add_zero := by intros; ext i; simp[add_zero]
   nsmul := fun n x => x.map fun xi => n • xi
-  nsmul_zero := by sorry_proof
-  nsmul_succ := by sorry_proof
+  nsmul_zero := by intros; ext i; simp
+  nsmul_succ := by intros; ext i; simp [succ_nsmul]
   zsmul := fun n x => x.map fun xi => n • xi
-  zsmul_zero' := sorry_proof
-  zsmul_succ' := sorry_proof
-  zsmul_neg' := by sorry_proof
+  zsmul_zero' := by intros; ext i; simp
+  zsmul_succ' := by intros; ext i; simp [add_zsmul]
+  zsmul_neg' := by intros; ext i; simp [add_zsmul, natCast_zsmul, succ_nsmul, add_comm]
   neg_add_cancel := by intros; ext i; simp[neg_add_cancel]
   add_comm := by intros; ext i; simp[add_comm]
   sub_eq_add_neg := by intros; ext i; simp[sub_eq_add_neg]

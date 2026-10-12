@@ -1,8 +1,19 @@
-import Lean
-import Qq
+module
 
-import SciLean.Lean.Meta.Basic
-import SciLean.Data.ArraySet
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+
+public import SciLean.Lean.Meta.Basic
+
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Data.ArraySet
+public meta import SciLean.Data.ArraySet
+
+@[expose] public meta section
+
 
 set_option linter.unusedVariables false
 
@@ -115,7 +126,7 @@ structure LambdaInfo where
 
 Returns `HeadFunInfo.bvar` if the head function is fvar and one of `xs`
 -/
-private def analyzeHeadFun (fn : Expr) (xs : Array Expr) : MetaM HeadFunInfo := do
+def analyzeHeadFun (fn : Expr) (xs : Array Expr) : MetaM HeadFunInfo := do
   match fn with
   | .const name _ =>
     pure (.const name (← getConstArity name))

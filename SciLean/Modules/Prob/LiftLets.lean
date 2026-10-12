@@ -1,4 +1,9 @@
-import Mathlib.Tactic.LiftLets
+module
+
+public import Mathlib.Tactic.LiftLets
+
+@[expose] public section
+
 
 -- TODO: move this to mathlib
 open Lean in

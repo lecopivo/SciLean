@@ -1,6 +1,11 @@
-import Mathlib.Topology.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Topology.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 @[fun_prop]
 theorem _root_.dite.arg_te.Continuous_rule {X Y} [TopologicalSpace X] [TopologicalSpace Y]
@@ -10,7 +15,6 @@ theorem _root_.dite.arg_te.Continuous_rule {X Y} [TopologicalSpace X] [Topologic
     Continuous (fun x => dite c (t · x) (e · x)) := by
   split_ifs <;> fun_prop
 
--- Is this true? I'm not really sure.
 @[fun_prop]
 theorem _root_.Eq.rec.Continuous_rule {α} (X : α → Type) [∀ a, TopologicalSpace (X a)] (a a' : α) (h : a = a') :
-  Continuous (fun x : X a => h ▸ x) := sorry_proof
+  Continuous (fun x : X a => h ▸ x) := by cases h; exact ⟨fun s hs => by simpa using hs⟩

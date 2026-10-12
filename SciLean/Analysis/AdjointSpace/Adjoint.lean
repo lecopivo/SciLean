@@ -1,10 +1,19 @@
-import SciLean.Analysis.AdjointSpace.Basic
+module
 
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Normed.Norm2
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Riesz
 
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Normed.Norm2
+-- for `Scalar.starRingEnd_make`
+public import SciLean.Analysis.SpecialFunctions.StarRingEnd
+
+public import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Tactic.FunTrans.Attr
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 set_option linter.unusedVariables false
 
@@ -44,10 +53,74 @@ postfix:1000 "†" => adjoint defaultScalar%
 
 
 theorem adjoint_ex [CompleteSpace E] [CompleteSpace F] (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) :
-    ∀ x y, ⟪A x, y⟫ = ⟪x, (A†) y⟫ := sorry_proof
+    ∀ x y, ⟪A x, y⟫ = ⟪x, (A†) y⟫ := by
+  have h := AdjointSpace.exists_adjoint (𝕜:=𝕜) A hA
+  intro x y
+  simp only [adjoint, h, ↓reduceDIte]
+  exact Classical.choose_spec h x y
 
-theorem adjoint_clm {A : E → F} (hA : IsContinuousLinearMap 𝕜 A) : IsContinuousLinearMap 𝕜 (A†) :=
-    sorry_proof
+/-- If `A'` satisfies the defining property of the adjoint of `A` then `A'` is linear. -/
+theorem isLinearMap_of_inner_adjoint {A : E → F} {A' : F → E}
+    (h : ∀ x y, ⟪A x, y⟫ = ⟪x, A' y⟫) :
+    IsLinearMap 𝕜 A' := by
+  constructor
+  · intro y z
+    apply AdjointSpace.ext_inner_left 𝕜
+    intro v
+    calc ⟪v, A' (y+z)⟫ = ⟪A v, y+z⟫ := (h v (y+z)).symm
+      _ = ⟪A v, y⟫ + ⟪A v, z⟫ := AdjointSpace.inner_add_right ..
+      _ = ⟪v, A' y⟫ + ⟪v, A' z⟫ := by rw [h, h]
+      _ = ⟪v, A' y + A' z⟫ := (AdjointSpace.inner_add_right ..).symm
+  · intro r y
+    apply AdjointSpace.ext_inner_left 𝕜
+    intro v
+    calc ⟪v, A' (r • y)⟫ = ⟪A v, r • y⟫ := (h v (r•y)).symm
+      _ = r * ⟪A v, y⟫ := AdjointSpace.inner_smul_right ..
+      _ = r * ⟪v, A' y⟫ := by rw [h]
+      _ = ⟪v, r • A' y⟫ := (AdjointSpace.inner_smul_right ..).symm
+
+/-- If `A'` satisfies the defining property of the adjoint of a continuous linear map `A` then
+`A'` is continuous linear too. -/
+theorem isContinuousLinearMap_of_inner_adjoint {A : E → F} {A' : F → E}
+    (hA : IsContinuousLinearMap 𝕜 A) (h : ∀ x y, ⟪A x, y⟫ = ⟪x, A' y⟫) :
+    IsContinuousLinearMap 𝕜 A' := by
+  have hlin : IsLinearMap 𝕜 A' := isLinearMap_of_inner_adjoint h
+  constructor
+  · exact hlin
+  · obtain ⟨c,d,hc,hd,hcd⟩ := AdjointSpace.inner_top_equiv_norm (𝕜:=𝕜) (E:=E)
+    obtain ⟨C, hC, hCle⟩ := AdjointSpace.exists_norm_inner_le 𝕜 (E:=F)
+    let B : E →L[𝕜] F := ContinuousLinearMap.mk' 𝕜 A hA
+    let L : F →ₗ[𝕜] E := ⟨⟨A', hlin.map_add⟩, hlin.map_smul⟩
+    have hbound : ∀ y, ‖L y‖ ≤ (C * ‖B‖ / c) * ‖y‖ := by
+      intro y
+      have hb : c * ‖A' y‖^2 ≤ C * ‖B‖ * ‖y‖ * ‖A' y‖ := by
+        have e1 : c • ‖A' y‖^2 ≤ re ⟪A' y, A' y⟫ := (hcd (A' y)).1
+        have e2 : ⟪A' y, A' y⟫ = ⟪A (A' y), y⟫ := (h (A' y) y).symm
+        have e3 : re ⟪A (A' y), y⟫ ≤ ‖⟪A (A' y), y⟫‖ := re_le_norm _
+        have e4 : ‖⟪A (A' y), y⟫‖ ≤ C * (‖A (A' y)‖ * ‖y‖) := hCle _ _
+        have e5 : ‖A (A' y)‖ ≤ ‖B‖ * ‖A' y‖ := B.le_opNorm (A' y)
+        have e6 : re ⟪A' y, A' y⟫ ≤ C * (‖B‖ * ‖A' y‖ * ‖y‖) := by
+          rw [e2]
+          refine le_trans e3 (le_trans e4 ?_)
+          nlinarith [mul_le_mul_of_nonneg_right e5 (norm_nonneg y), hC.le]
+        simp only [smul_eq_mul] at e1
+        nlinarith [e1, e6]
+      show ‖A' y‖ ≤ (C * ‖B‖ / c) * ‖y‖
+      rcases eq_or_lt_of_le (norm_nonneg (A' y)) with h0 | h0
+      · rw [← h0]; positivity
+      · rw [div_mul_eq_mul_div, le_div_iff₀ hc]
+        nlinarith [hb, h0]
+    exact AddMonoidHomClass.continuous_of_bound L (C * ‖B‖ / c) hbound
+
+theorem adjoint_clm {A : E → F} (hA : IsContinuousLinearMap 𝕜 A) : IsContinuousLinearMap 𝕜 (A†) := by
+  by_cases h : ∃ g : F → E, ∀ x y, ⟪A x, y⟫ = ⟪x, g y⟫
+  · refine isContinuousLinearMap_of_inner_adjoint hA (fun x y => ?_)
+    simp only [adjoint, h, ↓reduceDIte]
+    exact Classical.choose_spec h x y
+  · have : (adjoint 𝕜 A) = fun _ => (0 : E) := by
+      funext y; simp only [adjoint, h, ↓reduceDIte]
+    rw [this]
+    fun_prop
 
 /-- The fundamental property of the adjoint. -/
 theorem adjoint_inner_left (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) (x : E) (y : F) :
@@ -73,16 +146,14 @@ theorem adjoint_adjoint (A : E → F) (hA : IsContinuousLinearMap 𝕜 A) : A†
 
 
 theorem adjoint.arg_y.IsLinearMap (A : E → F) : IsLinearMap 𝕜 (fun y => adjoint 𝕜 A y) := by
-  constructor
-  · sorry_proof
-  · intros r x
-    apply AdjointSpace.ext_inner_right 𝕜; intro v
-    rw[AdjointSpace.inner_smul_left]
-    if hA : IsContinuousLinearMap 𝕜 A then
-      simp[adjoint_inner_left (hA:=hA)]
-      rw[AdjointSpace.inner_smul_left]
-    else
-      sorry_proof
+  by_cases h : ∃ g : F → E, ∀ x y, ⟪A x, y⟫ = ⟪x, g y⟫
+  · refine isLinearMap_of_inner_adjoint (A:=A) (fun x y => ?_)
+    simp only [adjoint, h, ↓reduceDIte]
+    exact Classical.choose_spec h x y
+  · have hz : (fun y => adjoint 𝕜 A y) = fun _ => (0 : E) := by
+      funext y; simp only [adjoint, h, ↓reduceDIte]
+    rw [hz]
+    constructor <;> intros <;> simp
 
 
 set_option linter.hashCommand false in
@@ -149,8 +220,10 @@ theorem proj_rule [DecidableEq ι]
     fun x => (fun j => if h : i=j then h ▸ x else 0) := by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro x y
-  rw[inner_forall_split]
-  sorry_proof
+  rw[inner_forall_split, SciLean.IndexType.sum_eq_finset_sum, Finset.sum_eq_single i]
+  · simp
+  · intro j _ hj; simp [Ne.symm hj]
+  · intro h; exact absurd (Finset.mem_univ i) h
 
 @[fun_trans]
 theorem prod_rule
@@ -214,10 +287,10 @@ theorem pi_rule
 
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   intro x y
-  sorry_proof
-  -- rw[AdjointSpace.sum_inner]
-  -- simp (disch:=fun_prop) [adjoint_inner_left]
-  -- rfl
+  rw[inner_forall_split]
+  simp only [SciLean.IndexType.sum_eq_finset_sum]
+  rw[AdjointSpace.sum_inner]
+  exact Finset.sum_congr rfl fun i _ => adjoint_inner_left _ (hf i) _ _
 
 
 end adjoint
@@ -247,7 +320,24 @@ theorem SciLean.adjoint_wrt_prod
     fun (z : Z) =>
       let x := adjoint K (f · 0) z
       let y := adjoint K (f 0 ·) z
-      (x,y) := sorry_proof
+      (x,y) := by
+  have hf₁ : IsContinuousLinearMap K (fun x : X => f x 0) := by
+    have h : (fun x : X => f x 0) = (fun xy : X×Y => f xy.1 xy.2) ∘ (fun x : X => (x,(0:Y))) := rfl
+    rw [h]; fun_prop
+  have hf₂ : IsContinuousLinearMap K (fun y : Y => f 0 y) := by
+    have h : (fun y : Y => f 0 y) = (fun xy : X×Y => f xy.1 xy.2) ∘ (fun y : Y => ((0:X),y)) := rfl
+    rw [h]; fun_prop
+  have hsplit : ∀ (x : X) (y : Y), f x y = f x 0 + f 0 y := by
+    intro x y
+    have h := hf.linear.map_add (x,(0:Y)) ((0:X),y)
+    simp only [Prod.mk_add_mk, add_zero, zero_add] at h
+    exact h
+  refine ((eq_adjoint_iff _ (fun xy : X×Y => f xy.1 xy.2) hf).2 ?_).symm
+  intro z xy
+  rw [AdjointSpace.inner_prod_split]
+  dsimp
+  rw [adjoint_inner_left _ hf₁, adjoint_inner_left _ hf₂,
+    ← AdjointSpace.inner_add_right, ← hsplit]
 
 
 -- Prod ------------------------------------------------------------------------
@@ -433,8 +523,8 @@ theorem SciLean.IndexType.sum.arg_f.adjoint_rule {ι n} [IndexType ι n] [Fold �
     (fun y => ∑ᴵ i, ((f · i)†) y) :=
 by
   rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
-  sorry_proof
-  -- simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]
+  simp only [SciLean.IndexType.sum_eq_finset_sum]
+  simp (disch:=fun_prop) [adjoint_inner_left,AdjointSpace.sum_inner,AdjointSpace.inner_sum]
 
 
 -- d/ite -----------------------------------------------------------------------
@@ -479,45 +569,9 @@ theorem Inner.inner.arg_a1.adjoint_rule
     =
     fun z => z • (f†) y :=
 by
-  rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
   simp (disch:=fun_prop)
     [adjoint_inner_left,AdjointSpace.inner_smul_left,mul_comm]
-
-
-section OnRealSpace
-
-variable
-  {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
-  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X] [CompleteSpace X]
-  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [AdjointSpace K Y] [CompleteSpace Y]
-  -- maybe [IsScalarTower R K X] [IsScalarTower R K Y] ?
-  -- This should be done properly with proofs to make sure it is correct
-open SciLean
-
-@[fun_trans]
-theorem Inner.inner.arg_a1.adjoint_rule_real
-  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
-  : adjoint R (fun x => ⟪y, f x⟫[K])
-    =
-    fun z => z • (adjoint R f) y :=
-by
-  rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
-  sorry_proof
-
-open ComplexConjugate in
-@[fun_trans]
-theorem Inner.inner.arg_a0.adjoint_rule
-  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
-  : adjoint R (fun x => ⟪f x, y⟫[K])
-    =
-    fun z => (conj z) • (adjoint R f) y :=
-by
-  rw[← (eq_adjoint_iff _ _ (by sorry_proof)).2]
-  sorry_proof
-
-
-end OnRealSpace
-
 
 
 --------------------------------------------------------------------------------
@@ -548,8 +602,10 @@ by
       rw[hf.linear.map_smul]
       calc _ = ⟪(c • (1:K)) • f x, y⟫[K] := by simp
            _ = (conj (c • (1:K))) * ⟪f x, y⟫[K] := by rw[AdjointSpace.inner_smul_left]
-           _ = c • ⟪f x, y⟫[K] := by simp[ScalarSMul.smul_eq_mul_make]; sorry_proof
-  · sorry_proof
+           _ = c • ⟪f x, y⟫[K] := by
+             rw [ScalarSMul.smul_eq_mul_make (K:=K) c 1, mul_one, Scalar.starRingEnd_make,
+               neg_zero, ← ScalarSMul.smul_eq_mul_make]
+  · exact (AdjointSpace.continuous_inner_left (𝕜:=K) y).comp hf.cont
 
 @[fun_prop]
 theorem Inner.inner.arg_a1.IsContinuousLinearMap_rule
@@ -568,7 +624,7 @@ by
       rw[hf.linear.map_smul]
       simp only [AdjointSpace.inner_smul_right]
       rfl
-  · sorry_proof
+  · exact (AdjointSpace.continuous_inner_right (𝕜:=K) y).comp hf.cont
 
 
 @[fun_prop]
@@ -585,7 +641,44 @@ by
       calc _ = ⟪y, (c • (1:K)) • f x⟫[K] := by simp[hf.linear.map_smul]
            _ = ((c • (1:K))) * ⟪y, f x⟫[K] := by rw[AdjointSpace.inner_smul_right]
            _ = c • ⟪y, f x⟫[K] := by simp[ScalarSMul.smul_eq_mul_make]
-  · sorry_proof
+  · fun_prop
 
 
 end IsContinuousLinearMap
+
+section OnRealSpace
+
+variable
+  {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K] [ScalarInner R K]
+  {X : Type*} [NormedAddCommGroup X] [AdjointSpace R X] [AdjointSpace K X] [CompleteSpace X]
+  {Y : Type*} [NormedAddCommGroup Y] [AdjointSpace R Y] [AdjointSpace K Y] [CompleteSpace Y]
+  -- maybe [IsScalarTower R K X] [IsScalarTower R K Y] ?
+  -- This should be done properly with proofs to make sure it is correct
+open SciLean
+
+@[fun_trans]
+theorem Inner.inner.arg_a1.adjoint_rule_real
+  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
+  : adjoint R (fun x => ⟪y, f x⟫[K])
+    =
+    fun z => z • (adjoint R f) y :=
+by
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  sorry_proof
+
+open ComplexConjugate in
+@[fun_trans]
+theorem Inner.inner.arg_a0.adjoint_rule
+  (f : X → Y) (hf : IsContinuousLinearMap R f) (y : Y)
+  : adjoint R (fun x => ⟪f x, y⟫[K])
+    =
+    fun z => (conj z) • (adjoint R f) y :=
+by
+  rw[← (eq_adjoint_iff _ _ (by fun_prop)).2]
+  sorry_proof
+
+
+end OnRealSpace
+
+
+

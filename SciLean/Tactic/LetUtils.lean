@@ -1,7 +1,17 @@
-import Lean.Elab.Tactic.ElabTerm
-import Lean.Elab.Tactic.Conv.Basic
+module
 
-import SciLean.Lean.Expr
+public import Lean.Elab.Tactic.ElabTerm
+
+public meta import Lean.Elab.Tactic.ElabTerm
+public import Lean.Elab.Tactic.Conv.Basic
+public meta import Lean.Elab.Tactic.Conv.Basic
+
+public import SciLean.Lean.Expr
+
+public meta import SciLean.Lean.Expr
+
+@[expose] public meta section
+
 
 
 namespace SciLean.Meta
@@ -249,8 +259,3 @@ by
     let_move_up z
     let_move_up d
     let_add hihi 10
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a
-    let_unfold1 a

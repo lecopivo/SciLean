@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.HasRevFDeriv
+module
+
+public import SciLean.Analysis.Calculus.HasRevFDeriv
 -- import SciLean.Tactic.DataSynth.HasRevFDerivUpdate
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
-import SciLean.Meta.Notation.Do
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+public import SciLean.Meta.Notation.Do
+
+@[expose] public section
+
 
 /-! Port of Optim.jl, file src/types.jl
 

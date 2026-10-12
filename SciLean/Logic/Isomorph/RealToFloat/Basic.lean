@@ -1,9 +1,14 @@
-import SciLean.Logic.Isomorph.Isomorph
-import SciLean.Logic.Isomorph.RealToFloat.Type
+module
 
-import Mathlib.Analysis.Complex.Exponential
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+public import SciLean.Logic.Isomorph.Isomorph
+public import SciLean.Logic.Isomorph.RealToFloat.Type
+
+public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
+
+@[expose] public section
+
 
 open SciLean
 
@@ -63,13 +68,7 @@ theorem Prod.fst.arg_self.isomorph_rule {α α' β₁ β₂ β₁' β₂' : Sort
   (f : α → β₁×β₂)
   : isomorph `RealToFloat (fun x => (f x).1)
     =
-    fun x => ((isomorph `RealToFloat f) x).1 :=
-by
-  funext x
-  unfold isomorph
-  unfold instIsomorphicTypeRealToFloatProd
-  unfold IsomorphicType.equiv
-  simp
+    fun x => ((isomorph `RealToFloat f) x).1 := by rfl
 
 @[fun_trans]
 theorem Prod.snd.arg_self.isomorph_rule {α α' β₁ β₂ β₁' β₂' : Sort _}
@@ -79,13 +78,7 @@ theorem Prod.snd.arg_self.isomorph_rule {α α' β₁ β₂ β₁' β₂' : Sort
   (f : α → β₁×β₂)
   : isomorph `RealToFloat (fun x => (f x).2)
     =
-    fun x => ((isomorph `RealToFloat f) x).2 :=
-by
-  funext x
-  unfold isomorph
-  unfold instIsomorphicTypeRealToFloatProd
-  unfold IsomorphicType.equiv
-  simp
+    fun x => ((isomorph `RealToFloat f) x).2 := by rfl
 
 
 @[fun_trans]

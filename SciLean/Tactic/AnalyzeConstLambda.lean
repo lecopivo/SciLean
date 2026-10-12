@@ -1,8 +1,19 @@
-import SciLean.Lean.Array
-import SciLean.Lean.Expr
-import SciLean.Lean.Meta.Basic
+module
 
-import SciLean.Data.ArraySet
+public import SciLean.Lean.Array
+
+public meta import SciLean.Lean.Array
+public import SciLean.Lean.Expr
+public meta import SciLean.Lean.Expr
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+
+public import SciLean.Data.ArraySet
+
+public meta import SciLean.Data.ArraySet
+
+@[expose] public meta section
+
 
 open Lean Meta
 

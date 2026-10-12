@@ -1,18 +1,23 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Prod
-import Mathlib.Analysis.Calculus.FDeriv.Linear
-import Mathlib.Analysis.Calculus.FDeriv.Add
-import Mathlib.Analysis.Calculus.FDeriv.Mul
+module
 
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Analysis.Calculus.Deriv.Inv
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.FDeriv.Prod
+public import Mathlib.Analysis.Calculus.FDeriv.Linear
+public import Mathlib.Analysis.Calculus.FDeriv.Add
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
 
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Meta.Notation.Let'
+public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Calculus.Deriv.Inv
 
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Meta.Notation.Let'
+
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 open SciLean
 
@@ -136,6 +141,7 @@ theorem fderiv.let_rule
 by
   funext x; fun_trans
 
+omit [Fintype ι] in
 @[fun_trans]
 theorem fderiv.pi_rule_at
     (f : X → (i : ι) → E i) (x : X) (hf : ∀ i, DifferentiableAt K (f · i) x) :
@@ -144,6 +150,7 @@ theorem fderiv.pi_rule_at
     fun dx =>L[K] fun i =>
       fderiv K (f · i) x dx := fderiv_pi hf
 
+omit [Fintype ι] in
 @[fun_trans]
 theorem fderiv.pi_rule
     (f : X → (i : ι) → E i) (hf : ∀ i, Differentiable K (f · i)) :
@@ -274,7 +281,7 @@ theorem HMul.hMul.arg_a0a1.fderiv_rule_at
       let dz := fderiv K g x dx
       y * dz + z * dy := by
   ext dx
-  simpa [mul_comm] using congrArg (fun F => F dx) (fderiv_mul hf hg)
+  simpa [mul_comm, Pi.mul_def] using congrArg (fun F => F dx) (fderiv_mul hf hg)
 
 
 
@@ -305,7 +312,7 @@ theorem _root_.HDiv.hDiv.arg_a0a1.DifferentiableAt_rule
     {W} [NormedAddCommGroup W] [NormedSpace R W]
     (w : W) (a0 a1 : W → R)
     (ha0 : DifferentiableAt R a0 w) (ha1 : DifferentiableAt R a1 w) (ha1' : a1 w ≠ 0) :
-    DifferentiableAt R (fun w => a0 w / a1 w) w := sorry_proof
+    DifferentiableAt R (fun w => a0 w / a1 w) w := by fun_prop
 
 set_option linter.unusedVariables false in
 @[fun_trans]
@@ -320,14 +327,16 @@ theorem HDiv.hDiv.arg_a0a1.fderiv_rule_at
       let dy := fderiv K f x dx
       let dz := fderiv K g x dx
       (dy * z - y * dz) / z^2 := by
-  ext dx
-  have h : ∀ (f : X → K) x, fderiv K f x dx = deriv (fun h : K => f (x + h•dx)) 0 := by sorry_proof
-  change ((fderiv K (fun x => f x / g x) x) dx =
-    ((fderiv K f x) dx * g x - f x * (fderiv K g x) dx) / g x ^ 2)
-  rw [h (fun x => f x / g x) x, h f x, h g x]
-  have hdiv := deriv_fun_div (c := (fun h : K => f (x + h • dx))) (d := (fun h : K => g (x + h • dx)))
-    (x := 0) (hc := by sorry_proof) (hd := by sorry_proof) (hx := by sorry_proof)
-  convert hdiv using 1; rw [zero_smul, add_zero]
+  have hinv : HasFDerivAt (fun x => (g x)⁻¹)
+      ((ContinuousLinearMap.toSpanSingleton K (-(g x^2)⁻¹)).comp (fderiv K g x)) x :=
+    HasFDerivAt.comp (𝕜:=K) x ((hasDerivAt_inv hx).hasFDerivAt) hg.hasFDerivAt
+  have hmul := HasFDerivAt.fun_mul hf.hasFDerivAt hinv
+  rw [show (fun x => f x / g x) = (fun x => f x * (g x)⁻¹) by funext x; rw [div_eq_mul_inv]]
+  rw [hmul.fderiv]
+  refine ContinuousLinearMap.ext fun dx => ?_
+  simp [ContinuousLinearMap.toSpanSingleton_apply]
+  field_simp
+  ring
 
 
 -- Inv.inv -------------------------------------------------------------------
@@ -339,7 +348,7 @@ theorem _root_.Inv.inv.arg_a0.DifferentiableAt_rule
     {W} [NormedAddCommGroup W] [NormedSpace R W]
     (w : W) (a0 : W → R)
     (ha0 : DifferentiableAt R a0 w) (ha0' : a0 w ≠ 0) :
-    DifferentiableAt R (fun w => (a0 w)⁻¹) w := sorry_proof
+    DifferentiableAt R (fun w => (a0 w)⁻¹) w := by fun_prop
 
 @[fun_trans]
 theorem HInv.hInv.arg_a0a1.fderiv_rule_at
@@ -352,7 +361,7 @@ theorem HInv.hInv.arg_a0a1.fderiv_rule_at
       let dy := fderiv K f x dx
       (-dy) / y^2 := by
   ext dx
-  rw[fderiv_comp']
+  rw[fderiv_fun_comp]
   rw[fderiv_inv]
   simp; ring
   apply differentiableAt_inv hx
@@ -363,7 +372,7 @@ theorem HInv.hInv.arg_a0a1.fderiv_rule_at
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.fderiv_rule_at (n : Nat) (x : X)
+theorem HPow.hPow.arg_a0.fderiv_rule_at (n : Nat) (x : X)
     (f : X → K) (hf : DifferentiableAt K f x) :
     fderiv K (fun x => f x ^ n) x
     =
@@ -377,14 +386,16 @@ by
     simp; rfl
   case succ n hn =>
     ext dx
-    simp_rw[pow_succ]
-    rw[HMul.hMul.arg_a0a1.fderiv_rule_at x _ f (by fun_prop) (by fun_prop)]
-    rw[hn]
+    simp_rw [pow_succ]
+    rw [HMul.hMul.arg_a0a1.fderiv_rule_at x _ f (by fun_prop) (by fun_prop)]
+    simp only [ContinuousLinearMap.mk'_eval]
+    rw [hn]
+    simp only [ContinuousLinearMap.mk'_eval]
     induction n
     case zero => simp
     case succ =>
-      rw[show ∀ (n : Nat), n.succ - 1 = n by simp]
-      rw[pow_succ]
+      rw [show ∀ (n : Nat), n.succ - 1 = n by simp]
+      rw [pow_succ]
       simp; ring
 
 
@@ -423,7 +434,7 @@ by
 --------------------------------------------------------------------------------
 
 theorem SciLean.fderiv_wrt_prod
-  {f : X → Y → Z} (_hf : Differentiable K ↿f := by fun_prop) :
+  {f : X → Y → Z} (hf : Differentiable K ↿f := by fun_prop) :
   fderiv K (fun xy : X×Y => f xy.1 xy.2)
   =
   fun xy => fun dxy =>L[K]
@@ -431,7 +442,26 @@ theorem SciLean.fderiv_wrt_prod
     let dx := dxy.1; let dy := dxy.2
     let dzdx := fderiv K (f · y) x dx
     let dzdy := fderiv K (f x ·) y dy
-    dzdx + dzdy := sorry_proof
+    dzdx + dzdy := by
+  funext xy
+  obtain ⟨x,y⟩ := xy
+  have hF := (hf (x,y)).hasFDerivAt
+  have h1 : HasFDerivAt (fun x' => f x' y)
+      ((fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y)).comp
+        ((ContinuousLinearMap.id K X).prod 0)) x :=
+    HasFDerivAt.comp (f := fun x' : X => (x',y)) x hF
+      ((hasFDerivAt_id x).prodMk (hasFDerivAt_const y x))
+  have h2 : HasFDerivAt (fun y' => f x y')
+      ((fderiv K (fun xy : X×Y => f xy.1 xy.2) (x,y)).comp
+        ((0 : Y →L[K] X).prod (ContinuousLinearMap.id K Y))) y :=
+    HasFDerivAt.comp (f := fun y' : Y => (x,y')) y hF
+      ((hasFDerivAt_const x y).prodMk (hasFDerivAt_id y))
+  refine ContinuousLinearMap.ext fun dxy => ?_
+  obtain ⟨dx,dy⟩ := dxy
+  simp only [ContinuousLinearMap.mk'_eval, h1.fderiv, h2.fderiv, ContinuousLinearMap.coe_comp,
+    Function.comp_apply, ContinuousLinearMap.prod_apply, ContinuousLinearMap.id_apply, zero_apply]
+  rw [← map_add]
+  norm_num
 
 
 variable
@@ -441,7 +471,7 @@ variable
 
 
 theorem SciLean.fderiv_wrt_prod3
-  {f : X₁ → X₂ → X₃ → Z} (_hf : Differentiable K ↿f := by fun_prop) :
+  {f : X₁ → X₂ → X₃ → Z} (hf : Differentiable K ↿f := by fun_prop) :
   fderiv K (fun x : X₁×X₂×X₃ => f x.1 x.2.1 x.2.2)
   =
   fun x => fun dx =>L[K]
@@ -450,4 +480,27 @@ theorem SciLean.fderiv_wrt_prod3
     let dzdx₁ := fderiv K (f · x₂ x₃) x₁ dx₁
     let dzdx₂ := fderiv K (f x₁ · x₃) x₂ dx₂
     let dzdx₃ := fderiv K (f x₁ x₂ ·) x₃ dx₃
-    dzdx₁ + dzdx₂ + dzdx₃ := sorry_proof
+    dzdx₁ + dzdx₂ + dzdx₃ := by
+  funext x
+  obtain ⟨x₁,x₂,x₃⟩ := x
+  have hF := (hf (x₁,x₂,x₃)).hasFDerivAt
+  set F := fderiv K (fun x : X₁×X₂×X₃ => f x.1 x.2.1 x.2.2) (x₁,x₂,x₃) with hFdef
+  have h1 : HasFDerivAt (fun x' => f x' x₂ x₃)
+      (F.comp ((ContinuousLinearMap.id K X₁).prod 0)) x₁ :=
+    HasFDerivAt.comp (f := fun x' : X₁ => (x',x₂,x₃)) x₁ hF
+      ((hasFDerivAt_id x₁).prodMk (hasFDerivAt_const (x₂,x₃) x₁))
+  have h2 : HasFDerivAt (fun x' => f x₁ x' x₃)
+      (F.comp ((0 : X₂ →L[K] X₁).prod (((ContinuousLinearMap.id K X₂).prod 0)))) x₂ :=
+    HasFDerivAt.comp (f := fun x' : X₂ => (x₁,x',x₃)) x₂ hF
+      ((hasFDerivAt_const x₁ x₂).prodMk ((hasFDerivAt_id x₂).prodMk (hasFDerivAt_const x₃ x₂)))
+  have h3 : HasFDerivAt (fun x' => f x₁ x₂ x')
+      (F.comp ((0 : X₃ →L[K] X₁).prod ((0 : X₃ →L[K] X₂).prod (ContinuousLinearMap.id K X₃)))) x₃ :=
+    HasFDerivAt.comp (f := fun x' : X₃ => (x₁,x₂,x')) x₃ hF
+      ((hasFDerivAt_const x₁ x₃).prodMk ((hasFDerivAt_const x₂ x₃).prodMk (hasFDerivAt_id x₃)))
+  refine ContinuousLinearMap.ext fun dx => ?_
+  obtain ⟨dx₁,dx₂,dx₃⟩ := dx
+  simp only [ContinuousLinearMap.mk'_eval, h1.fderiv, h2.fderiv, h3.fderiv,
+    ContinuousLinearMap.coe_comp, Function.comp_apply, ContinuousLinearMap.prod_apply,
+    ContinuousLinearMap.id_apply, zero_apply]
+  rw [← map_add, ← map_add]
+  norm_num

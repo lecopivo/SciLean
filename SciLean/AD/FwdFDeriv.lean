@@ -1,4 +1,9 @@
-import SciLean.Analysis.Calculus.FDeriv
+module
+
+public import SciLean.Analysis.Calculus.FDeriv
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -368,7 +373,7 @@ theorem HDiv.hDiv.arg_a0a1.fwdFDeriv_rule_at (x : X)
     lhs
     simp[div_eq_inv_mul]
     fun_trans (disch:=assumption)
-  field_simp ; sorry_proof --ring
+  field_simp ; grind --ring
 
 
 -- Inv.inv -------------------------------------------------------------------
@@ -390,7 +395,7 @@ theorem HInv.hInv.arg_a0a1.fwdFDeriv_rule_at
 --------------------------------------------------------------------------------
 
 @[fun_trans]
-def HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
+theorem HPow.hPow.arg_a0.fwdFDeriv_rule (n : Nat) :
     fwdFDeriv K (fun x : K => x ^ n)
     =
     fun x dx : K =>
@@ -411,8 +416,12 @@ theorem FinType.sum.arg_f.fwdFDeriv_rule_at (x : X) (A : Finset ι)
     fun dx =>
       let ydy := fun i => fwdFDeriv K (f · i) x dx
       Finset.sum A ydy := by
-  unfold fwdFDeriv; fun_trans
-  sorry_proof
+  funext dx
+  unfold fwdFDeriv
+  rw [fderiv_fun_sum (fun i _ => hf i)]
+  refine Prod.ext ?_ ?_
+  · simp [Prod.fst_sum]
+  · simp [Prod.snd_sum, Finset.sum_apply]
 
 
 
@@ -428,7 +437,12 @@ theorem sum.arg_f.fwdFDeriv_rule_at {ι nι} [IndexType ι nι] [Fold ι]
 by
   unfold fwdFDeriv;
   fun_trans [sum_push]
-  sorry_proof
+  funext dx
+  simp (disch:=fun_prop) only [fderiv.pi_rule_at]
+  simp only [IndexType.sum_eq_finset_sum]
+  refine Prod.ext ?_ ?_
+  · simp [Prod.fst_sum]
+  · simp [Prod.snd_sum]
 
 
 @[fun_trans]

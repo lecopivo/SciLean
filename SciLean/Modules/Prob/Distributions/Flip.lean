@@ -1,5 +1,10 @@
-import SciLean.Modules.Prob.RandFwdDeriv
-import SciLean.Core.FloatAsReal
+module
+
+public import SciLean.Modules.Prob.RandFwdDeriv
+public import SciLean.Core.FloatAsReal
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 

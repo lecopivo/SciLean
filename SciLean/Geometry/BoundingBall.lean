@@ -1,12 +1,17 @@
-import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Analysis.Scalar
-import SciLean.Logic.Function.Preimage
+public import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
-import SciLean.Tactic.GTrans
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Geometry
+public import SciLean.Analysis.Scalar
+public import SciLean.Logic.Function.Preimage
+
+public import SciLean.Tactic.GTrans
+
+@[expose] public section
+
 
 open SciLean Set MeasureTheory
 
@@ -68,7 +73,9 @@ set_option linter.unusedVariables false in
 theorem SProd.sprod.bounding_ball₂
     (A : Set X) (B : Set Y) (cx : X) (cy : Y) (rx ry : R)
     (hA : BoundingBall₂ R A cx rx) (hB : BoundingBall₂ R B cy ry) :
-    BoundingBall₂ R (A ×ˢ B) (cx,cy) (sqrt (rx^2 + ry^2)) := sorry_proof
+    BoundingBall₂ R (A ×ˢ B) (cx,cy) (sqrt (rx^2 + ry^2)) :=
+  -- `A ×ˢ B` is notation for `A.prod B`
+  Set.prod.bounding_ball₂ A B cx cy rx ry hA hB
 
 
 set_option linter.unusedVariables false in
@@ -98,14 +105,16 @@ set_option linter.unusedVariables false in
 theorem Set.inter.left_bounding_ball₂
     (A B : Set X) (center : X) (radius : R)
     (hA : BoundingBall₂ R A center radius) :
-    BoundingBall₂ R (A ∩ B) center radius := sorry_proof
+    BoundingBall₂ R (A ∩ B) center radius :=
+  ⟨Set.inter_subset_left.trans hA.1, fun hc => hA.2 (fun _ hx => (hc hx).1)⟩
 
 set_option linter.unusedVariables false in
 @[gtrans]
 theorem Set.inter.right_bounding_ball₂
     (A B : Set X) (center : X) (radius : R)
     (hB : BoundingBall₂ R B center radius) :
-    BoundingBall₂ R (A ∩ B) center radius := sorry_proof
+    BoundingBall₂ R (A ∩ B) center radius :=
+  ⟨Set.inter_subset_right.trans hB.1, fun hc => hB.2 (fun _ hx => (hc hx).2)⟩
 
 -- TODO: make sure that we can do bounding balls on `R×R` or similar
 --       I somehow need to make sure that Preorder structure is compatible with

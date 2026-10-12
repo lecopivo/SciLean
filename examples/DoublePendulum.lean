@@ -1,12 +1,17 @@
-import SciLean.Core
-import SciLean.Mechanics
-import SciLean.Operators.ODE
-import SciLean.Solver.Solver
-import SciLean.Data.DataArray
-import SciLean.Core.Extra
-import SciLean.Functions.Trigonometric
+module
 
-import SciLean.Data.FunRec
+public import SciLean.Core
+public import SciLean.Mechanics
+public import SciLean.Operators.ODE
+public import SciLean.Solver.Solver
+public import SciLean.Data.DataArray
+public import SciLean.Core.Extra
+public import SciLean.Functions.Trigonometric
+
+public import SciLean.Data.FunRec
+
+@[expose] public section
+
 
 -- set_option synthInstance.maxHeartbeats 50000
 set_option synthInstance.maxSize 10000

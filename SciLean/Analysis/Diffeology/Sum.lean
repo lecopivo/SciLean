@@ -1,6 +1,11 @@
-import SciLean.Analysis.Diffeology.Basic
-import SciLean.Analysis.Diffeology.TangentSpace
-import SciLean.Analysis.Diffeology.Prod
+module
+
+public import SciLean.Analysis.Diffeology.Basic
+public import SciLean.Analysis.Diffeology.TangentSpace
+public import SciLean.Analysis.Diffeology.Prod
+
+@[expose] public section
+
 -- import SciLean.Analysis.Diffeology.SumInstances
 
 namespace SciLean

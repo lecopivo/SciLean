@@ -1,4 +1,9 @@
-import SciLean.Meta.SimpAttr
+module
+
+public import SciLean.Meta.SimpAttr
+
+@[expose] public section
+
 
 namespace SciLean
 

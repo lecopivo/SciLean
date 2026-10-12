@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 def ColProd (α β) := α × β
 -- we use `×ₗ` because some moron did not include subscript c (as 'C'olumn) into unicode
 infixr:35 " ×ₗ "  => ColProd

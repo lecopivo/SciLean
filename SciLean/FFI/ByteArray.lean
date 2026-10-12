@@ -1,12 +1,18 @@
 
+module
+
+@[expose] public section
+
 /-- Get `i`-th float out of `ByteArray` if interpreted as `FloatArray` -/
-@[extern c inline "((double*)(lean_sarray_cptr(#1)))[#2]"]
--- @[extern "scilean_byte_array_uget_float"]
+
+
+-- @[extern c inline "((double*)(lean_sarray_cptr(#1)))[#2]"]
+-- -- @[extern "scilean_byte_array_uget_float"]
 opaque ByteArray.ugetFloat (a : @& ByteArray) (i : USize) (hi : i.toNat*8 + 7 < a.size) : Float
 
 
-@[extern c inline "(((double*)(lean_sarray_cptr(#1)+#2))[0])"]
--- @[extern "scilean_byte_array_uget_float"]
+-- @[extern c inline "(((double*)(lean_sarray_cptr(#1)+#2))[0])"]
+-- -- @[extern "scilean_byte_array_uget_float"]
 opaque ByteArray.ugetFloatAtByte (a : @& ByteArray) (i : USize) (hi : i.toNat + 7 < a.size) : Float
 
 
@@ -28,16 +34,16 @@ let c := a.mkExclusive `c
 then common subexpression optimization can't collapse those two calls into one.
 
 TODO: Is there a more robust way to avoid common subexpression optimization then `uniqueName`?
+-- @[extern "scilean_byte_array_mk_exclusive"]
 -/
-@[extern "scilean_byte_array_mk_exclusive"]
 opaque ByteArray.mkExclusive (a : ByteArray) (uniqueName : Name) : ByteArray := a
 
 
 /-- Set `i`-th float out of `ByteArray` if interpreted as `FloatArray`
 
-This function is unsafe! It mutates the array without checking the array -/
-@[extern c inline "((((double*)(lean_sarray_cptr(#1)))[#2] = #3), #1)"]
+This function is unsafe! It mutates the array without checking the array -- @[extern c inline "((((double*)(lean_sarray_cptr(#1)))[#2] = #3), #1)"]
+-/
 unsafe opaque ByteArray.usetFloatUnsafe (a : ByteArray) (i : USize) (v : Float) (h : i.toNat*8 + 7 < a.size) : ByteArray
 
-@[extern "scilean_byte_array_replicate"]
+-- @[extern "scilean_byte_array_replicate"]
 opaque ByteArray.replicate (n : @& Nat) (v : UInt8) : ByteArray

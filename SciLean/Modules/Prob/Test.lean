@@ -1,5 +1,11 @@
 
+module
+
+@[expose] public section
+
 /-- P(n) = x^n * exp (-x) / n! -/
+
+
 def randNatPoisson (x : ℝ) : Rand ℕ := sorry
 
 

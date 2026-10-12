@@ -1,11 +1,16 @@
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.BFGS
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.LBFGS
-import SciLean.Numerics.Optimization.ArgMin
+module
 
-import SciLean.Analysis.Scalar.FloatAsReal
-import SciLean.Util.Approx.Basic
-import SciLean.Util.Approx.ApproxLimit
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.BFGS
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.LBFGS
+public import SciLean.Numerics.Optimization.ArgMin
+
+public import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Util.Approx.Basic
+public import SciLean.Util.Approx.ApproxLimit
+
+@[expose] public section
+
 
 namespace SciLean
 

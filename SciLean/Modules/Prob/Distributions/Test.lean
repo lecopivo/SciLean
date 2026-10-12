@@ -1,12 +1,17 @@
-import SciLean.Modules.Prob.Tactic
-import SciLean.Modules.Prob.Distributions.Flip
-import SciLean.Tactic.ConvInduction
+module
 
-import Mathlib.Tactic.FieldSimp
+public import SciLean.Modules.Prob.Tactic
+public import SciLean.Modules.Prob.Distributions.Flip
+public import SciLean.Tactic.ConvInduction
 
-import SciLean.Core.FunctionPropositions
+public import Mathlib.Tactic.FieldSimp
 
-import Mathlib.Lean.Expr
+public import SciLean.Core.FunctionPropositions
+
+public import Batteries.Lean.Expr
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset Measure
 

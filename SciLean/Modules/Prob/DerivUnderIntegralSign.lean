@@ -1,7 +1,12 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.FDeriv.Prod
-import Mathlib.MeasureTheory.Integral.Bochner
+module
+
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.FDeriv.Prod
+public import Mathlib.MeasureTheory.Integral.Bochner
+
+@[expose] public section
+
 
 open MeasureTheory
 

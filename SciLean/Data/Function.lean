@@ -1,8 +1,13 @@
-import Mathlib.Logic.Function.Basic
+module
+
+public import Mathlib.Logic.Function.Basic
 -- import SciLean.Data.Index
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
+public import SciLean.Data.IndexType
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+
+@[expose] public section
+
 
 def Function.Inverse (g : β → α) (f : α → β) :=
   Function.LeftInverse g f ∧ Function.RightInverse g f
@@ -58,12 +63,12 @@ def Function.modify (f : ∀ a, β a) (a' : α) (g : β a' → β a') (a : α) :
   Function.update f a' (g (f a')) a
 
 @[simp]
-theorem Function.modify_same (a : α) (g : β a → β a) (f : ∀ a, β a) : modify f a g a = g (f a) :=
-  dif_pos rfl
+theorem Function.modify_same (a : α) (g : β a → β a) (f : ∀ a, β a) : modify f a g a = g (f a) := by
+  simp [modify, update]
 
 @[simp]
-theorem Function.modify_noteq {a a' : α} (h : a ≠ a') (g : β a' → β a') (f : ∀ a, β a) : modify f a' g a = f a :=
-  dif_neg h
+theorem Function.modify_noteq {a a' : α} (h : a ≠ a') (g : β a' → β a') (f : ∀ a, β a) : modify f a' g a = f a := by
+  simp [modify, update, h]
 
 end FunctionModify
 

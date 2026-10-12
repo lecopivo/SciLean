@@ -1,8 +1,13 @@
 -- import Mathlib.Analysis.Calculus.FDeriv.Basic
 
-import SciLean.Util.Approx.ApproxSolution
-import SciLean.Util.Limit
-import SciLean.Util.SorryProof
+module
+
+public import SciLean.Util.Approx.ApproxSolution
+public import SciLean.Util.Limit
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -16,7 +21,7 @@ abbrev Approx.limit {N} {lN : Filter N} (M) (lM : Filter M)
   : Approx (lN ×ˢ lM) (limit n ∈ lN, aₙ n) :=
   ApproxSolution.approx _ lN lM
     (by intro aₙ' h a h'; simp[h,h'])
-    (by sorry_proof)
+    (by simp)
     x
 
 

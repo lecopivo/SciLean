@@ -1,6 +1,11 @@
-import SciLean.Data.DataArray.RnEquiv
-import SciLean.Data.ArrayOperations.Algebra
-import SciLean.Algebra.VectorOptimize.Basic
+module
+
+public import SciLean.Data.DataArray.RnEquiv
+public import SciLean.Data.ArrayOperations.Algebra
+public import SciLean.Algebra.VectorOptimize.Basic
+
+@[expose] public section
+
 
 /-! Algebraic structure in `X^[I]`
 
@@ -85,38 +90,6 @@ example : SMul R (R^[I]^[J]^[I]) := by infer_instance
 ----------------------------------------------------------------------------------------------------
 
 
--- IsZeroGetElem instances
-instance instIsZeroGetElemInductive [HasRnEquiv X K R] :
-    IsZeroGetElem (X^[J]^[I]) I where
-  getElem_zero := by sorry_proof
-
-instance  instIsZeroGetElemBase  : IsZeroGetElem (R^[I]) I := by sorry_proof
-
-instance instIsZeroGetElemUncurry {L nL} [IndexType L nL]
-    [HasRnEquiv X K R]
-    {Y} [PlainDataType Y] [Zero Y]
-    [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsZeroGetElem (X^[L]) J] :
-    IsZeroGetElem (X^[L]^[I]) (I × J) where
-  getElem_zero := by intro ⟨i,j⟩; simp[getElem_curry]
-
-instance instIsZeroGetElemUncurryBase : IsZeroGetElem (R^[I]) (I × Unit) where
-  getElem_zero := by sorry_proof
-
-instance instIsZeroGetElemRn [HasRnEquiv X K R] : IsZeroGetElem (X^[I]) (Idx (nI*nK)) where
-  getElem_zero := sorry_proof
-
-example : IsZeroGetElem (R^[I]) I := by infer_instance
-example : IsZeroGetElem (R^[I,J]) (I×J) := by infer_instance
-
--- set_option trace.Meta.synthInstance true in
-example : IsZeroGetElem (R^[J]^[I]) (I×J) := by infer_instance
-example : IsZeroGetElem (R^[I]^[J]) J := by infer_instance
-example : IsZeroGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
-example : IsZeroGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
-example : IsZeroGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
-
-----------------------------------------------------------------------------------------------------
-
 -- IsAddGetElem instances
 instance instIsAddGetElemInductive [HasRnEquiv X K R] :
     IsAddGetElem (X^[J]^[I]) I where
@@ -130,10 +103,10 @@ instance instIsAddGetElemUncurry {L nL} [IndexType L nL]
     {Y} [PlainDataType Y] [Add Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsAddGetElem (X^[L]) J] :
     IsAddGetElem (X^[L]^[I]) (I × J) where
-  getElem_add := sorry_proof
+  getElem_add := by intro x x' ⟨i,j⟩; simp[getElem_curry]
 
 instance instIsAddGetElemUncurryBase : IsAddGetElem (R^[I]) (I × Unit) where
-  getElem_add := by sorry_proof
+  getElem_add := by intro x x' ⟨i,j⟩; simp[getElem_curry]; rfl
 
 instance instIsAddGetElemRn [HasRnEquiv X K R] : IsAddGetElem (X^[I]) (Idx (nI*nK)) where
   getElem_add := sorry_proof
@@ -149,13 +122,60 @@ example : IsAddGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instan
 
 ----------------------------------------------------------------------------------------------------
 
+-- IsZeroGetElem instances
+instance instIsZeroGetElemInductive [HasRnEquiv X K R] :
+    IsZeroGetElem (X^[J]^[I]) I where
+  getElem_zero i := by
+    have h := IsAddGetElem.getElem_add (0 : X^[J]^[I]) 0 i
+    rw [add_zero] at h
+    exact left_eq_add.mp h
+
+instance  instIsZeroGetElemBase  : IsZeroGetElem (R^[I]) I where
+  getElem_zero i := by
+    have h := IsAddGetElem.getElem_add (0 : R^[I]) 0 i
+    rw [add_zero] at h
+    exact left_eq_add.mp h
+
+instance instIsZeroGetElemUncurry {L nL} [IndexType L nL]
+    [HasRnEquiv X K R]
+    {Y} [PlainDataType Y] [Zero Y]
+    [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsZeroGetElem (X^[L]) J] :
+    IsZeroGetElem (X^[L]^[I]) (I × J) where
+  getElem_zero := by intro ⟨i,j⟩; simp[getElem_curry]
+
+instance instIsZeroGetElemUncurryBase : IsZeroGetElem (R^[I]) (I × Unit) where
+  getElem_zero := by intro ⟨i,j⟩; simp[getElem_curry]; rfl
+
+instance instIsZeroGetElemRn [HasRnEquiv X K R] : IsZeroGetElem (X^[I]) (Idx (nI*nK)) where
+  getElem_zero i := by
+    have h := IsAddGetElem.getElem_add (0 : X^[I]) 0 i
+    rw [add_zero] at h
+    exact left_eq_add.mp h
+
+example : IsZeroGetElem (R^[I]) I := by infer_instance
+example : IsZeroGetElem (R^[I,J]) (I×J) := by infer_instance
+
+-- set_option trace.Meta.synthInstance true in
+example : IsZeroGetElem (R^[J]^[I]) (I×J) := by infer_instance
+example : IsZeroGetElem (R^[I]^[J]) J := by infer_instance
+example : IsZeroGetElem (R^[I]^[J]^[I]) (I) := by infer_instance
+example : IsZeroGetElem (R^[I]^[J]^[I]) (I×J) := by infer_instance
+example : IsZeroGetElem (R^[I]^[J]^[I]) (Idx (nI*(nJ*(nI*1)))) := by infer_instance
+
+----------------------------------------------------------------------------------------------------
+
 
 -- IsNegGetElem instances
 instance instIsNegGetElemInductive [HasRnEquiv X K R] :
     IsNegGetElem (X^[J]^[I]) I where
-  getElem_neg := by sorry_proof
+  getElem_neg x i := by
+    rw [eq_neg_iff_add_eq_zero, ← IsAddGetElem.getElem_add, neg_add_cancel,
+      IsZeroGetElem.getElem_zero]
 
-instance instIsNegGetElemBase : IsNegGetElem (R^[I]) I := by sorry_proof
+instance instIsNegGetElemBase : IsNegGetElem (R^[I]) I where
+  getElem_neg x i := by
+    rw [eq_neg_iff_add_eq_zero, ← IsAddGetElem.getElem_add, neg_add_cancel,
+      IsZeroGetElem.getElem_zero]
 
 instance instIsNegGetElemUncurry {L nL} [IndexType L nL]
     [HasRnEquiv X K R]
@@ -165,10 +185,12 @@ instance instIsNegGetElemUncurry {L nL} [IndexType L nL]
   getElem_neg := by intro ⟨i,j⟩; simp[getElem_curry]
 
 instance instIsNegGetElemUncurryBase : IsNegGetElem (R^[I]) (I × Unit) where
-  getElem_neg := by sorry_proof
+  getElem_neg := by intro x ⟨i,j⟩; simp[getElem_curry]; rfl
 
 instance instIsNegGetElemRn [HasRnEquiv X K R] : IsNegGetElem (X^[I]) (Idx (nI*nK)) where
-  getElem_neg := sorry_proof
+  getElem_neg x i := by
+    rw [eq_neg_iff_add_eq_zero, ← IsAddGetElem.getElem_add, neg_add_cancel,
+      IsZeroGetElem.getElem_zero]
 
 
 example : IsNegGetElem (R^[I]) I := by infer_instance
@@ -194,10 +216,10 @@ instance instIsSMulGetElemUncurry {L nL} [IndexType L nL]
     {Y} [PlainDataType Y] [SMul R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsSMulGetElem R (X^[L]) J] :
     IsSMulGetElem R (X^[L]^[I]) (I × J) where
-  getElem_smul := sorry_proof
+  getElem_smul := by intro r x ⟨i,j⟩; simp[getElem_curry]
 
 instance instIsSMulGetElemUncurryBase : IsSMulGetElem R (R^[I]) (I × Unit) where
-  getElem_smul := by sorry_proof
+  getElem_smul := by intro r x ⟨i,j⟩; simp[getElem_curry]; rfl
 
 instance instIsSMulGetElemRn [HasRnEquiv X K R] : IsSMulGetElem R (X^[I]) (Idx (nI*nK)) where
   getElem_smul := sorry_proof
@@ -229,10 +251,16 @@ instance instIsInnerGetElemUncurry {L nL} [IndexType L nL]
     {Y} [PlainDataType Y] [Inner R Y]
     [DataArrayEquiv (X^[L]) J Y] [GetElem' (X^[L]) J Y]  [IsInnerGetElem R (X^[L]) J] :
     IsInnerGetElem R (X^[L]^[I]) (I × J) where
-  inner_eq_sum_getElem := sorry_proof
+  inner_eq_sum_getElem := by
+    intro x x'
+    rw [IsInnerGetElem.inner_eq_sum_getElem (𝕜:=R) (X:=X^[L]^[I]) (I:=I) (Y:=X^[L]) (n:=nI) x x',
+      Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [IsInnerGetElem.inner_eq_sum_getElem (𝕜:=R) (X:=X^[L]) (I:=J) (Y:=Y) (n:=nJ)]
+    exact Finset.sum_congr rfl fun j _ => by simp [getElem_curry]
 
 instance instIsInnerGetElemUncurryBase : IsInnerGetElem R (R^[I]) (I × Unit) where
-  inner_eq_sum_getElem := by sorry_proof
+  inner_eq_sum_getElem := by intro x x'; rw [IsInnerGetElem.inner_eq_sum_getElem (𝕜:=R) (X:=R^[I]) (I:=I) (Y:=R) (n:=nI) x x', Fintype.sum_prod_type]; simp[getElem_curry]; rfl
 
 instance instIsInnerGetElemRn [HasRnEquiv X K R] : IsInnerGetElem R (X^[I]) (Idx (nI*nK)) where
   inner_eq_sum_getElem := sorry_proof
@@ -295,7 +323,7 @@ instance instIsContinuousGetElemUncurry {L nL} [IndexType L nL]
   continuous_getElem := by intro ⟨i,j⟩; simp[getElem_curry]; fun_prop
 
 instance instIsContinuousGetElemUncurryBase : IsContinuousGetElem (R^[I]) (I × Unit) where
-  continuous_getElem := sorry_proof
+  continuous_getElem := by intro ⟨i,j⟩; simp[getElem_curry]; exact continuous_getElem (X:=R^[I]) i
 
 instance instContinuousGetElemRn [HasRnEquiv X K R] : IsContinuousGetElem (X^[I]) (Idx (nI*nK)) where
   continuous_getElem := sorry_proof

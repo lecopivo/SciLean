@@ -1,4 +1,9 @@
-import SciLean.Data.IndexType.Fold
+module
+
+public import SciLean.Data.IndexType.Fold
+
+@[expose] public section
+
 
 
 open SciLean

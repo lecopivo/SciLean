@@ -1,9 +1,14 @@
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
-import SciLean.Data.ArrayOperations.Algebra
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.IfPull
+module
+
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Data.ArrayOperations.Algebra
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.IfPull
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -30,7 +35,7 @@ theorem ofFn.arg_f.IsContinuousLinearMap_rule {𝕜 X I Y : Type*}
     [AddCommGroup Y] [Module 𝕜 Y] [TopologicalSpace Y]
     [IsModuleGetElem 𝕜 X I] [IsContinuousGetElem X I] :
     IsContinuousLinearMap 𝕜 (fun f : I → Y => ofFn (coll:=X) f) := by
-  constructor; fun_prop; dsimp[autoParam]; fun_prop
+  constructor <;> fun_prop
 
 @[data_synth]
 theorem ofFn.arg_f.HasFDerivAt_rule {𝕜 X I Y : Type*}

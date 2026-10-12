@@ -1,9 +1,14 @@
-import Mathlib.Logic.Equiv.Basic
+module
 
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Elab
+public import Mathlib.Logic.Equiv.Basic
 
-import SciLean.Meta.SimpAttr
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Elab
+
+public import SciLean.Meta.SimpAttr
+
+@[expose] public section
+
 
 open Lean
 

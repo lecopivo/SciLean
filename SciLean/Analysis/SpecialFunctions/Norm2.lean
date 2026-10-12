@@ -1,6 +1,11 @@
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Analysis.SpecialFunctions.Pow
-import SciLean.Meta.GenerateFunProp
+module
+
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Analysis.SpecialFunctions.Pow
+public import SciLean.Meta.GenerateFunProp
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -56,13 +61,13 @@ theorem norm2_nonneg (R) [RealScalar R] {X} [NormedAddCommGroup X] [AdjointSpace
 ----------------------------------------------------------------------------------------------------
 
 def_fun_prop (x : U) (hx : x ≠ 0) : DifferentiableAt R (norm₂ R) x by
-  have : ‖x‖₂²[R] ≠ 0 := sorry_proof
+  have : ‖x‖₂²[R] ≠ 0 := AdjointSpace.inner_self_ne_zero.mpr hx
   unfold norm₂; fun_prop (disch:=aesop)
 
 def_fun_prop (f : X → U) (hf : Differentiable R f) (hx' : ∀ x, f x ≠ 0) :
     Differentiable R (fun x : X => ‖f x‖₂[R]) by
   intro x;
-  have : ‖f x‖₂²[R] ≠ 0 := sorry_proof
+  have : ‖f x‖₂²[R] ≠ 0 := AdjointSpace.inner_self_ne_zero.mpr (hx' x)
   fun_prop (disch:=aesop)
 
 
@@ -73,12 +78,11 @@ theorem norm₂.arg_x.fderiv_rule_at (x : U) (hx : x ≠ 0) :
     fderiv R (fun x : U => ‖x‖₂[R]) x
     =
     fun dx =>L[R] ⟪dx,x⟫[R] / ‖x‖₂[R] := by
-  unfold norm₂;
-  have : ‖x‖₂²[R] ≠ 0 := sorry_proof
+  have : ‖x‖₂²[R] ≠ 0 := AdjointSpace.inner_self_ne_zero.mpr hx
+  conv_lhs => unfold norm₂
   fun_trans (disch:=assumption)
-  ext dx; simp
-  rw [← AdjointSpace.inner_conj_symm]
-  simp; ring
+  ext dx; simp [norm₂]
+  rw [mul_div_mul_left _ _ two_ne_zero]
 
 @[fun_trans]
 theorem norm₂.arg_x.fderiv_rule (f : X → U) (hf : Differentiable R f) (hf' : ∀ x, f x ≠ 0) :
@@ -131,5 +135,4 @@ theorem norm₂.arg_x.revFDeriv_rule (f : U → V) (hf : Differentiable R f) (hf
 
 
 theorem norm₂_nonneg (R) [RealScalar R] {X} [NormedAddCommGroup X] [AdjointSpace R X] (x : X) :
-    0 ≤ ‖x‖₂²[R] := by
-  sorry_proof
+    0 ≤ ‖x‖₂²[R] := norm2_nonneg R x

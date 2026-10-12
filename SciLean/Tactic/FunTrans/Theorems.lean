@@ -3,13 +3,23 @@ Copyright (c) 2024 Tomas Skrivan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tomas Skrivan
 -/
-import Batteries.Data.RBMap.Alter
 
-import SciLean.Tactic.FunTrans.Decl
-import Mathlib.Tactic.FunProp.Theorems
-import Mathlib.Lean.Meta.RefinedDiscrTree
-import SciLean.Lean.Array
-import SciLean.Lean.Meta.RefinedDiscrTree
+module
+
+public import SciLean.Tactic.FunTrans.Decl
+
+public meta import SciLean.Tactic.FunTrans.Decl
+public import Mathlib.Tactic.FunProp.Theorems
+public meta import Mathlib.Tactic.FunProp.Theorems
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+public import SciLean.Lean.Array
+public meta import SciLean.Lean.Array
+public import SciLean.Lean.Meta.RefinedDiscrTree
+public meta import SciLean.Lean.Meta.RefinedDiscrTree
+
+@[expose] public meta section
+
 
 
 
@@ -201,7 +211,7 @@ private local instance : Ord Name := ⟨Name.quickCmp⟩
 /-- Storage for generalized function-transformation theorems. -/
 structure FunctionTheorems where
   /-- map: function name → function transformation → function theorem -/
-  theorems : Batteries.RBMap Name (Batteries.RBMap Name (Array FunctionTheorem) compare) compare := {}
+  theorems : NameMap (NameMap (Array FunctionTheorem)) := {}
   deriving Inhabited
 
 
@@ -221,13 +231,10 @@ initialize functionTheoremsExt : FunctionTheoremsExt ←
     name     := by exact decl_name%
     initial  := {}
     addEntry := fun d e =>
-      {d with
-        theorems :=
-          d.theorems.alter e.funOrigin.name fun funTrans =>
-            let funTrans := funTrans.getD {}
-            funTrans.alter e.funTransName fun thms =>
-              let thms := thms.getD #[]
-              thms.push e}
+      let funTrans := (d.theorems.find? e.funOrigin.name).getD {}
+      let thms := (funTrans.find? e.funTransName).getD #[]
+      let funTrans := funTrans.insert e.funTransName (thms.push e)
+      { d with theorems := d.theorems.insert e.funOrigin.name funTrans }
   }
 
 
@@ -242,8 +249,8 @@ def FunctionTheorem.ord (t s : FunctionTheorem) : Ordering :=
 def getTheoremsForFunction (funName : Name) (funTransName : Name) (nargs : Option Nat) (mainArgs : Option (Array Nat)) :
     CoreM (Array FunctionTheorem) := do
 
-  let thms := (functionTheoremsExt.getState (← getEnv)).theorems.findD funName {}
-              |>.findD funTransName #[]
+  let thms := ((functionTheoremsExt.getState (← getEnv)).theorems.find? funName).getD {}
+              |>.find? funTransName |>.getD #[]
 
   let thms := thms
       |>.filter (fun thm =>
@@ -385,9 +392,9 @@ def getTheoremFromConst (declName : Name) (prio : Nat := eval_prio default) : Me
     match fData.fn with
     | .const funName _ =>
 
-      let dec ← fData.nontrivialDecomposition
+      let dec ← fData.decomposition
       let form : FunProp.TheoremForm :=
-        if dec.isSome || funName == ``Prod.mk then .comp else .uncurried
+        if funName == ``Prod.mk then .comp else dec.toTheoremForm
 
       return .function {
 -- funTransName funName fData.mainArgs fData.args.size thmForm

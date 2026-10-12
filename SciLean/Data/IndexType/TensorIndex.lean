@@ -1,7 +1,12 @@
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.SumProduct
+module
 
-import Mathlib.Logic.Equiv.Fin.Basic
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.SumProduct
+
+public import Mathlib.Logic.Equiv.Fin.Basic
+
+@[expose] public section
+
 
 namespace SciLean
 

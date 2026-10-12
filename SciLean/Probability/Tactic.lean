@@ -1,5 +1,10 @@
-import SciLean.Probability.PushPullExpectation
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Probability.PushPullExpectation
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 namespace SciLean.Rand
 
@@ -22,6 +27,7 @@ macro "rand_compute_mean" : conv =>
 
 syntax Parser.assumptions := ("assuming" bracketedBinder*)?
 
+set_option linter.ambiguousOpen false in
 open Lean Meta Elab.Term Parser.Tactic.Conv Parser in
 elab " derive_random_approx " e:term as:assumptions " by " t:convSeq : term => do
   --

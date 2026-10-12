@@ -1,11 +1,17 @@
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 open SciLean
 
@@ -41,13 +47,53 @@ theorem hasFDerivAt_from_isContinuousLinearMap
     HasFDerivAt f (fun x =>L[𝕜] f x) x₀ :=
   (fun x =>L[𝕜] f x).hasFDerivAt
 
-set_option linter.unusedVariables false in
+/-- A map of two arguments that is jointly differentiable and continuous linear in each argument
+separately has the sum of its two partial maps as its derivative. -/
+theorem hasFDerivAt_of_isContinuousLinearMap_partials
+    {f : E → G → F}
+    (hf : Differentiable 𝕜 (fun p : E×G => f p.1 p.2))
+    (hf₁ : ∀ y, IsContinuousLinearMap 𝕜 (fun x => f x y))
+    (hf₂ : ∀ x, IsContinuousLinearMap 𝕜 (fun y => f x y))
+    (p : E×G) :
+    HasFDerivAt (fun q : E×G => f q.1 q.2)
+      (ContinuousLinearMap.mk' 𝕜 (fun dq : E×G => f dq.1 p.2 + f p.1 dq.2) (by fun_prop)) p := by
+  have hF : HasFDerivAt (fun q : E×G => f q.1 q.2) (fderiv 𝕜 (fun q : E×G => f q.1 q.2) p) p :=
+    (hf p).hasFDerivAt
+  set L := fderiv 𝕜 (fun q : E×G => f q.1 q.2) p with hL
+  have h₁ : HasFDerivAt (fun x : E => f x p.2)
+      (L.comp ((ContinuousLinearMap.id 𝕜 E).prod 0)) p.1 :=
+    HasFDerivAt.comp (𝕜:=𝕜) p.1 (g := fun q : E×G => f q.1 q.2) (f := fun x : E => (x, p.2))
+      (by simpa using hF) ((hasFDerivAt_id (𝕜:=𝕜) p.1).prodMk (hasFDerivAt_const (𝕜:=𝕜) p.2 p.1))
+  have h₁' : HasFDerivAt (fun x : E => f x p.2)
+      (ContinuousLinearMap.mk' 𝕜 (fun x => f x p.2) (hf₁ p.2)) p.1 :=
+    (ContinuousLinearMap.mk' 𝕜 (fun x => f x p.2) (hf₁ p.2)).hasFDerivAt
+  have e₁ : ∀ dx : E, L (dx, 0) = f dx p.2 := fun dx =>
+    congrFun (congrArg DFunLike.coe (h₁.unique h₁')) dx
+  have h₂ : HasFDerivAt (fun y : G => f p.1 y)
+      (L.comp ((0 : G →L[𝕜] E).prod (ContinuousLinearMap.id 𝕜 G))) p.2 :=
+    HasFDerivAt.comp (𝕜:=𝕜) p.2 (g := fun q : E×G => f q.1 q.2) (f := fun y : G => (p.1, y))
+      (by simpa using hF) ((hasFDerivAt_const (𝕜:=𝕜) p.1 p.2).prodMk (hasFDerivAt_id (𝕜:=𝕜) p.2))
+  have h₂' : HasFDerivAt (fun y : G => f p.1 y)
+      (ContinuousLinearMap.mk' 𝕜 (fun y => f p.1 y) (hf₂ p.1)) p.2 :=
+    (ContinuousLinearMap.mk' 𝕜 (fun y => f p.1 y) (hf₂ p.1)).hasFDerivAt
+  have e₂ : ∀ dy : G, L (0, dy) = f p.1 dy := fun dy =>
+    congrFun (congrArg DFunLike.coe (h₂.unique h₂')) dy
+  have hLe : (ContinuousLinearMap.mk' 𝕜 (fun dq : E×G => f dq.1 p.2 + f p.1 dq.2) (by fun_prop))
+      = L := by
+    refine ContinuousLinearMap.ext fun dq => ?_
+    show f dq.1 p.2 + f p.1 dq.2 = L dq
+    rw [← e₁ dq.1, ← e₂ dq.2, ← L.map_add]
+    congr 1
+    simp
+  rw [hLe]
+  exact hF
+
 theorem hasFDerivAt_from_fderiv
     {f : E → F} {x₀ : E}
     {f'} (deriv : f' = fderiv 𝕜 f x₀)
     (diff : Differentiable 𝕜 f := by fun_prop) :
-    HasFDerivAt f f' x₀ :=
-  sorry_proof
+    HasFDerivAt f f' x₀ := by
+  rw [deriv]; exact (diff x₀).hasFDerivAt
 
 
 open ContinuousLinearMap
@@ -64,7 +110,7 @@ theorem hasFDerivAt_comp {g : E → F} {f : F → G} {g' : E →L[𝕜] F} {f'  
         let dy := g' dx
         let dz := f' dy
         dz) x :=
-  HasFDerivAtFilter.comp x hf hg hg.continuousAt
+  HasFDerivAt.comp x hf hg
 
 theorem hasFDerivAt_let {g : E → F} {f : F → E → G} {g' : E →L[𝕜] F} {f'  : F×E →L[𝕜] G} (x : E)
     (hg : HasFDerivAt g g' x) (hf : HasFDerivAt ↿f f' (g x,x)) :
@@ -189,7 +235,10 @@ theorem HMul.hMul.arg_a0a1.HasFDerivAt_simple_rule (xy : K×K) :
 @[data_synth]
 theorem HPow.hPow.arg_a0.HasFDerivAt_simple_rule_nat (x : K) (n : ℕ) :
     HasFDerivAt (fun x : K => x^n)
-      (fun dx =>L[K] n*x^(n-1)*dx) x := sorry_proof
+      (fun dx =>L[K] n*x^(n-1)*dx) x := by
+  refine hasFDerivAt_from_hasFDerivAt (hasDerivAt_pow n x).hasFDerivAt ?_
+  refine ContinuousLinearMap.ext fun dx => ?_
+  simp [mul_comm]
 
 -- #check Scalar.pow
 -- @[data_synth]
@@ -197,20 +246,33 @@ theorem HPow.hPow.arg_a0.HasFDerivAt_simple_rule_nat (x : K) (n : ℕ) :
 --     HasFDerivAt (fun xy : K×K => (Scalar.pow (R:=R) xy.1 xy.2))
 --       (fun dx =>L[K] (xy.2)*xy.1^(xy.2-1)*dx) xy := sorry_proof
 
-set_option linter.unusedVariables false in
 open ComplexConjugate in
 @[data_synth]
 theorem HDiv.hDiv.arg_a0a1.HasFDerivAt_simp_rule (xy : K×K) (h : xy.2 ≠ 0) :
     HasFDerivAt (fun x : K×K => x.1 / x.2)
-      (fun dx =>L[K] (xy.2 * dx.1 - xy.1 * dx.2) / (xy.2 ^ 2)) xy :=
-  sorry_proof
+      (fun dx =>L[K] (xy.2 * dx.1 - xy.1 * dx.2) / (xy.2 ^ 2)) xy := by
+  have hc : HasFDerivAt (fun x : K×K => x.1) (ContinuousLinearMap.fst K K K) xy :=
+    (hasFDerivAt_id (𝕜:=K) xy).fst
+  have hd : HasFDerivAt (fun x : K×K => x.2) (ContinuousLinearMap.snd K K K) xy :=
+    (hasFDerivAt_id (𝕜:=K) xy).snd
+  have hinv : HasFDerivAt (fun x : K×K => x.2⁻¹)
+      ((ContinuousLinearMap.toSpanSingleton K (-(xy.2^2)⁻¹)).comp
+        (ContinuousLinearMap.snd K K K)) xy :=
+    HasFDerivAt.comp (𝕜:=K) xy ((hasDerivAt_inv h).hasFDerivAt) hd
+  simp only [div_eq_mul_inv]
+  refine hasFDerivAt_from_hasFDerivAt (HasFDerivAt.fun_mul hc hinv) ?_
+  refine ContinuousLinearMap.ext fun dx => ?_
+  simp [ContinuousLinearMap.toSpanSingleton_apply]
+  field_simp
+  ring
 
-set_option linter.unusedVariables false in
 @[data_synth]
 theorem Inv.inv.arg_a0.HasFDerivAt_simp_rule (x : K) (h : x ≠ 0) :
     HasFDerivAt (fun x : K => x⁻¹)
-      (fun dx =>L[K] -dx / x^2) x :=
-  sorry_proof
+      (fun dx =>L[K] -dx / x^2) x := by
+  refine hasFDerivAt_from_hasFDerivAt (hasDerivAt_inv h).hasFDerivAt ?_
+  refine ContinuousLinearMap.ext fun dx => ?_
+  simp [div_eq_mul_inv]
 
 -- @[data_synth]
 -- theorem SciLean.sum.arg_f.HasFDerivAt_simp_rule {I : Type*} [IndexType I] (f : I → X) :
@@ -241,7 +303,32 @@ theorem Inner.inner.arg_a0a1.HasFDerivAt_simple_rule
     {R K : Type*} [RealScalar R] [Scalar R K] [ScalarSMul R K]
     {X : Type*} [NormedAddCommGroup X] [AdjointSpace K X] [AdjointSpace R X] (xy) :
     HasFDerivAt (𝕜:=R) (fun x : X×X => ⟪x.1,x.2⟫[K])
-      (fun dx =>L[R] ⟪dx.1,xy.2⟫[K] + ⟪xy.1,dx.2⟫[K]) xy := sorry_proof
+      (fun dx =>L[R] ⟪dx.1,xy.2⟫[K] + ⟪xy.1,dx.2⟫[K]) xy := by
+  -- the inner product is a bounded bilinear map, hence the remainder `⟪dx.1,dx.2⟫` is `o(‖dx‖)`
+  obtain ⟨C, hC, hCle⟩ := AdjointSpace.exists_norm_inner_le (𝕜:=K) (E:=X)
+  rw [hasFDerivAt_iff_isLittleO_nhds_zero]
+  have hrem : (fun h : X×X => ⟪(xy+h).1, (xy+h).2⟫[K] - ⟪xy.1,xy.2⟫[K]
+        - ((fun dx =>L[R] ⟪dx.1,xy.2⟫[K] + ⟪xy.1,dx.2⟫[K]) h))
+      = fun h : X×X => ⟪h.1,h.2⟫[K] := by
+    funext h
+    simp only [ContinuousLinearMap.mk'_eval, Prod.fst_add, Prod.snd_add,
+      AdjointSpace.inner_add_left, AdjointSpace.inner_add_right]
+    abel
+  rw [hrem, Asymptotics.isLittleO_iff]
+  intro c hc
+  filter_upwards [Metric.ball_mem_nhds (0 : X×X) (by positivity : 0 < c/C)] with h hh
+  have hh' : ‖h‖ < c/C := by simpa [dist_eq_norm] using hh
+  have h1 : ‖h.1‖ ≤ ‖h‖ := le_max_left _ _
+  have h2 : ‖h.2‖ ≤ ‖h‖ := le_max_right _ _
+  calc ‖⟪h.1,h.2⟫[K]‖ ≤ C * (‖h.1‖ * ‖h.2‖) := hCle _ _
+    _ ≤ C * (‖h‖ * ‖h‖) := by
+        have := mul_le_mul h1 h2 (norm_nonneg _) (norm_nonneg _)
+        exact mul_le_mul_of_nonneg_left this hC.le
+    _ ≤ c * ‖h‖ := by
+        have : C * ‖h‖ ≤ c := by
+          rw [← le_div_iff₀' hC]
+          exact hh'.le
+        nlinarith [norm_nonneg h]
 
 @[data_synth]
 theorem Inner.inner.arg_a0a1.HasFDerivAt_comp_rule
@@ -264,7 +351,8 @@ theorem Inner.inner.arg_a0a1.HasFDerivAt_comp_rule
 theorem Inner.inner.arg_a1.HasFDerivAt_simple_rule
     {K X : Type*} [RCLike K] [NormedAddCommGroup X] [AdjointSpace K X] (x y) :
     HasFDerivAt (fun y : X => ⟪x,y⟫[K])
-      (fun dy =>L[K] ⟪x,dy⟫[K]) y := sorry_proof
+      (fun dy =>L[K] ⟪x,dy⟫[K]) y :=
+  hasFDerivAt_from_isContinuousLinearMap (by fun_prop)
 
 @[data_synth]
 theorem Norm2.norm2.arg_a0.HasRevFDeriv_simple_rule_complex

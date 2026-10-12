@@ -1,5 +1,10 @@
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
+module
+
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
+
+@[expose] public section
+
 
 
 namespace SciLean.IndexType
@@ -72,4 +77,13 @@ theorem max.arg_f.HasRevDerivUpdate_rule
         (xi, fun dy dw =>
           let dw := dfi dy dw
           dw)) := by
-  sorry_proof
+  obtain ⟨hval, df, hd, ha⟩ :=
+    max.arg_f.HasRevDeriv_rule (𝕜:=𝕜) f
+      (f' := fun i w => ((f' i w).1, fun dy => (f' i w).2 dy 0))
+      (fun i => (hf i).toHasRevFDeriv) hf'
+  refine hasRevFDerivUpdate_from_hasFDerivAt_hasAdjointUpdate hd
+    (df' := fun w dy dw => (f' (argMax (f w)) w).2 dy dw)
+    (fun w => hasAdjointUpdate_from_hasAdjoint (ha w)
+      (fun dy dw => (hf (argMax (f w))).apply_eq_zero_add w dy dw)) ?_
+  funext w
+  exact Prod.ext (hval w) rfl

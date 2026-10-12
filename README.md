@@ -33,6 +33,27 @@ Lean is an expressive functional programming language that allows to formalize t
 
 ### Prerequisites
 
+#### Option A: Using Nix (Recommended)
+
+If you use [Nix](https://nixos.org/) with Flakes enabled, all prerequisites (Lean 4 toolchain, OpenBLAS, pkg-config, and environment variables like `OPENBLAS_PATH` and `LD_LIBRARY_PATH`) are provided automatically:
+
+```bash
+# Enter the Nix development shell
+nix develop
+
+# Or automatically load environment when cd-ing into the directory
+direnv allow
+```
+
+Inside the shell, simply run:
+
+```bash
+lake exe cache get
+lake build
+```
+
+#### Option B: Manual Setup
+
 SciLean relies on **OpenBLAS** for accelerating numerical computations.  
 You’ll need to have it installed on your system:
 
@@ -54,6 +75,10 @@ Clone and build the library with:
 ```bash
 git clone https://github.com/lecopivo/SciLean.git
 cd SciLean
+# If using Nix:
+nix develop --command lake exe cache get
+nix develop --command lake build
+# If using manual setup:
 lake exe cache get
 lake build
 ```
@@ -84,7 +109,7 @@ package foo {
   moreLinkArgs := linkArgs
 }
 
-require scilean from git "https://github.com/lecopivo/SciLean" @ "v4.20.1"
+require scilean from git "https://github.com/lecopivo/SciLean" @ "v4.34.0"
 
 @[default_target]
 lean_lib Foo {

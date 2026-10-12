@@ -1,8 +1,13 @@
-import SciLean.Modules.ML.XLA.TensorIndex
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Meta.GenerateFunProp
+module
 
-import Mathlib.Tactic.ProxyType
+public import SciLean.Modules.ML.XLA.TensorIndex
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Meta.GenerateFunProp
+
+public import Mathlib.Tactic.ProxyType
+
+@[expose] public section
+
 
 namespace SciLean
 

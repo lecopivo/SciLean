@@ -1,6 +1,11 @@
-import Mathlib.Analysis.Matrix.Normed
+module
 
-import SciLean.Analysis.AdjointSpace.Adjoint
+public import Mathlib.Analysis.Matrix.Normed
+
+public import SciLean.Analysis.AdjointSpace.Adjoint
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -14,8 +19,5 @@ variable
 instance [AddCommMonoid R] [Inner R α] : Inner R (Matrix I J α) :=
   show Inner R (I → J → α) from inferInstance
 
-instance [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] : AdjointSpace R (Matrix I J α) where
-  inner_top_equiv_norm := sorry_proof
-  conj_symm := sorry_proof
-  add_left := sorry_proof
-  smul_left := sorry_proof
+instance [RCLike R] [NormedAddCommGroup α] [AdjointSpace R α] : AdjointSpace R (Matrix I J α) :=
+  show AdjointSpace R (I → J → α) from inferInstance

@@ -1,15 +1,20 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.Algebra
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.Algebra
 
 -- import SciLean.Data.VectorType.Base
 -- import SciLean.Data.VectorType.BaseSimps
 -- import SciLean.Data.VectorType.Optimize
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
 
-import SciLean.Meta.GenerateFunProp
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Tactic.ConvAssign
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Tactic.ConvAssign
+
+@[expose] public section
+
 -- import SciLean.Analysis.AdjointSpace.HasAdjoint
 -- import SciLean.Analysis.Calculus.HasRevFDeriv
 

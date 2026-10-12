@@ -1,6 +1,11 @@
-import SciLean
-import SciLean.Examples.GMM.Util
-import SciLean.Examples.GMM.ObjectiveDirect
+module
+
+public import SciLean
+public import SciLean.Examples.GMM.Util
+public import SciLean.Examples.GMM.ObjectiveDirect
+
+@[expose] public section
+
 
 open SciLean
 

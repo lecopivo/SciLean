@@ -1,4 +1,9 @@
-import SciLean.Data.Mesh.Prism
+module
+
+public import SciLean.Data.Mesh.Prism
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -101,15 +106,17 @@ instance [∀ P, Iterable (Elem₁ P)] [∀ P, Iterable (Elem₂ P)]
 
   decEq := λ elem elem' =>
     if h : elem.dec = elem'.dec
-      then if
+      then if h' :
        elem.fst = (h ▸ elem'.fst) ∧
        elem.snd = (h ▸ elem'.snd)
       then
-        isTrue sorry_proof
+        isTrue (by
+          obtain ⟨d, f, s⟩ := elem; obtain ⟨d', f', s'⟩ := elem'
+          dsimp only at h h'; subst h; obtain ⟨rfl, rfl⟩ := h'; rfl)
       else
-        isFalse sorry_proof
+        isFalse (by rintro rfl; exact h' ⟨rfl, rfl⟩)
     else
-      isFalse sorry_proof
+      isFalse (fun e => h (congrArg ProdElem.dec e))
 }
 
 instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)]
@@ -133,13 +140,13 @@ instance [∀ P, Enumtype (Elem₁ P)] [∀ P, Enumtype (Elem₂ P)]
       let N₁ := numOf (Elem₁ dec.fst)
       let N₂ := numOf (Elem₂ dec.fst)
       let N := N₁ * N₂
-      if id < N then
+      if h : id < N then
         let i := id / N₂
         let j := id % N₂
-        return ⟨dec, fromFin ⟨i,sorry_proof⟩, fromFin ⟨j,sorry_proof⟩⟩
+        return ⟨dec, fromFin ⟨i, Nat.div_lt_of_lt_mul (Nat.mul_comm N₁ N₂ ▸ h)⟩, fromFin ⟨j,sorry_proof⟩⟩
       else
         id -= N
-    absurd (a:= True) sorry_proof sorry_proof -- This should not happed
+    absurd (a:= True) trivial sorry_proof -- This should not happed
 
   first_fromFin := sorry_proof
   next_fromFin  := sorry_proof

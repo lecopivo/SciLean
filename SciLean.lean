@@ -1,86 +1,88 @@
-import SciLean.AD.FDeriv
-import SciLean.AD.FwdFDeriv
-import SciLean.AD.HasFDeriv
-import SciLean.AD.HasFwdFDeriv
-import SciLean.AD.HasRevFDeriv
-import SciLean.AD.HasVecFwdFDeriv
-import SciLean.AD.HasVecRevFDeriv
-import SciLean.AD.RevFDeriv
-import SciLean.AD.Rules.Common
-import SciLean.AD.Rules.DataArrayN.Det
-import SciLean.AD.Rules.DataArrayN.FromRn
-import SciLean.AD.Rules.DataArrayN.Logsumexp
-import SciLean.AD.Rules.DataArrayN.Minor
-import SciLean.AD.Rules.DataArrayN.RSum
-import SciLean.AD.Rules.DataArrayN.Reshape
-import SciLean.AD.Rules.DataArrayN.ScalAdd
-import SciLean.AD.Rules.DataArrayN.Softmax
-import SciLean.AD.Rules.DataArrayN.Sum
-import SciLean.AD.Rules.DataArrayN.SumMiddleR
-import SciLean.AD.Rules.DataArrayN.SumRows
-import SciLean.AD.Rules.DataArrayN.ToRn
-import SciLean.AD.Rules.Exp
-import SciLean.AD.Rules.IndexType.Fold
-import SciLean.AD.Rules.IndexType.Max
-import SciLean.AD.Rules.IndexType.Min
-import SciLean.AD.Rules.IndexType.Sum
-import SciLean.AD.Rules.Log
-import SciLean.AD.Rules.MatVecMul
-import SciLean.AD.Rules.VecMatMul
-import SciLean.Algebra.CanonicalBasis
-import SciLean.Algebra.Determinant
-import SciLean.Algebra.Dimension
-import SciLean.Algebra.IsAddGroupHom
-import SciLean.Algebra.IsAffineMap
-import SciLean.Algebra.IsLinearMap
-import SciLean.Algebra.MatrixType.Basic
-import SciLean.Algebra.TensorProduct.Assoc
-import SciLean.Algebra.TensorProduct.Basic
-import SciLean.Algebra.TensorProduct.Curry
-import SciLean.Algebra.TensorProduct.MatMul
-import SciLean.Algebra.TensorProduct.Pi
-import SciLean.Algebra.TensorProduct.Prod
-import SciLean.Algebra.TensorProduct.ProdMatrix
-import SciLean.Algebra.TensorProduct.ProdMatrixCol
-import SciLean.Algebra.TensorProduct.ProdMatrixRow
-import SciLean.Algebra.TensorProduct.Self
-import SciLean.Algebra.TensorProduct.Swap
-import SciLean.Algebra.TensorProduct.Transpose
-import SciLean.Algebra.TensorProduct.Util
-import SciLean.Algebra.VectorOptimize.Basic
-import SciLean.Algebra.VectorOptimize.Init
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Analysis.AdjointSpace.Geometry
-import SciLean.Analysis.AdjointSpace.HasAdjoint
-import SciLean.Analysis.Calculus.ContDiff
-import SciLean.Analysis.Calculus.FDeriv
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.HasFDeriv
-import SciLean.Analysis.Calculus.HasFwdFDeriv
+module
+
+public import SciLean.AD.FDeriv
+public import SciLean.AD.FwdFDeriv
+public import SciLean.AD.HasFDeriv
+public import SciLean.AD.HasFwdFDeriv
+public import SciLean.AD.HasRevFDeriv
+public import SciLean.AD.HasVecFwdFDeriv
+public import SciLean.AD.HasVecRevFDeriv
+public import SciLean.AD.RevFDeriv
+public import SciLean.AD.Rules.Common
+public import SciLean.AD.Rules.DataArrayN.Det
+public import SciLean.AD.Rules.DataArrayN.FromRn
+public import SciLean.AD.Rules.DataArrayN.Logsumexp
+public import SciLean.AD.Rules.DataArrayN.Minor
+public import SciLean.AD.Rules.DataArrayN.RSum
+public import SciLean.AD.Rules.DataArrayN.Reshape
+public import SciLean.AD.Rules.DataArrayN.ScalAdd
+public import SciLean.AD.Rules.DataArrayN.Softmax
+public import SciLean.AD.Rules.DataArrayN.Sum
+public import SciLean.AD.Rules.DataArrayN.SumMiddleR
+public import SciLean.AD.Rules.DataArrayN.SumRows
+public import SciLean.AD.Rules.DataArrayN.ToRn
+public import SciLean.AD.Rules.Exp
+public import SciLean.AD.Rules.IndexType.Fold
+public import SciLean.AD.Rules.IndexType.Max
+public import SciLean.AD.Rules.IndexType.Min
+public import SciLean.AD.Rules.IndexType.Sum
+public import SciLean.AD.Rules.Log
+public import SciLean.AD.Rules.MatVecMul
+public import SciLean.AD.Rules.VecMatMul
+public import SciLean.Algebra.CanonicalBasis
+public import SciLean.Algebra.Determinant
+public import SciLean.Algebra.Dimension
+public import SciLean.Algebra.IsAddGroupHom
+public import SciLean.Algebra.IsAffineMap
+public import SciLean.Algebra.IsLinearMap
+public import SciLean.Algebra.MatrixType.Basic
+public import SciLean.Algebra.TensorProduct.Assoc
+public import SciLean.Algebra.TensorProduct.Basic
+public import SciLean.Algebra.TensorProduct.Curry
+public import SciLean.Algebra.TensorProduct.MatMul
+public import SciLean.Algebra.TensorProduct.Pi
+public import SciLean.Algebra.TensorProduct.Prod
+public import SciLean.Algebra.TensorProduct.ProdMatrix
+public import SciLean.Algebra.TensorProduct.ProdMatrixCol
+public import SciLean.Algebra.TensorProduct.ProdMatrixRow
+public import SciLean.Algebra.TensorProduct.Self
+public import SciLean.Algebra.TensorProduct.Swap
+public import SciLean.Algebra.TensorProduct.Transpose
+public import SciLean.Algebra.TensorProduct.Util
+public import SciLean.Algebra.VectorOptimize.Basic
+public import SciLean.Algebra.VectorOptimize.Init
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Analysis.AdjointSpace.Geometry
+public import SciLean.Analysis.AdjointSpace.HasAdjoint
+public import SciLean.Analysis.Calculus.ContDiff
+public import SciLean.Analysis.Calculus.FDeriv
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.HasFDeriv
+public import SciLean.Analysis.Calculus.HasFwdFDeriv
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Common
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.Functions
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFwdFDerivWithDisc
 -- import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamRevFDerivWithDisc
-import SciLean.Analysis.Calculus.HasRevFDeriv
-import SciLean.Analysis.Calculus.HasVecFwdFDeriv
-import SciLean.Analysis.Calculus.HasVecRevFDeriv
-import SciLean.Analysis.Calculus.Jacobian
-import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
-import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
-import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
-import SciLean.Analysis.Calculus.Monad.Id
-import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
-import SciLean.Analysis.Calculus.Monad.StateT
-import SciLean.Analysis.Calculus.Notation.Deriv
-import SciLean.Analysis.Calculus.Notation.FwdDeriv
-import SciLean.Analysis.Calculus.Notation.Gradient
-import SciLean.Analysis.Calculus.Notation.RevDeriv
-import SciLean.Analysis.Calculus.Notation.Test
-import SciLean.Analysis.Calculus.RevCDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.HasRevFDeriv
+public import SciLean.Analysis.Calculus.HasVecFwdFDeriv
+public import SciLean.Analysis.Calculus.HasVecRevFDeriv
+public import SciLean.Analysis.Calculus.Jacobian
+public import SciLean.Analysis.Calculus.Monad.DifferentiableMonad
+public import SciLean.Analysis.Calculus.Monad.FwdFDerivMonad
+public import SciLean.Analysis.Calculus.Monad.HasRevFDerivMonad
+public import SciLean.Analysis.Calculus.Monad.Id
+public import SciLean.Analysis.Calculus.Monad.RevFDerivMonad
+public import SciLean.Analysis.Calculus.Monad.StateT
+public import SciLean.Analysis.Calculus.Notation.Deriv
+public import SciLean.Analysis.Calculus.Notation.FwdDeriv
+public import SciLean.Analysis.Calculus.Notation.Gradient
+public import SciLean.Analysis.Calculus.Notation.RevDeriv
+public import SciLean.Analysis.Calculus.Notation.Test
+public import SciLean.Analysis.Calculus.RevCDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
 -- import SciLean.Analysis.Diffeology.Array
 -- import SciLean.Analysis.Diffeology.ArrayTangentSpace
 -- import SciLean.Analysis.Diffeology.Basic
@@ -98,26 +100,26 @@ import SciLean.Analysis.Calculus.RevFDeriv
 -- import SciLean.Analysis.Diffeology.TangentSpace
 -- import SciLean.Analysis.Diffeology.Util
 -- import SciLean.Analysis.Diffeology.VecDiffeology
-import SciLean.Analysis.Matrix
-import SciLean.Analysis.MetricSpace
-import SciLean.Analysis.Normed.Diffeomorphism
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Normed.Norm2
-import SciLean.Analysis.ODE.OdeSolve
-import SciLean.Analysis.Scalar
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Analysis.Scalar.FloatAsReal
-import SciLean.Analysis.Scalar.FloatRealEquiv
-import SciLean.Analysis.Scalar.Notation
-import SciLean.Analysis.Sorry
-import SciLean.Analysis.SpecialFunctions.GaborWavelet
-import SciLean.Analysis.SpecialFunctions.Gaussian
-import SciLean.Analysis.SpecialFunctions.Inner
-import SciLean.Analysis.SpecialFunctions.MultiGamma
-import SciLean.Analysis.SpecialFunctions.Norm2
-import SciLean.Analysis.SpecialFunctions.Pow
-import SciLean.Analysis.SpecialFunctions.StarRingEnd
-import SciLean.Analysis.SpecialFunctions.Trigonometric
+public import SciLean.Analysis.Matrix
+public import SciLean.Analysis.MetricSpace
+public import SciLean.Analysis.Normed.Diffeomorphism
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Normed.Norm2
+public import SciLean.Analysis.ODE.OdeSolve
+public import SciLean.Analysis.Scalar
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Analysis.Scalar.FloatRealEquiv
+public import SciLean.Analysis.Scalar.Notation
+public import SciLean.Analysis.Sorry
+public import SciLean.Analysis.SpecialFunctions.GaborWavelet
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+public import SciLean.Analysis.SpecialFunctions.Inner
+public import SciLean.Analysis.SpecialFunctions.MultiGamma
+public import SciLean.Analysis.SpecialFunctions.Norm2
+public import SciLean.Analysis.SpecialFunctions.Pow
+public import SciLean.Analysis.SpecialFunctions.StarRingEnd
+public import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.Approx.ApproxLimit
 -- import SciLean.Core_old.Approx.ApproxSolution
 -- import SciLean.Core_old.Approx.Basic
@@ -320,37 +322,37 @@ import SciLean.Analysis.SpecialFunctions.Trigonometric
 -- import SciLean.Core_old.old.VariationalCalculus
 -- import SciLean.Core_old.old.VariationalCalculus.Examples
 -- import SciLean.Core_old.old.Vec
-import SciLean.Data.ArrayLike
-import SciLean.Data.ArrayOperations.Algebra
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Data.ArrayOperations.Operations
-import SciLean.Data.ArrayOperations.Operations.GetElem
-import SciLean.Data.ArrayOperations.Operations.MapIdxMonoAcc
-import SciLean.Data.ArrayOperations.Operations.OfFn
-import SciLean.Data.ArrayOperations.Operations.SetElem
-import SciLean.Data.ArraySet
-import SciLean.Data.ArrayType
+public import SciLean.Data.ArrayLike
+public import SciLean.Data.ArrayOperations.Algebra
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Data.ArrayOperations.Operations
+public import SciLean.Data.ArrayOperations.Operations.GetElem
+public import SciLean.Data.ArrayOperations.Operations.MapIdxMonoAcc
+public import SciLean.Data.ArrayOperations.Operations.OfFn
+public import SciLean.Data.ArrayOperations.Operations.SetElem
+public import SciLean.Data.ArraySet
+public import SciLean.Data.ArrayType
 -- import SciLean.Data.ArrayType.Algebra_old
-import SciLean.Data.ArrayType.Basic
-import SciLean.Data.ArrayType.Notation
+public import SciLean.Data.ArrayType.Basic
+public import SciLean.Data.ArrayType.Notation
 -- import SciLean.Data.ArrayType.Properties_old
-import SciLean.Data.ByteArray
-import SciLean.Data.ColProd
-import SciLean.Data.Curry
-import SciLean.Data.DataArray
-import SciLean.Data.DataArray.Algebra
-import SciLean.Data.DataArray.Basis
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.DataArray.DataArrayEquiv
-import SciLean.Data.DataArray.Float
-import SciLean.Data.DataArray.FloatN
-import SciLean.Data.DataArray.FloatNN
-import SciLean.Data.DataArray.MatrixType
-import SciLean.Data.DataArray.Operations
-import SciLean.Data.DataArray.Operations.Col
-import SciLean.Data.DataArray.Operations.Curry
-import SciLean.Data.DataArray.Operations.Row
-import SciLean.Data.DataArray.Operations.Uncurry
+public import SciLean.Data.ByteArray
+public import SciLean.Data.ColProd
+public import SciLean.Data.Curry
+public import SciLean.Data.DataArray
+public import SciLean.Data.DataArray.Algebra
+public import SciLean.Data.DataArray.Basis
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.DataArray.DataArrayEquiv
+public import SciLean.Data.DataArray.Float
+public import SciLean.Data.DataArray.FloatN
+public import SciLean.Data.DataArray.FloatNN
+public import SciLean.Data.DataArray.MatrixType
+public import SciLean.Data.DataArray.Operations
+public import SciLean.Data.DataArray.Operations.Col
+public import SciLean.Data.DataArray.Operations.Curry
+public import SciLean.Data.DataArray.Operations.Row
+public import SciLean.Data.DataArray.Operations.Uncurry
 -- import SciLean.Data.DataArray.Operations_old
 -- import SciLean.Data.DataArray.Operations_old.AntiSymmPart
 -- import SciLean.Data.DataArray.Operations_old.Cross
@@ -379,41 +381,41 @@ import SciLean.Data.DataArray.Operations.Uncurry
 -- import SciLean.Data.DataArray.Operations_old.Transpose
 -- import SciLean.Data.DataArray.Operations_old.Uncurry
 -- import SciLean.Data.DataArray.Operations_old.Vecmul
-import SciLean.Data.DataArray.PlainDataType
-import SciLean.Data.DataArray.RnEquiv
-import SciLean.Data.DataArray.TensorOperations
-import SciLean.Data.DataArray.TensorProduct
-import SciLean.Data.FinProd
-import SciLean.Data.Float
-import SciLean.Data.FloatArray
-import SciLean.Data.FloatExtern
-import SciLean.Data.Function
-import SciLean.Data.Idx
-import SciLean.Data.Idx.Basic
-import SciLean.Data.Idx.GetElemIdx
-import SciLean.Data.IndexType
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.DeriveIndexType
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.IndexEquiv
-import SciLean.Data.IndexType.Init
-import SciLean.Data.IndexType.Operations
-import SciLean.Data.IndexType.Range
-import SciLean.Data.IndexType.RangeNotation
-import SciLean.Data.IndexType.SumProduct
-import SciLean.Data.IndexType.TensorIndex
-import SciLean.Data.Instances.Sigma
-import SciLean.Data.Int64
-import SciLean.Data.ListN
-import SciLean.Data.Nat
-import SciLean.Data.Prod
-import SciLean.Data.Random
-import SciLean.Data.SparseMatrix.Basic
-import SciLean.Data.StructType
-import SciLean.Data.StructType.Algebra
-import SciLean.Data.StructType.Basic
-import SciLean.Data.Vector
-import SciLean.Data.VectorType.Base
+public import SciLean.Data.DataArray.PlainDataType
+public import SciLean.Data.DataArray.RnEquiv
+public import SciLean.Data.DataArray.TensorOperations
+public import SciLean.Data.DataArray.TensorProduct
+public import SciLean.Data.FinProd
+public import SciLean.Data.Float
+public import SciLean.Data.FloatArray
+public import SciLean.Data.FloatExtern
+public import SciLean.Data.Function
+public import SciLean.Data.Idx
+public import SciLean.Data.Idx.Basic
+public import SciLean.Data.Idx.GetElemIdx
+public import SciLean.Data.IndexType
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.DeriveIndexType
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.IndexType.IndexEquiv
+public import SciLean.Data.IndexType.Init
+public import SciLean.Data.IndexType.Operations
+public import SciLean.Data.IndexType.Range
+public import SciLean.Data.IndexType.RangeNotation
+public import SciLean.Data.IndexType.SumProduct
+public import SciLean.Data.IndexType.TensorIndex
+public import SciLean.Data.Instances.Sigma
+public import SciLean.Data.Int64
+public import SciLean.Data.ListN
+public import SciLean.Data.Nat
+public import SciLean.Data.Prod
+public import SciLean.Data.Random
+public import SciLean.Data.SparseMatrix.Basic
+public import SciLean.Data.StructType
+public import SciLean.Data.StructType.Algebra
+public import SciLean.Data.StructType.Basic
+public import SciLean.Data.Vector
+public import SciLean.Data.VectorType.Base
 -- import SciLean.Data.VectorType.VectorType_old.BaseSimps
 -- import SciLean.Data.VectorType.VectorType_old.Basic
 -- import SciLean.Data.VectorType.VectorType_old.BinOps
@@ -445,13 +447,13 @@ import SciLean.Data.VectorType.Base
 -- import SciLean.Examples.GMM.Simps
 -- import SciLean.Examples.GMM.SumSimproc
 -- import SciLean.Examples.GMM.Util
-import SciLean.FFI
-import SciLean.FFI.ByteArray
-import SciLean.FFI.Float
-import SciLean.FFI.FloatArray
+public import SciLean.FFI
+public import SciLean.FFI.ByteArray
+public import SciLean.FFI.Float
+public import SciLean.FFI.FloatArray
 -- import SciLean.Geometry.Bezier
-import SciLean.Geometry.BoundingBall
-import SciLean.Geometry.FrontierSpeed
+public import SciLean.Geometry.BoundingBall
+public import SciLean.Geometry.FrontierSpeed
 -- import SciLean.Geometry.Shape.AxisAlignedBox
 -- import SciLean.Geometry.Shape.Basic
 -- import SciLean.Geometry.Shape.BasicShapes
@@ -462,29 +464,29 @@ import SciLean.Geometry.FrontierSpeed
 -- import SciLean.Geometry.Shape.Sphere
 -- import SciLean.Geometry.Shape.TransfromedShape
 -- import SciLean.Geometry.Shape.Triangle
-import SciLean.Geometry.SurfaceParametrization
-import SciLean.Lean.Array
-import SciLean.Lean.Expr
-import SciLean.Lean.HashMap
-import SciLean.Lean.MergeMapDeclarationExtension
-import SciLean.Lean.Meta.Basic
-import SciLean.Lean.Meta.Replace
-import SciLean.Lean.Meta.Structure
-import SciLean.Lean.Meta.Uncurry
-import SciLean.Lean.Name
-import SciLean.Lean.String
-import SciLean.Lean.ToSSA
-import SciLean.Logic.Function.Basic
-import SciLean.Logic.Function.Bijective
-import SciLean.Logic.Function.Constant
-import SciLean.Logic.Function.InvFun
-import SciLean.Logic.Function.Preimage
-import SciLean.Logic.Function.Sort
-import SciLean.Logic.If
-import SciLean.Logic.Isomorph.Isomorph
-import SciLean.Logic.Isomorph.IsomorphicType
-import SciLean.Logic.Isomorph.RealToFloat.Basic
-import SciLean.Logic.Isomorph.RealToFloat.Type
+public import SciLean.Geometry.SurfaceParametrization
+public import SciLean.Lean.Array
+public import SciLean.Lean.Expr
+public import SciLean.Lean.HashMap
+public import SciLean.Lean.MergeMapDeclarationExtension
+public import SciLean.Lean.Meta.Basic
+public import SciLean.Lean.Meta.Replace
+public import SciLean.Lean.Meta.Structure
+public import SciLean.Lean.Meta.Uncurry
+public import SciLean.Lean.Name
+public import SciLean.Lean.String
+public import SciLean.Lean.ToSSA
+public import SciLean.Logic.Function.Basic
+public import SciLean.Logic.Function.Bijective
+public import SciLean.Logic.Function.Constant
+public import SciLean.Logic.Function.InvFun
+public import SciLean.Logic.Function.Preimage
+public import SciLean.Logic.Function.Sort
+public import SciLean.Logic.If
+public import SciLean.Logic.Isomorph.Isomorph
+public import SciLean.Logic.Isomorph.IsomorphicType
+public import SciLean.Logic.Isomorph.RealToFloat.Basic
+public import SciLean.Logic.Isomorph.RealToFloat.Type
 -- import SciLean.Mathlib_old.Analysis.AdjointSpace.Adjoint
 -- import SciLean.Mathlib_old.Analysis.AdjointSpace.Basic
 -- import SciLean.Mathlib_old.Analysis.AdjointSpace.Dual
@@ -496,21 +498,21 @@ import SciLean.Logic.Isomorph.RealToFloat.Type
 -- import SciLean.Mathlib_old.MeasureTheory.Unit
 -- import SciLean.Mathlib_old.MeasureTheory.WeakIntegral
 -- import SciLean.Mathlib_old.Set
-import SciLean.MeasureTheory.RnDeriv
-import SciLean.MeasureTheory.WeakIntegral
+public import SciLean.MeasureTheory.RnDeriv
+public import SciLean.MeasureTheory.WeakIntegral
 -- import SciLean.Meta.DerivingAlgebra
 -- import SciLean.Meta.DerivingOp
-import SciLean.Meta.GenerateAddGroupHomSimp
-import SciLean.Meta.GenerateFunProp
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Meta.GenerateLinearMapSimp
-import SciLean.Meta.Notation.Do
-import SciLean.Meta.Notation.Let'
-import SciLean.Meta.SetSynthOrder
-import SciLean.Meta.SimpAttr
-import SciLean.Meta.SimpCore
-import SciLean.Modules.DDG.SurfaceMesh
-import SciLean.Modules.DDG.Trace
+public import SciLean.Meta.GenerateAddGroupHomSimp
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Meta.GenerateLinearMapSimp
+public import SciLean.Meta.Notation.Do
+public import SciLean.Meta.Notation.Let'
+public import SciLean.Meta.SetSynthOrder
+public import SciLean.Meta.SimpAttr
+public import SciLean.Meta.SimpCore
+public import SciLean.Modules.DDG.SurfaceMesh
+public import SciLean.Modules.DDG.Trace
 -- import SciLean.Modules.FiniteElement.Mesh.Circle
 -- import SciLean.Modules.FiniteElement.Mesh.Line
 -- import SciLean.Modules.FiniteElement.Mesh.Prism
@@ -612,29 +614,29 @@ import SciLean.Modules.DDG.Trace
 -- import SciLean.Modules.Symbolic.Symbolic.Monomial
 -- import SciLean.Modules.Symbolic.Symbolic.OrthogonalPolynomials
 -- import SciLean.Modules.Symbolic.Symbolic.Symbolic
-import SciLean.Numerics.ODE.BackwardEuler
-import SciLean.Numerics.ODE.Basic
-import SciLean.Numerics.ODE.ForwardEuler
-import SciLean.Numerics.ODE.Solvers
-import SciLean.Numerics.Optimization.ArgMin
-import SciLean.Numerics.Optimization.Optimjl
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
-import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.BFGS
-import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.LBFGS
-import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
-import SciLean.Probability.Distributions.Flip
-import SciLean.Probability.Distributions.Normal
-import SciLean.Probability.Distributions.Uniform
-import SciLean.Probability.Distributions.WalkOnSpheres
-import SciLean.Probability.IsAffineRandMap
-import SciLean.Probability.PullMean
-import SciLean.Probability.PushPullExpectation
-import SciLean.Probability.Rand
-import SciLean.Probability.RandWithTrace
-import SciLean.Probability.SimpAttr
-import SciLean.Probability.Tactic
+public import SciLean.Numerics.ODE.BackwardEuler
+public import SciLean.Numerics.ODE.Basic
+public import SciLean.Numerics.ODE.ForwardEuler
+public import SciLean.Numerics.ODE.Solvers
+public import SciLean.Numerics.Optimization.ArgMin
+public import SciLean.Numerics.Optimization.Optimjl
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.BackTracking
+public import SciLean.Numerics.Optimization.Optimjl.LinerSearches.Types
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Optimize.Optimize
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.BFGS
+public import SciLean.Numerics.Optimization.Optimjl.Multivariate.Solvers.FirstOrder.LBFGS
+public import SciLean.Numerics.Optimization.Optimjl.Utilities.Types
+public import SciLean.Probability.Distributions.Flip
+public import SciLean.Probability.Distributions.Normal
+public import SciLean.Probability.Distributions.Uniform
+public import SciLean.Probability.Distributions.WalkOnSpheres
+public import SciLean.Probability.IsAffineRandMap
+public import SciLean.Probability.PullMean
+public import SciLean.Probability.PushPullExpectation
+public import SciLean.Probability.Rand
+public import SciLean.Probability.RandWithTrace
+public import SciLean.Probability.SimpAttr
+public import SciLean.Probability.Tactic
 -- import SciLean.SpecialFunctions.Convolution
 -- import SciLean.SpecialFunctions.CrossProduct
 -- import SciLean.SpecialFunctions.Divergence
@@ -647,72 +649,75 @@ import SciLean.Probability.Tactic
 -- import SciLean.SpecialFunctions.Limit
 -- import SciLean.SpecialFunctions.Rotate
 -- import SciLean.SpecialFunctions.Trigonometric
-import SciLean.Tactic.AnalyzeConstLambda
-import SciLean.Tactic.AnalyzeLambda
-import SciLean.Tactic.Autodiff
-import SciLean.Tactic.Basic
-import SciLean.Tactic.CompiledTactics
-import SciLean.Tactic.ConvAssign
-import SciLean.Tactic.ConvIf
-import SciLean.Tactic.ConvInduction
-import SciLean.Tactic.DFunLikeCoeZetaDelta
-import SciLean.Tactic.DataSynth.Attr
-import SciLean.Tactic.DataSynth.Decl
-import SciLean.Tactic.DataSynth.DefDataSynth
-import SciLean.Tactic.DataSynth.DefRevDeriv
-import SciLean.Tactic.DataSynth.Elab
-import SciLean.Tactic.DataSynth.Main
-import SciLean.Tactic.DataSynth.Simproc
-import SciLean.Tactic.DataSynth.Theorems
-import SciLean.Tactic.DataSynth.Types
-import SciLean.Tactic.FunTrans.Attr
-import SciLean.Tactic.FunTrans.Core
-import SciLean.Tactic.FunTrans.Decl
-import SciLean.Tactic.FunTrans.Elab
-import SciLean.Tactic.FunTrans.Theorems
-import SciLean.Tactic.FunTrans.Types
-import SciLean.Tactic.GTrans
-import SciLean.Tactic.GTrans.Attr
-import SciLean.Tactic.GTrans.Core
-import SciLean.Tactic.GTrans.Decl
-import SciLean.Tactic.GTrans.Elab
-import SciLean.Tactic.GTrans.MetaLCtxM
-import SciLean.Tactic.GTrans.Theorems
-import SciLean.Tactic.IfLetNormalize
-import SciLean.Tactic.IfPull
-import SciLean.Tactic.InferVar
-import SciLean.Tactic.LFunTrans
-import SciLean.Tactic.LSimp
-import SciLean.Tactic.LSimp.Elab
-import SciLean.Tactic.LSimp.Main
-import SciLean.Tactic.LSimp.Types
-import SciLean.Tactic.LetEnter
-import SciLean.Tactic.LetNormalize
-import SciLean.Tactic.LetNormalize2
-import SciLean.Tactic.LetUtils
-import SciLean.Tactic.MetaFunction.Decl
-import SciLean.Tactic.MetaFunction.Def
-import SciLean.Tactic.MoveTerms
-import SciLean.Tactic.OptimizeIndexAccess
-import SciLean.Tactic.OptimizeIndexAccessInit
-import SciLean.Tactic.PullLimitOut
-import SciLean.Tactic.RefinedSimp
-import SciLean.Tactic.SimpleProxyType
-import SciLean.Tactic.StructuralInverse
-import SciLean.Tactic.StructureDecomposition
-import SciLean.Tactic.TimeTactic
-import SciLean.Tactic.UnsafeAD
-import SciLean.Topology.Continuous
-import SciLean.Util.Alternatives
-import SciLean.Util.Approx.ApproxLimit
-import SciLean.Util.Approx.ApproxSolution
-import SciLean.Util.Approx.Basic
-import SciLean.Util.DefOptimize
-import SciLean.Util.HoldLet
-import SciLean.Util.HoldLetProperties
-import SciLean.Util.Limit
-import SciLean.Util.Profile
-import SciLean.Util.RecVal
-import SciLean.Util.RewriteBy
-import SciLean.Util.SolveFun
-import SciLean.Util.SorryProof
+public import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Tactic.AnalyzeLambda
+public import SciLean.Tactic.Autodiff
+public import SciLean.Tactic.Basic
+public import SciLean.Tactic.CompiledTactics
+public import SciLean.Tactic.ConvAssign
+public import SciLean.Tactic.ConvIf
+public import SciLean.Tactic.ConvInduction
+public import SciLean.Tactic.DFunLikeCoeZetaDelta
+public import SciLean.Tactic.DataSynth.Attr
+public import SciLean.Tactic.DataSynth.Decl
+public import SciLean.Tactic.DataSynth.DefDataSynth
+public import SciLean.Tactic.DataSynth.DefRevDeriv
+public import SciLean.Tactic.DataSynth.Elab
+public import SciLean.Tactic.DataSynth.Main
+public import SciLean.Tactic.DataSynth.Simproc
+public import SciLean.Tactic.DataSynth.Theorems
+public import SciLean.Tactic.DataSynth.Types
+public import SciLean.Tactic.FunTrans.Attr
+public import SciLean.Tactic.FunTrans.Core
+public import SciLean.Tactic.FunTrans.Decl
+public import SciLean.Tactic.FunTrans.Elab
+public import SciLean.Tactic.FunTrans.Theorems
+public import SciLean.Tactic.FunTrans.Types
+public import SciLean.Tactic.GTrans
+public import SciLean.Tactic.GTrans.Attr
+public import SciLean.Tactic.GTrans.Core
+public import SciLean.Tactic.GTrans.Decl
+public import SciLean.Tactic.GTrans.Elab
+public import SciLean.Tactic.GTrans.MetaLCtxM
+public import SciLean.Tactic.GTrans.Theorems
+public import SciLean.Tactic.IfLetNormalize
+public import SciLean.Tactic.IfPull
+public import SciLean.Tactic.InferVar
+public import SciLean.Tactic.LFunTrans
+public import SciLean.Tactic.LSimp
+public import SciLean.Tactic.LSimp.Elab
+public import SciLean.Tactic.LSimp.Main
+public import SciLean.Tactic.LSimp.Types
+public import SciLean.Tactic.LetEnter
+public import SciLean.Tactic.LetNormalize
+public import SciLean.Tactic.LetNormalize2
+public import SciLean.Tactic.LetUtils
+public import SciLean.Tactic.MetaFunction.Decl
+public import SciLean.Tactic.MetaFunction.Def
+public import SciLean.Tactic.MoveTerms
+public import SciLean.Tactic.OptimizeIndexAccess
+public import SciLean.Tactic.OptimizeIndexAccessInit
+public import SciLean.Tactic.PullLimitOut
+public import SciLean.Tactic.RefinedSimp
+public import SciLean.Tactic.SimpleProxyType
+public import SciLean.Tactic.StructuralInverse
+public import SciLean.Tactic.StructureDecomposition
+public import SciLean.Tactic.TimeTactic
+public import SciLean.Tactic.UnsafeAD
+public import SciLean.Topology.Continuous
+public import SciLean.Util.Alternatives
+public import SciLean.Util.Approx.ApproxLimit
+public import SciLean.Util.Approx.ApproxSolution
+public import SciLean.Util.Approx.Basic
+public import SciLean.Util.DefOptimize
+public import SciLean.Util.HoldLet
+public import SciLean.Util.HoldLetProperties
+public import SciLean.Util.Limit
+public import SciLean.Util.Profile
+public import SciLean.Util.RecVal
+public import SciLean.Util.RewriteBy
+public import SciLean.Util.SolveFun
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+

@@ -1,4 +1,9 @@
-import SciLean.Probability.Rand
+module
+
+public import SciLean.Probability.Rand
+
+@[expose] public section
+
 -- import SciLean.Core.Rand.Tactic
 -- import SciLean.Core.Rand.Distributions.Uniform
 -- import SciLean.Core.Rand.Distributions.Sphere

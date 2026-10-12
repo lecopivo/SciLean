@@ -1,4 +1,10 @@
-import SciLean.Probability.Rand
+module
+
+public import SciLean.Probability.Rand
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 -- import SciLean.Core.FunctionPropositions
 -- import Mathlib
 
@@ -54,6 +60,7 @@ theorem ite_pull_mean_f {c} [Decidable c] (t : X) (e : Rand X) :
   if h : c then simp[h] else simp[h]
 
 -- this has messed up universes
+set_option warning.simp.otherHead false in
 @[rand_pull_E]
 theorem pull_E_lambda (r : Rand Y) (f : X → Y → Z) :
     (fun x => r.E (fun y => f x y))
@@ -65,7 +72,7 @@ theorem pull_E_lambda (r : Rand Y) (f : X → Y → Z) :
 theorem push_E_lambda (r : Rand Y) (f : X → Y → Z) :
     r.E (fun y x => f x y)
     =
-    (fun x => r.E (fun y => f x y)) := sorry_proof
+    (fun x => r.E (fun y => f x y)) := (pull_E_lambda r f).symm
 
 -- can't be simp as it has variable head
 set_option linter.unusedVariables false in
@@ -85,7 +92,15 @@ theorem pull_mean_add (x y : Rand X) :
     Rand.mean do
       let x' ← x
       let y' ← y
-      return x' + y' := sorry_proof
+      return x' + y' := by
+  rw [bind_mean]
+  have h : ∀ x' : X, (Rand.mean do let y' ← y; return x' + y') = x' + y.mean := by
+    intro x'
+    rw [show (Rand.mean do let y' ← y; return x' + y') = ((fun y' : X => x' + y') <$> y).mean from rfl,
+        map_mean]
+    exact (pull_E_affine y id (fun z => x' + z) (by fun_prop)).symm
+  simp only [h]
+  exact pull_E_affine x id (fun z => z + y.mean) (by fun_prop)
 
 @[rand_pull_E]
 theorem pull_mean_add_1 (x : Rand X) (y : X) :
@@ -93,7 +108,10 @@ theorem pull_mean_add_1 (x : Rand X) (y : X) :
     =
     Rand.mean do
       let x' ← x
-      return x' + y := sorry_proof
+      return x' + y := by
+  rw [show (Rand.mean do let x' ← x; return x' + y) = ((fun x' : X => x' + y) <$> x).mean from rfl,
+      map_mean]
+  exact pull_E_affine x id (fun z => z + y) (by fun_prop)
 
 @[rand_pull_E]
 theorem pull_mean_add_2 (x : X) (y : Rand X) :
@@ -101,7 +119,10 @@ theorem pull_mean_add_2 (x : X) (y : Rand X) :
     =
     Rand.mean do
       let y' ← y
-      return x + y' := sorry_proof
+      return x + y' := by
+  rw [show (Rand.mean do let y' ← y; return x + y') = ((fun y' : X => x + y') <$> y).mean from rfl,
+      map_mean]
+  exact pull_E_affine y id (fun z => x + z) (by fun_prop)
 
 @[rand_pull_E]
 theorem pull_mean_sub (x y : Rand X) :
@@ -110,7 +131,15 @@ theorem pull_mean_sub (x y : Rand X) :
     Rand.mean do
       let x' ← x
       let y' ← y
-      return x' - y' := sorry_proof
+      return x' - y' := by
+  rw [bind_mean]
+  have h : ∀ x' : X, (Rand.mean do let y' ← y; return x' - y') = x' - y.mean := by
+    intro x'
+    rw [show (Rand.mean do let y' ← y; return x' - y') = ((fun y' : X => x' - y') <$> y).mean from rfl,
+        map_mean]
+    exact (pull_E_affine y id (fun z => x' - z) (by fun_prop)).symm
+  simp only [h]
+  exact pull_E_affine x id (fun z => z - y.mean) (by fun_prop)
 
 @[rand_pull_E]
 theorem pull_mean_smul [Module R X] (r : R) (x : Rand X) :
@@ -126,7 +155,10 @@ theorem pull_mean_mul (r : R) (x : Rand R) :
     =
     Rand.mean do
       let x' ← x
-      return r * x' := sorry_proof
+      return r * x' := by
+  rw [show (Rand.mean do let x' ← x; return r * x') = ((fun x' : R => r * x') <$> x).mean from rfl,
+      map_mean]
+  exact pull_E_affine x id (fun z => r * z) (by fun_prop)
 
 @[rand_pull_E]
 theorem pull_mean_div (x : Rand R) (y : R) :
@@ -134,7 +166,10 @@ theorem pull_mean_div (x : Rand R) (y : R) :
     =
     Rand.mean do
       let x' ← x
-      return x' / y:= sorry_proof
+      return x' / y:= by
+  rw [show (Rand.mean do let x' ← x; return x' / y) = ((fun x' : R => x' / y) <$> x).mean from rfl,
+      map_mean]
+  exact pull_E_affine x id (fun z => z / y) (by simp only [div_eq_mul_inv]; fun_prop)
 
 
 @[rand_pull_E]
@@ -143,7 +178,10 @@ theorem pull_mean_neg (x : Rand X) :
     =
     Rand.mean do
       let x' ← x
-      return - x' := sorry_proof
+      return - x' := by
+  rw [show (Rand.mean do let x' ← x; return - x') = ((fun x' : X => - x') <$> x).mean from rfl,
+      map_mean]
+  exact pull_E_affine x id (fun z => - z) (by fun_prop)
 
 
 section Nat

@@ -1,7 +1,12 @@
-import Mathlib.Algebra.Group.Basic
-import SciLean.Util.SorryProof
-import SciLean.Meta.SimpAttr
-import SciLean.Data.Function
+module
+
+public import Mathlib.Algebra.Group.Basic
+public import SciLean.Util.SorryProof
+public import SciLean.Meta.SimpAttr
+public import SciLean.Data.Function
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -123,7 +128,7 @@ instance (priority:=low+1) instStrucTypePiSimple
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by
-    intro i i'; intros _ _ H
+    intro i i' _ _ H
     if h: i' = i then
       simp [h] at H
     else
@@ -142,7 +147,7 @@ instance (priority:=low+1) instStrucTypePi
   right_inv := by simp[Function.RightInverse, LeftInverse]
   structProj_structModify := by simp
   structProj_structModify' := by
-    intro ⟨i,j⟩ ⟨i',j'⟩; intros _ _ H; simp
+    intro ⟨i, j⟩ ⟨i', j'⟩ _ _ H; simp
     if h: i' = i then
       subst h
       if h': j=j' then

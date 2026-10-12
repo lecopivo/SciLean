@@ -1,5 +1,10 @@
-import SciLean
-import SciLean.Data.ArrayOperations.Operations.MapIdxMonoAcc
+module
+
+public import SciLean
+public import SciLean.Data.ArrayOperations.Operations.MapIdxMonoAcc
+
+@[expose] public section
+
 
 open SciLean
 

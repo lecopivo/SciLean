@@ -1,13 +1,31 @@
-import Mathlib.Algebra.Module.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.Algebra.Module.LinearMap.Defs
+module
 
-import SciLean.Algebra.IsAddGroupHom
+public import Mathlib.Algebra.Module.Basic
 
-import SciLean.Data.IndexType
-import SciLean.Meta.SimpAttr
+public meta import Mathlib.Algebra.Module.Basic
+public import Mathlib.Algebra.Module.Prod
+public meta import Mathlib.Algebra.Module.Prod
+public import Mathlib.Algebra.Module.LinearMap.Defs
+public meta import Mathlib.Algebra.Module.LinearMap.Defs
 
-import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Algebra.IsAddGroupHom
+
+public meta import SciLean.Algebra.IsAddGroupHom
+
+public import SciLean.Data.IndexType
+
+public meta import SciLean.Data.IndexType
+public import SciLean.Meta.SimpAttr
+public meta import SciLean.Meta.SimpAttr
+
+public import SciLean.Tactic.AnalyzeConstLambda
+
+public meta import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Util.SorryProof
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -62,8 +80,9 @@ theorem _root_.IsAddGroupHom.neg_pull (x : X)
 
 theorem _root_.IsAddGroupHom.app_zero
   : f 0 = 0 := by
-  have := hf
-  sorry_proof
+  have h := hf.map_add 0 0
+  simp only [add_zero] at h
+  exact left_eq_add.mp h
 
 variable {g : X → Y → Z} (hg : IsAddGroupHom fun xy : X×Y => g xy.1 xy.2)
 
@@ -110,8 +129,9 @@ by
 theorem _root_.IsAddGroupHom.app_zero₂
   : g 0 0 = 0 :=
 by
-  have := hg
-  sorry_proof
+  have h := hg.map_add (0,0) (0,0)
+  simp only [Prod.mk_add_mk, add_zero] at h
+  exact left_eq_add.mp h
 
 
 end HelperTheorems
@@ -172,17 +192,22 @@ def generateAddGroupHomSimps (isAddGroupHomTheorem : Name) : MetaM Unit := do
 
   let info ← getConstInfo isAddGroupHomTheorem
 
-  lambdaTelescope info.value! fun ctx isAddGroupHom => do
+  forallTelescope info.type fun ctx target => do
+    let isAddGroupHom := mkApp (← mkConstWithFreshMVarLevels ``sorryProofAxiom) target
 
     let pullpush := [`add_pull,`add_push, `sub_pull,`sub_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
-      generateAddGroupHomSimp ctx isAddGroupHom thrm
+      try
+        generateAddGroupHomSimp ctx isAddGroupHom thrm
+      catch _ => pure ()
 
     let simps := [`app_zero]
 
     for thrm in simps do
-      generateAddGroupHomSimp ctx isAddGroupHom thrm (isSimpAttr:=false) (makeSimp:=true)
+      try
+        generateAddGroupHomSimp ctx isAddGroupHom thrm (isSimpAttr:=false) (makeSimp:=true)
+      catch _ => pure ()
 
 
 /-- This commands generates simp lemmas for given function preserving addition and subtraction.

@@ -1,6 +1,15 @@
-import Lean
-import Qq
-import SciLean.Tactic.GTrans.MetaLCtxM
+module
+
+public import Lean
+
+public meta import Lean
+public import Qq
+public meta import Qq
+public import SciLean.Tactic.GTrans.MetaLCtxM
+public meta import SciLean.Tactic.GTrans.MetaLCtxM
+
+@[expose] public meta section
+
 
 open Lean Meta
 

@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 #exit
 
 import SciLean.Core.Transformations.HasParamDerivWithJumps.Common

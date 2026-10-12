@@ -1,4 +1,9 @@
-import SciLean.Analysis.Normed.IsContinuousLinearMap
+module
+
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+
+@[expose] public section
+
 
 open SciLean ComplexConjugate
 
@@ -25,7 +30,7 @@ theorem Star.star.arg_a0.IsContinuousLinearMap_rule_scalar {R K} [RealScalar R] 
     IsContinuousLinearMap R (fun x : K => star x) := by
   constructor
   · fun_prop
-  · dsimp only [autoParam]; fun_prop
+  · fun_prop
 
 example {R} [RCLike R] : ContinuousStar R := by infer_instance
 

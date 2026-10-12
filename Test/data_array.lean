@@ -1,4 +1,9 @@
-import SciLean.Data.DataArray
+module
+
+public import SciLean.Data.DataArray
+
+@[expose] public section
+
 
 open SciLean
 

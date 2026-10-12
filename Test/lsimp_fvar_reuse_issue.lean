@@ -1,5 +1,10 @@
-import SciLean.Tactic.CompiledTactics
-import SciLean.Tactic.LSimp.Elab
+module
+
+public import SciLean.Tactic.CompiledTactics
+public import SciLean.Tactic.LSimp.Elab
+
+@[expose] public section
+
 
 open Lean
 

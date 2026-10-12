@@ -1,7 +1,12 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.RCLike.Basic
+module
 
-import SciLean.Util.SorryProof
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.RCLike.Basic
+
+public import SciLean.Util.SorryProof
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -12,15 +17,28 @@ variable {E : ι → Type v}
 
 -- instance {X} [Vec K X] : Inhabited X := ⟨0⟩
 
-abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α := AddSemigroup.mk sorry_proof
-abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α :=
-  AddMonoid.mk (toAddSemigroup := AddSemigroup.mkSorryProofs) sorry_proof sorry_proof nsmulRec sorry_proof sorry_proof
-abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α]  : SubNegMonoid α :=
-  SubNegMonoid.mk (toAddMonoid := AddMonoid.mkSorryProofs) sorry_proof zsmulRec sorry_proof sorry_proof sorry_proof
-abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α :=
-  AddGroup.mk (toSubNegMonoid := SubNegMonoid.mkSorryProofs) sorry_proof
-abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α :=
-  AddCommGroup.mk (toAddGroup := AddGroup.mkSorryProofs) sorry_proof
+abbrev AddSemigroup.mkSorryProofs {α} [Add α] : AddSemigroup α where
+  add_assoc := sorry_proof
+abbrev AddMonoid.mkSorryProofs {α} [Add α] [Zero α] : AddMonoid α where
+  toAddSemigroup := AddSemigroup.mkSorryProofs
+  zero_add := sorry_proof
+  add_zero := sorry_proof
+  nsmul := nsmulRec
+  nsmul_zero := by aesop
+  nsmul_succ := by aesop
+abbrev SubNegMonoid.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : SubNegMonoid α where
+  toAddMonoid := AddMonoid.mkSorryProofs
+  sub_eq_add_neg := sorry_proof
+  zsmul := zsmulRec
+  zsmul_zero' := by aesop
+  zsmul_succ' := by intros; rfl
+  zsmul_neg' := by intros; rfl
+abbrev AddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddGroup α where
+  toSubNegMonoid := SubNegMonoid.mkSorryProofs
+  neg_add_cancel := sorry_proof
+abbrev AddCommGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] : AddCommGroup α where
+  toAddGroup := AddGroup.mkSorryProofs
+  add_comm := sorry_proof
 
 abbrev MulAction.mkSorryProofs {α β} [Monoid α] [SMul α β] : MulAction α β :=
   { mul_smul := sorry_proof, one_smul := sorry_proof }
@@ -28,13 +46,25 @@ abbrev DistribMulAction.mkSorryProofs {α β} [Monoid α] [AddMonoid β] [SMul �
   { (MulAction.mkSorryProofs (α:=α) (β:=β)) with smul_add := sorry_proof, smul_zero := sorry_proof }
 set_option linter.unusedVariables false in
 abbrev Module.mkSorryProofs {α β} [Semiring α] [addcommgroup : AddCommGroup β] [SMul α β] : Module α β :=
-  { (DistribMulAction.mkSorryProofs (α:=α) (β:=β)) with add_smul := sorry_proof, zero_smul := sorry_proof }
+  have add_smul : ∀ (r s : α) (x : β), (r + s) • x = r • x + s • x := sorry_proof
+  { (DistribMulAction.mkSorryProofs (α:=α) (β:=β)) with
+    add_smul := add_smul,
+    zero_smul := fun x => by
+      have h := add_smul 0 0 x
+      rw [add_zero] at h
+      exact left_eq_add.mp h }
 
 abbrev ContinuousAdd.mkSorryProofs {α} [Add α] [TopologicalSpace α] : ContinuousAdd α := ContinuousAdd.mk sorry_proof
 abbrev ContinuousNeg.mkSorryProofs {α} [Neg α] [TopologicalSpace α] : ContinuousNeg α := ContinuousNeg.mk sorry_proof
-abbrev IsTopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :=
- @IsTopologicalAddGroup.mk α _ (AddGroup.mkSorryProofs) (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
-abbrev IsUniformAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [UniformSpace α] :=
- @IsUniformAddGroup.mk α _ (AddGroup.mkSorryProofs) sorry_proof -- (ContinuousAdd.mkSorryProofs) (ContinuousNeg.mkSorryProofs)
+abbrev IsTopologicalAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [TopologicalSpace α] :
+    @IsTopologicalAddGroup α _ AddGroup.mkSorryProofs :=
+  let _ : AddGroup α := AddGroup.mkSorryProofs
+  let _ : ContinuousAdd α := ContinuousAdd.mkSorryProofs
+  let _ : ContinuousNeg α := ContinuousNeg.mkSorryProofs
+  IsTopologicalAddGroup.mk
+abbrev IsUniformAddGroup.mkSorryProofs {α} [Add α] [Sub α] [Neg α] [Zero α] [UniformSpace α] :
+    @IsUniformAddGroup α _ AddGroup.mkSorryProofs :=
+  let _ : AddGroup α := AddGroup.mkSorryProofs
+  @IsUniformAddGroup.mk α _ _ sorry_proof
 
 abbrev ContinuousSMul.mkSorryProofs {α} [SMul K α] [TopologicalSpace α] : ContinuousSMul K α := ContinuousSMul.mk sorry_proof

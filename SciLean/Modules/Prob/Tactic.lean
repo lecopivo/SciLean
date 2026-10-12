@@ -1,10 +1,15 @@
-import SciLean.Modules.Prob.Rand
-import SciLean.Modules.Prob.DRand
-import SciLean.Modules.Prob.FDRand
-import SciLean.Modules.Prob.RandDeriv
-import SciLean.Modules.Prob.RandFwdDeriv
-import SciLean.Modules.Prob.PushPullE
-import SciLean.Modules.Prob.ADTheorems
+module
+
+public import SciLean.Modules.Prob.Rand
+public import SciLean.Modules.Prob.DRand
+public import SciLean.Modules.Prob.FDRand
+public import SciLean.Modules.Prob.RandDeriv
+public import SciLean.Modules.Prob.RandFwdDeriv
+public import SciLean.Modules.Prob.PushPullE
+public import SciLean.Modules.Prob.ADTheorems
+
+@[expose] public section
+
 
 
 namespace SciLean.Prob

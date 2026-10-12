@@ -1,4 +1,9 @@
-import SciLean.Data.DataArray.FloatN
+module
+
+public import SciLean.Data.DataArray.FloatN
+
+@[expose] public section
+
 
 namespace SciLean
 

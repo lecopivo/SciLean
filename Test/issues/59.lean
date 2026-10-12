@@ -1,5 +1,10 @@
-import SciLean.AD.HasFwdFDeriv
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.AD.HasFwdFDeriv
+public import SciLean.Util.RewriteBy
+
+@[expose] public section
+
 
 open SciLean
 

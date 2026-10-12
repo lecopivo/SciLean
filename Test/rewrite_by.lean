@@ -1,4 +1,9 @@
-import SciLean
+module
+
+public import SciLean
+
+@[expose] public section
+
 
 set_option pp.proofs false
 

@@ -1,6 +1,11 @@
-import SciLean.Core
-import SciLean.Modules.Geometry.Shape
-import SciLean.Modules.Geometry.Shape.Sphere
+module
+
+public import SciLean.Core
+public import SciLean.Modules.Geometry.Shape
+public import SciLean.Modules.Geometry.Shape.Sphere
+
+@[expose] public section
+
 
 open FiniteDimensional
 
@@ -75,7 +80,7 @@ abbrev boundingBox [BoundingBox S] (s : S) := BoundingBox.boundingBox R ι s
 
 instance : BoundingBox (AxisAlignedBox X) where
   boundingBox b := b
-  is_bounding_box := sorry_proof
+  is_bounding_box := fun _ => ⟨fun _ h => h, fun _ h => h⟩
 
 
 instance [OrthonormalBasis ι R X] : BoundingBox (Sphere R X) where

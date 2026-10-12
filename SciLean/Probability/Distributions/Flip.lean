@@ -1,4 +1,9 @@
-import SciLean.Probability.Rand
+module
+
+public import SciLean.Probability.Rand
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal BigOperators Finset
 
@@ -61,5 +66,5 @@ theorem add_as_flip_E {x y : X} (θ : R) (h : θ ∈ Set.Ioo 0 1) :
     x + y = (flip θ).E (fun b => if b then θ⁻¹ • x else (1-θ)⁻¹ • y) := by
   simp[flip.E_val]
   have : θ ≠ 0 := by aesop
-  have : 1 - θ ≠ 0 := by sorry_proof
+  have : 1 - θ ≠ 0 := sub_ne_zero_of_ne (Ne.symm (ne_of_lt h.2))
   simp (disch:=assumption)

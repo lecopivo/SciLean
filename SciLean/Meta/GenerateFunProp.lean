@@ -1,7 +1,17 @@
-import Mathlib.Tactic.FunProp
-import SciLean.Lean.Meta.Basic
-import SciLean.Util.RewriteBy
-import Mathlib.Lean.Meta.RefinedDiscrTree
+module
+
+public import Mathlib.Tactic.FunProp
+
+public meta import Mathlib.Tactic.FunProp
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+public import Mathlib.Lean.Meta.RefinedDiscrTree
+public meta import Mathlib.Lean.Meta.RefinedDiscrTree
+
+@[expose] public meta section
+
 
 open Lean Meta Elab Term Command
 

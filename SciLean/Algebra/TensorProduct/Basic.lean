@@ -1,11 +1,16 @@
 
-import Mathlib.LinearAlgebra.TensorProduct.Basic
-import Mathlib.Data.Erased
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.CanonicalBasis
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.SpecialFunctions.Inner
+public import Mathlib.LinearAlgebra.TensorProduct.Basic
+public import Mathlib.Data.Erased
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.CanonicalBasis
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.SpecialFunctions.Inner
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -21,7 +26,7 @@ TODO: TensorProductType should accept this as an input
 inductive TansorProductTag where
   | dense
   | sparse
-  | custom (name : Name)
+  | custom (name : Lean.Name)
 
 open TensorProduct  in
 /-- `TensorProductType R Y X YX` says that `YX` is mathematical tensor product `Y ⊗ X`.
@@ -142,7 +147,7 @@ elab (priority:=high) x:term:101 " ⊗[" R:term "] " y:term:100 : term => do
 
 macro (priority:=high) x:term:101 " ⊗ " y:term:100 : term => `($x ⊗[defaultScalar%] $y)
 
-@[app_unexpander tmul] def unexpandTMul : Lean.PrettyPrinter.Unexpander
+@[app_unexpander tmul] meta def unexpandTMul : Lean.PrettyPrinter.Unexpander
   | `($(_) $_ $y $x) => `($y ⊗ $x)
   | _ => throw ()
 
@@ -206,6 +211,40 @@ theorem tmul_scalar_right [SMul (Rᵐᵒᵖ) X] [Star X] (a : R) (x : X) :
 end Identity
 
 
+-- moved here from `SciLean.Algebra.VectorOptimize.Basic` so that it is available to every user of
+-- `tmulAdd`
+theorem tmulAdd_spec {R Y X YX : Type*} [RCLike R]
+    [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
+    [AddCommGroup YX] [Module R YX] [TensorProductType R Y X YX]
+    (a : R) (y : Y) (x : X) (A : YX) :
+  tmulAdd a y x A = a•(y⊗[R]x) + A := by
+  simp only [tmul, TensorProductType.tmulAdd_eq_tmul, map_zero, add_zero, one_smul,
+    map_add, map_smul, LinearEquiv.symm_apply_apply]
+
+/-- `matVecMulAdd a A x b y` is the fused operation `a•(A*x) + b•y`, where `A*x` is the plain
+matrix-vector product `matVecMulAdd 1 A x 0 0`.
+
+This is the defining property of `matVecMulAdd`; `matVecMulAdd_spec` is its restatement with the
+matrix multiplication notation. -/
+theorem matVecMulAdd_eq_smul_add {R Y X YX : Type*} [RCLike R]
+    [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
+    [AddCommGroup YX] [Module R YX] [TensorProductType R Y X YX]
+    (a b : R) (A : YX) (x : X) (y : Y) :
+    matVecMulAdd a A x b y = a•(matVecMulAdd (1:R) A x (0:R) (0:Y)) + b•y := sorry_proof
+
+/-- `vecMatMulAdd a y A b x` is the fused operation `a•(y*A) + b•x`, where `y*A` is the plain
+vector-matrix product `vecMatMulAdd 1 y A 0 0`.
+
+This is the defining property of `vecMatMulAdd`; `vecMatMulAdd_spec` is its restatement with the
+matrix multiplication notation. -/
+theorem vecMatMulAdd_eq_smul_add {R Y X YX : Type*} [RCLike R]
+    [NormedAddCommGroup Y] [AdjointSpace R Y] [NormedAddCommGroup X] [AdjointSpace R X]
+    [AddCommGroup YX] [Module R YX] [TensorProductType R Y X YX]
+    (a b : R) (A : YX) (x : X) (y : Y) :
+    vecMatMulAdd a y A b x = a•(vecMatMulAdd (1:R) y A (0:R) (0:X)) + b•x := sorry_proof
+
+
+
 ----------------------------------------------------------------------------------------------------
 -- Simps and theorems ------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -222,10 +261,85 @@ variable
 -- basic properties of `tmul`
 
 @[simp, simp_core]
-theorem tmul_zero (y : Y) : y ⊗[R] (0 : X) = 0 := by sorry_proof
+theorem tmul_zero (y : Y) : y ⊗[R] (0 : X) = 0 := by
+  rw [tmul, TensorProductType.tmulAdd_eq_tmul]; simp
 
 @[simp, simp_core]
-theorem zero_tmul (x : X) : (0 : Y) ⊗[R] x = 0 := by sorry_proof
+theorem zero_tmul (x : X) : (0 : Y) ⊗[R] x = 0 := by
+  rw [tmul, TensorProductType.tmulAdd_eq_tmul]; simp
+
+/-- Two linear maps out of a tensor product are equal if they agree on elementary tensors. -/
+theorem tmul_ext {M : Type*} [AddCommGroup M] [Module R M] {f g : YX → M}
+    (hf : IsLinearMap R f) (hg : IsLinearMap R g)
+    (h : ∀ (y : Y) (x : X), f (y ⊗[R] x) = g (y ⊗[R] x)) : f = g := by
+  set e := (TensorProductType.equiv (R:=R) (Y:=Y) (X:=X) (YX:=YX)).out with he
+  have htmul : ∀ (y : Y) (x : X), (y ⊗[R] x : YX) = e.symm (y ⊗ₜ[R] x) := by
+    intro y x; rw [tmul, TensorProductType.tmulAdd_eq_tmul]; simp [he]
+  have hFG : (IsLinearMap.mk' f hf).comp (e.symm.toLinearMap)
+           = (IsLinearMap.mk' g hg).comp (e.symm.toLinearMap) := by
+    apply TensorProduct.ext'
+    intro y x
+    show f (e.symm (y ⊗ₜ[R] x)) = g (e.symm (y ⊗ₜ[R] x))
+    rw [← htmul]; exact h y x
+  funext u
+  simpa using LinearMap.congr_fun hFG (e u)
+
+/-- Elementary tensors are the image of mathlib's elementary tensors under `equiv`. -/
+theorem tmul_eq_equiv_symm (y : Y) (x : X) :
+    (y ⊗[R] x : YX)
+    =
+    (TensorProductType.equiv (R:=R) (Y:=Y) (X:=X) (YX:=YX)).out.symm (y ⊗ₜ[R] x) := by
+  rw [tmul, TensorProductType.tmulAdd_eq_tmul]; simp
+
+theorem add_tmul (y y' : Y) (x : X) :
+    ((y + y') ⊗[R] x : YX) = y ⊗[R] x + y' ⊗[R] x := by
+  simp [tmul_eq_equiv_symm, TensorProduct.add_tmul]
+
+theorem tmul_add (y : Y) (x x' : X) :
+    (y ⊗[R] (x + x') : YX) = y ⊗[R] x + y ⊗[R] x' := by
+  simp [tmul_eq_equiv_symm, TensorProduct.tmul_add]
+
+theorem smul_tmul (r : R) (y : Y) (x : X) :
+    ((r • y) ⊗[R] x : YX) = r • (y ⊗[R] x) := by
+  rw [tmul_eq_equiv_symm, tmul_eq_equiv_symm, ← TensorProduct.smul_tmul', map_smul]
+
+theorem tmul_smul (r : R) (y : Y) (x : X) :
+    (y ⊗[R] (r • x) : YX) = r • (y ⊗[R] x) := by
+  simp [tmul_eq_equiv_symm, TensorProduct.tmul_smul]
+
+theorem nsmul_tmul (n : ℕ) (y : Y) (x : X) : ((n • y) ⊗[R] x : YX) = n • (y ⊗[R] x) := by
+  rw [← Nat.cast_smul_eq_nsmul R n y, smul_tmul, Nat.cast_smul_eq_nsmul]
+
+theorem zsmul_tmul (n : ℤ) (y : Y) (x : X) : ((n • y) ⊗[R] x : YX) = n • (y ⊗[R] x) := by
+  rw [← Int.cast_smul_eq_zsmul R n y, smul_tmul, Int.cast_smul_eq_zsmul]
+
+theorem neg_tmul (y : Y) (x : X) : ((-y) ⊗[R] x : YX) = - (y ⊗[R] x) := by
+  simp [tmul_eq_equiv_symm, TensorProduct.neg_tmul]
+
+theorem tmul_neg (y : Y) (x : X) : (y ⊗[R] (-x) : YX) = - (y ⊗[R] x) := by
+  simp [tmul_eq_equiv_symm, TensorProduct.tmul_neg]
+
+theorem sub_tmul (y y' : Y) (x : X) :
+    ((y - y') ⊗[R] x : YX) = y ⊗[R] x - y' ⊗[R] x := by
+  simp [tmul_eq_equiv_symm, TensorProduct.sub_tmul]
+
+theorem tmul_sub (y : Y) (x x' : X) :
+    (y ⊗[R] (x - x') : YX) = y ⊗[R] x - y ⊗[R] x' := by
+  simp [tmul_eq_equiv_symm, TensorProduct.tmul_sub]
+
+@[fun_prop]
+theorem tmul.arg_x.IsLinearMap_rule (y : Y) :
+    IsLinearMap R (fun x : X => (y ⊗[R] x : YX)) := by
+  constructor
+  · intro x x'; exact tmul_add y x x'
+  · intro r x; exact tmul_smul r y x
+
+@[fun_prop]
+theorem tmul.arg_y.IsLinearMap_rule (x : X) :
+    IsLinearMap R (fun y : Y => (y ⊗[R] x : YX)) := by
+  constructor
+  · intro y y'; exact add_tmul y y' x
+  · intro r y; exact smul_tmul r y x
 
 @[fun_prop]
 theorem tmul.arg_xy.Continuous_rule :
@@ -233,18 +347,23 @@ theorem tmul.arg_xy.Continuous_rule :
 
 @[fun_prop]
 theorem tmul.arg_x.IsContinuousLinearMap_rule (y : Y) :
-  IsContinuousLinearMap R (fun x : X => y⊗[R]x) := sorry_proof
+  IsContinuousLinearMap R (fun x : X => y⊗[R]x) :=
+  ⟨tmul.arg_x.IsLinearMap_rule y,
+    tmul.arg_xy.Continuous_rule.comp (continuous_const.prodMk continuous_id)⟩
 
 @[fun_prop]
 theorem tmul.arg_y.IsContinuousLinearMap_rule (x : X) :
-  IsContinuousLinearMap R (fun y : Y => y⊗[R]x) := sorry_proof
+  IsContinuousLinearMap R (fun y : Y => y⊗[R]x) :=
+  ⟨tmul.arg_y.IsLinearMap_rule x,
+    tmul.arg_xy.Continuous_rule.comp (continuous_id.prodMk continuous_const)⟩
 
 
 -- basic properties of `matVecMulAdd`
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
-    matVecMulAdd 0 A x b y = b•y := by sorry_proof
+    matVecMulAdd 0 A x b y = b•y := by
+  rw [matVecMulAdd_eq_smul_add, zero_smul, zero_add]
 
 @[simp, simp_core]
 theorem matVecMulAdd_zero_A (a b : R) (x : X) (y : Y) :
@@ -259,7 +378,8 @@ theorem matVecMulAdd_zero_x (a b : R) (A : YX) (y : Y) :
 
 @[simp, simp_core]
 theorem vecMatMulAdd_zero_a (b : R) (A : YX) (x : X) (y : Y) :
-    vecMatMulAdd 0 y A b x = b•x := by sorry_proof
+    vecMatMulAdd 0 y A b x = b•x := by
+  rw [vecMatMulAdd_eq_smul_add, zero_smul, zero_add]
 
 @[simp, simp_core]
 theorem vecMatMulAdd_zero_A (a b : R) (x : X) (y : Y) :

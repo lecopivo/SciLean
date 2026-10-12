@@ -1,7 +1,12 @@
 -- import SciLean.Core
 -- import SciLean.Modules.Geometry.Shape.Rotation
-import Mathlib.Topology.Basic
-import SciLean.Geometry.BoundingBall
+module
+
+public import Mathlib.Topology.Basic
+public import SciLean.Geometry.BoundingBall
+
+@[expose] public section
+
 -- import Mathlib.Data.Real.EReal
 
 namespace SciLean
@@ -184,7 +189,12 @@ namespace Shape
       | .lt => .outside
       | .gt => .inside
       | .eq => .boundary
-    is_locate := sorry_proof
+    is_locate := by
+      funext s x
+      have h := HasLevelSet.is_level_set (R := R) s x
+      unfold IsLevelSet at h
+      simp only [levelSet]
+      split <;> simp_all
   }
   open BigOperators
 

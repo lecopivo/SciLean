@@ -1,7 +1,12 @@
-import SciLean.Core
+module
+
+public import SciLean.Core
 -- import SciLean.Data.PowType
-import SciLean.Functions.CrossProduct
-import SciLean.Functions.Trigonometric
+public import SciLean.Functions.CrossProduct
+public import SciLean.Functions.Trigonometric
+
+@[expose] public section
+
 
 set_option synthInstance.maxSize 2048
 

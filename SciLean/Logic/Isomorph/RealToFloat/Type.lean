@@ -1,7 +1,13 @@
-import SciLean.Util.SorryProof
-import SciLean.Logic.Isomorph.IsomorphicType
+module
 
-import Mathlib.Data.Real.Basic
+public import SciLean.Util.SorryProof
+public import SciLean.Logic.Isomorph.IsomorphicType
+
+public import Mathlib.Basic.Real.Basic
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 namespace SciLean
 

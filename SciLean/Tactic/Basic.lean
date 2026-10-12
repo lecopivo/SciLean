@@ -1,7 +1,17 @@
-import Lean
+module
 
-import SciLean.Lean.Expr
-import SciLean.Lean.Meta.Basic
+public import Lean
+
+public meta import Lean
+
+public import SciLean.Lean.Expr
+
+public meta import SciLean.Lean.Expr
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+
+@[expose] public meta section
+
 
 open Lean
 

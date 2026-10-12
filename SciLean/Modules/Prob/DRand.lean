@@ -1,10 +1,15 @@
-import Mathlib.MeasureTheory.Measure.VectorMeasure
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Mul
-import Mathlib.Analysis.Calculus.Deriv.Basic
+module
 
-import SciLean.Modules.Prob.Rand
-import SciLean.Modules.Prob.TestFunctionExtension
+public import Mathlib.MeasureTheory.Measure.VectorMeasure
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+public import Mathlib.Analysis.Calculus.Deriv.Basic
+
+public import SciLean.Modules.Prob.Rand
+public import SciLean.Modules.Prob.TestFunctionExtension
+
+@[expose] public section
+
 
 
 open MeasureTheory ENNReal BigOperators Finset

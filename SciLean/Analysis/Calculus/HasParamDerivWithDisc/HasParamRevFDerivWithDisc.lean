@@ -1,7 +1,12 @@
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
+module
+
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.HasParamDerivWithDisc.HasParamFDerivWithDisc
 -- import Mathlib.Lean.CoreM
-import SciLean.Tactic.IfPull
+public import SciLean.Tactic.IfPull
+
+@[expose] public section
+
 
 
 set_option linter.unusedVariables false

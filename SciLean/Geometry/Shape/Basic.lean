@@ -1,7 +1,12 @@
-import Mathlib.Topology.Basic
+module
 
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.Scalar
+public import Mathlib.Topology.Basic
+
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.Scalar
+
+@[expose] public section
+
 
 
 namespace SciLean

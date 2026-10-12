@@ -1,7 +1,12 @@
-import SciLean
+module
 
-import SciLean.AD.Rules.Exp
-import SciLean.AD.Rules.DataArrayN.ScalAdd
+public import SciLean
+
+public import SciLean.AD.Rules.Exp
+public import SciLean.AD.Rules.DataArrayN.ScalAdd
+
+@[expose] public section
+
 
 open SciLean Scalar Lean ToJson FromJson
 

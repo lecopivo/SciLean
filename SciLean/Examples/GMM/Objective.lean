@@ -1,7 +1,12 @@
-import SciLean
+module
 
-import SciLean.Examples.GMM.Simps
-import SciLean.Examples.GMM.SumSimproc
+public import SciLean
+
+public import SciLean.Examples.GMM.Simps
+public import SciLean.Examples.GMM.SumSimproc
+
+@[expose] public section
+
 
 namespace SciLean.Examples.GMM
 

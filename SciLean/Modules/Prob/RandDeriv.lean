@@ -1,9 +1,14 @@
-import Mathlib.Analysis.Calculus.FDeriv.Basic
-import Mathlib.Analysis.Calculus.FDeriv.Comp
-import Mathlib.Analysis.Calculus.Deriv.Basic
+module
 
-import SciLean.Core.FunctionTransformations
-import SciLean.Modules.Prob.DRand
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Comp
+public import Mathlib.Analysis.Calculus.Deriv.Basic
+
+public import SciLean.Core.FunctionTransformations
+public import SciLean.Modules.Prob.DRand
+
+@[expose] public section
+
 
 namespace SciLean.Prob
 

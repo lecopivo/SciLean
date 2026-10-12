@@ -1,10 +1,15 @@
- import SciLean.Core
-import SciLean.Data.GenericArray
-import SciLean.Data.FunRec
-import SciLean.Tactic.ConvIf
-import SciLean.Meta.DerivingOp
-import SciLean.Meta.DerivingAlgebra
-import SciLean.Solver.Solver
+module
+
+ public import SciLean.Core
+public import SciLean.Data.GenericArray
+public import SciLean.Data.FunRec
+public import SciLean.Tactic.ConvIf
+public import SciLean.Meta.DerivingOp
+public import SciLean.Meta.DerivingAlgebra
+public import SciLean.Solver.Solver
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -59,13 +64,13 @@ def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n :=
         -- This is effectivelly asking if `0 < n - n'` but in a form that is usefully for typecasting
         if h : n - n' = (n - (n' + 1) + 1) then
           -- In this case pts should have at least one element
-          let first := pts[⟨0, sorry_proof⟩]
-          let last  := pts[⟨n - n' - 1, sorry_proof⟩]
+          let first := pts[⟨0, by omega⟩]
+          let last  := pts[⟨n - n' - 1, by omega⟩]
           (linearInterpolate t (h ▸ pts), pushElem 1 first startPts, pushElem 1 last endPts)
         else
           -- it should be the case that `n - n' = 0`
           -- thus `h'` should be saying 0 = 0
-          have h' : (n - n') = (n - (n' + 1)) := sorry_proof
+          have h' : (n - n') = (n - (n' + 1)) := by omega
           -- `pts` is an empty array, so just push 0 vectors to startPts and endPts
           ((h' ▸ pts), pushElem 1 0 startPts, pushElem 1 0 endPts)
 
@@ -76,8 +81,8 @@ def split [Vec X] {n} (points : Points n) (t : ℝ) : Points n × Points n :=
 /-- Bezier curve evaluation satisfy a recursive formula -/
 def eval_rec [Vec X] (points : Points (n + 2)) (t : ℝ)
   :
-    let P₀ : Points (n+1) := λ [i] => points[⟨i.1, sorry_proof⟩]
-    let P₁ : Points (n+1) := λ [i] => points[⟨i.1+1, sorry_proof⟩]
+    let P₀ : Points (n+1) := λ [i] => points[⟨i.1, Nat.lt_succ_of_lt i.2⟩]
+    let P₁ : Points (n+1) := λ [i] => points[⟨i.1+1, Nat.succ_lt_succ i.2⟩]
     eval points t = (1-t) * eval P₀ t + t * eval P₁ t
   := sorry_proof
 

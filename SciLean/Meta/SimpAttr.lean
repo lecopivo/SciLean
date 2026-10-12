@@ -1,4 +1,11 @@
-import Lean
+module
+
+public import Lean
+
+public meta import Lean
+
+@[expose] public meta section
+
 
 register_simp_attr add_pull
 register_simp_attr add_push

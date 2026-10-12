@@ -1,4 +1,9 @@
-import SciLean.Data.Quotient.GradedSetoid
+module
+
+public import SciLean.Data.Quotient.GradedSetoid
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -19,7 +24,7 @@ namespace GradedQuotient
   @[simp high]
   theorem repr_quotient (a : GradedQuotient α maxLvl) [GradedSetoid.Reduce α maxLvl]
     : ⟦maxLvl| a.repr⟧ = a
-    := sorry_proof
+    := Eq.trans (Quotient.sound (GradedSetoid.Reduce.reduce_sound (lvl := maxLvl) _)) (Classical.choose_spec (Quotient.exists_rep a))
 
   def ungraded (a : GradedQuotient α maxLvl) := a.liftOn (λ a => ⟦a.1⟧) sorry_proof
 
@@ -34,7 +39,7 @@ namespace GradedQuotient
   @[simp high]
   theorem grepr_quotient (a : GradedQuotient α maxLvl)
     : ⟦a.grepr⟧ = a
-    := sorry_proof
+    := Classical.choose_spec (Quotient.exists_rep a)
 
   noncomputable
   def lvl (a : GradedQuotient α maxLvl) : Lvl := (Quotient.repr a).2

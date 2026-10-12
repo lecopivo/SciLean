@@ -1,10 +1,23 @@
-import Lean
-import SciLean.Tactic.LSimp.Main
-import SciLean.Tactic.DataSynth.Decl
-import SciLean.Lean.Meta.Uncurry
-import SciLean.Lean.Meta.Basic
+module
 
-import Mathlib.Logic.Equiv.Defs
+public import Lean
+
+public meta import Lean
+public import SciLean.Tactic.LSimp.Main
+public meta import SciLean.Tactic.LSimp.Main
+public import SciLean.Tactic.DataSynth.Decl
+public meta import SciLean.Tactic.DataSynth.Decl
+public import SciLean.Lean.Meta.Uncurry
+public meta import SciLean.Lean.Meta.Uncurry
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+
+public import Mathlib.Logic.Equiv.Defs
+
+public meta import Mathlib.Logic.Equiv.Defs
+
+@[expose] public meta section
+
 
 open Lean Meta
 
@@ -198,7 +211,7 @@ structure FunData where
 /-- Size of product type, assuming it is right associated
 i.e. `prodSize (A×B×C) = 3` but `prodSize ((A×B)×C) = 2`
  -/
-private def prodSize (e : Expr) : Nat :=
+def prodSize (e : Expr) : Nat :=
   go e 1
 where
   go (e : Expr) (n : Nat) :=

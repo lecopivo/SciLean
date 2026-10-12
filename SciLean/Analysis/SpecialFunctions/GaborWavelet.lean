@@ -1,4 +1,10 @@
-import SciLean.Analysis.SpecialFunctions.Gaussian
+module
+
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+
+@[expose] public section
+set_option linter.overlappingInstances false
+
 
 namespace SciLean
 

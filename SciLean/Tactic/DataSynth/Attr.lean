@@ -1,5 +1,13 @@
-import SciLean.Tactic.DataSynth.Theorems
-import SciLean.Tactic.DataSynth.Decl
+module
+
+public import SciLean.Tactic.DataSynth.Theorems
+
+public meta import SciLean.Tactic.DataSynth.Theorems
+public import SciLean.Tactic.DataSynth.Decl
+public meta import SciLean.Tactic.DataSynth.Decl
+
+@[expose] public meta section
+
 
 open Lean Meta
 

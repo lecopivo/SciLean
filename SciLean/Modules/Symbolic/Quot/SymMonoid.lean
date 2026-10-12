@@ -1,4 +1,9 @@
-import SciLean.Algebra
+module
+
+public import SciLean.Algebra
+
+@[expose] public section
+
 
 namespace SciLean
 

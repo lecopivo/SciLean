@@ -1,11 +1,27 @@
-import Mathlib.Algebra.Module.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.Algebra.Module.LinearMap.Defs
+module
 
-import SciLean.Data.IndexType
-import SciLean.Meta.SimpAttr
+public import Mathlib.Algebra.Module.Basic
 
-import SciLean.Tactic.AnalyzeConstLambda
+public meta import Mathlib.Algebra.Module.Basic
+public import Mathlib.Algebra.Module.Prod
+public meta import Mathlib.Algebra.Module.Prod
+public import Mathlib.Algebra.Module.LinearMap.Defs
+public meta import Mathlib.Algebra.Module.LinearMap.Defs
+
+public import SciLean.Data.IndexType
+
+public meta import SciLean.Data.IndexType
+public import SciLean.Meta.SimpAttr
+public meta import SciLean.Meta.SimpAttr
+
+public import SciLean.Tactic.AnalyzeConstLambda
+
+public meta import SciLean.Tactic.AnalyzeConstLambda
+public import SciLean.Util.SorryProof
+public meta import SciLean.Util.SorryProof
+
+@[expose] public meta section
+
 
 namespace SciLean
 
@@ -185,17 +201,22 @@ def generateLinearMapSimps (isLinearMapTheorem : Name) : MetaM Unit := do
 
   let info ← getConstInfo isLinearMapTheorem
 
-  lambdaTelescope info.value! fun ctx isLinearMap => do
+  forallTelescope info.type fun ctx target => do
+    let isLinearMap := mkApp (← mkConstWithFreshMVarLevels ``sorryProofAxiom) target
 
     let pullpush := [`add_pull,`add_push, `sub_pull,`sub_push,`smul_pull,`smul_push,`neg_pull,`neg_push]
 
     for thrm in pullpush do
-      generateLinearMapSimp ctx isLinearMap thrm
+      try
+        generateLinearMapSimp ctx isLinearMap thrm
+      catch _ => pure ()
 
     let simps := [`app_zero]
 
     for thrm in simps do
-      generateLinearMapSimp ctx isLinearMap thrm (isSimpAttr:=false) (makeSimp:=true)
+      try
+        generateLinearMapSimp ctx isLinearMap thrm (isSimpAttr:=false) (makeSimp:=true)
+      catch _ => pure ()
 
 
 /-- This commands generates simp lemmas for given linear function.

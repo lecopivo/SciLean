@@ -1,6 +1,11 @@
-import SciLean
-import SciLean.Core.Meta.GenerateRevCDeriv'
-import SciLean.Modules.ML.DenseLayer
+module
+
+public import SciLean
+public import SciLean.Core.Meta.GenerateRevCDeriv'
+public import SciLean.Modules.ML.DenseLayer
+
+@[expose] public section
+
 
 open SciLean ML
 

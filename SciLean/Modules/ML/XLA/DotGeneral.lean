@@ -1,5 +1,10 @@
-import SciLean.Modules.ML.XLA.TensorIndex
-import SciLean.Modules.ML.XLA.ConvWithPadding
+module
+
+public import SciLean.Modules.ML.XLA.TensorIndex
+public import SciLean.Modules.ML.XLA.ConvWithPadding
+
+@[expose] public section
+
 
 namespace SciLean
 

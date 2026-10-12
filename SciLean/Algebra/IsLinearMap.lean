@@ -1,11 +1,16 @@
-import Mathlib.Algebra.Module.LinearMap.Basic
-import Mathlib.Algebra.Module.Prod
-import Mathlib.LinearAlgebra.Prod
+module
 
-import SciLean.Algebra.IsAddGroupHom
-import SciLean.Analysis.Scalar.Basic
-import SciLean.Analysis.Normed.Norm2
-import SciLean.Meta.GenerateLinearMapSimp
+public import Mathlib.Algebra.Module.LinearMap.Basic
+public import Mathlib.Algebra.Module.Prod
+public import Mathlib.LinearAlgebra.Prod
+
+public import SciLean.Algebra.IsAddGroupHom
+public import SciLean.Analysis.Scalar.Basic
+public import SciLean.Analysis.Normed.Norm2
+public import SciLean.Meta.GenerateLinearMapSimp
+
+@[expose] public section
+
 
 set_option linter.unusedVariables false
 set_option linter.hashCommand false
@@ -31,7 +36,9 @@ theorem id_rule : IsLinearMap R (fun x : X ↦ x) := LinearMap.id.isLinear
 @[fun_prop]
 theorem const_zero_rule
   : IsLinearMap R (fun _ : X => (0 : Y))
-  := by constructor <;> simp
+  := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem comp_rule {f : Y → Z} {g : X → Y}
@@ -39,7 +46,9 @@ theorem comp_rule {f : Y → Z} {g : X → Y}
   ((mk' _ hf).comp (mk' _ hg)).isLinear
 
 @[fun_prop]
-theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by constructor <;> simp
+theorem apply_rule (i : ι) : IsLinearMap R (fun f : (i : ι) → E i ↦ f i) := by
+  constructor
+  all_goals aesop
 
 @[fun_prop]
 theorem pi_rule (f : X → (i : ι) → E i) (hf : ∀ i, IsLinearMap R (f · i)) :
@@ -92,7 +101,7 @@ theorem LinearMap.mk'_coe (f : X → Y) (hf : IsLinearMap R f) :
 theorem LinearMap.eta_reduce (f : X →ₗ[R] Y) :
     mk' R f.1 ⟨f.1.2,f.2⟩ = f := by rfl
 
-@[app_unexpander LinearMap.mk'] def unexpandLinearMapMk : Lean.PrettyPrinter.Unexpander
+@[app_unexpander LinearMap.mk'] meta def unexpandLinearMapMk : Lean.PrettyPrinter.Unexpander
   | `($(_) $R $f:term $_:term) =>
     match f with
     | `(fun $x':ident => $b:term) => `(fun $x' =>ₗ[$R] $b)
@@ -364,13 +373,21 @@ variable
   {R : Type _} [RealScalar R]
   {X : Type _} [NormedAddCommGroup X] [AdjointSpace R X]
 
-theorem Inner.inner.arg_a0.IsLinearMap_rule' (y : X) :
-    IsLinearMap R (fun x : X => ⟪x,y⟫[R]) := sorry_proof
+set_option linter.defProp false in
+def Inner.inner.arg_a0.IsLinearMap_rule' (y : X) :
+    IsLinearMap R (fun x : X => ⟪x,y⟫[R]) := by
+  constructor
+  · intro a b; exact AdjointSpace.inner_add_left _ _ _
+  · intro c x; rw [AdjointSpace.inner_smul_left, conj_for_real_scalar, smul_eq_mul]
 
 #generate_linear_map_simps Inner.inner.arg_a0.IsLinearMap_rule'
 
-theorem Inner.inner.arg_a1.IsLinearMap_rule' (y : X) :
-    IsLinearMap R (fun x : X => ⟪y,x⟫[R]) := sorry_proof
+set_option linter.defProp false in
+def Inner.inner.arg_a1.IsLinearMap_rule' (y : X) :
+    IsLinearMap R (fun x : X => ⟪y,x⟫[R]) := by
+  constructor
+  · intro a b; exact AdjointSpace.inner_add_right _ _ _
+  · intro c x; rw [AdjointSpace.inner_smul_right, smul_eq_mul]
 
 #generate_linear_map_simps Inner.inner.arg_a1.IsLinearMap_rule'
 

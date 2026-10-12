@@ -1,1 +1,6 @@
-import SciLean.AD.HasVecRevFDeriv
+module
+
+public import SciLean.AD.HasVecRevFDeriv
+
+@[expose] public section
+

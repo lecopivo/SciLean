@@ -1,10 +1,15 @@
-import SciLean.Modules.ML.XLA.TensorIndex
-import SciLean.Data.DataArray
-import SciLean.Data.FinProd
-import SciLean.Tactic.InferVar
-import SciLean.Analysis.Normed.IsContinuousLinearMap
-import SciLean.Analysis.Scalar.FloatAsReal
-import SciLean.Data.ArrayType
+module
+
+public import SciLean.Modules.ML.XLA.TensorIndex
+public import SciLean.Data.DataArray
+public import SciLean.Data.FinProd
+public import SciLean.Tactic.InferVar
+public import SciLean.Analysis.Normed.IsContinuousLinearMap
+public import SciLean.Analysis.Scalar.FloatAsReal
+public import SciLean.Data.ArrayType
+
+@[expose] public section
+
 
 namespace SciLean
 

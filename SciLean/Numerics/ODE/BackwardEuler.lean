@@ -1,10 +1,15 @@
-import SciLean.Analysis.Normed.Diffeomorphism
-import SciLean.Logic.Function.InvFun
+module
 
-import SciLean.Numerics.ODE.Basic
-import SciLean.Numerics.ODE.Solvers
+public import SciLean.Analysis.Normed.Diffeomorphism
+public import SciLean.Logic.Function.InvFun
 
-import SciLean.Tactic.MoveTerms
+public import SciLean.Numerics.ODE.Basic
+public import SciLean.Numerics.ODE.Solvers
+
+public import SciLean.Tactic.MoveTerms
+
+@[expose] public section
+
 
 namespace SciLean
 

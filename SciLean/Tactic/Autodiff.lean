@@ -1,12 +1,27 @@
-import SciLean.AD.HasRevFDeriv
-import SciLean.AD.HasFwdFDeriv
-import SciLean.AD.HasVecFwdFDeriv
-import SciLean.AD.HasVecRevFDeriv
+module
 
-import SciLean.Meta.SimpCore
+public import SciLean.AD.HasRevFDeriv
 
-import SciLean.Tactic.LetNormalize2
-import SciLean.Tactic.LFunTrans
+public meta import SciLean.AD.HasRevFDeriv
+public import SciLean.AD.HasFwdFDeriv
+public meta import SciLean.AD.HasFwdFDeriv
+public import SciLean.AD.HasVecFwdFDeriv
+public meta import SciLean.AD.HasVecFwdFDeriv
+public import SciLean.AD.HasVecRevFDeriv
+public meta import SciLean.AD.HasVecRevFDeriv
+
+public import SciLean.Meta.SimpCore
+
+public meta import SciLean.Meta.SimpCore
+
+public import SciLean.Tactic.LetNormalize2
+
+public meta import SciLean.Tactic.LetNormalize2
+public import SciLean.Tactic.LFunTrans
+public meta import SciLean.Tactic.LFunTrans
+
+@[expose] public meta section
+
 
 /-!
 
@@ -22,7 +37,7 @@ open Lean Meta Elab Tactic Mathlib.Meta.FunTrans Lean.Parser.Tactic in
 syntax (name := lautodiffTacticStx) "autodiff" optConfig (discharger)?
   (" [" withoutPosition((simpStar <|> simpErase <|> simpLemma),*) "]")? : tactic
 
-private def addUnfoldPartialApp :
+def addUnfoldPartialApp :
     Lean.TSyntax `Lean.Parser.Tactic.optConfig → Lean.MacroM (Lean.TSyntax `Lean.Parser.Tactic.optConfig)
   | `(Lean.Parser.Tactic.optConfig| $xs:configItem*) => do
     `(Lean.Parser.Tactic.optConfig|$xs* +unfoldPartialApp)

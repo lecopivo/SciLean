@@ -1,10 +1,15 @@
-import SciLean.Analysis.Calculus.FwdFDeriv
-import SciLean.Analysis.Calculus.RevFDeriv
-import SciLean.Analysis.Calculus.ContDiff
+module
 
-import SciLean.Meta.GenerateFunProp
-import SciLean.Meta.GenerateFunTrans
-import SciLean.Lean.ToSSA
+public import SciLean.Analysis.Calculus.FwdFDeriv
+public import SciLean.Analysis.Calculus.RevFDeriv
+public import SciLean.Analysis.Calculus.ContDiff
+
+public import SciLean.Meta.GenerateFunProp
+public import SciLean.Meta.GenerateFunTrans
+public import SciLean.Lean.ToSSA
+
+@[expose] public section
+
 
 open ComplexConjugate
 
@@ -27,8 +32,8 @@ theorem add_sin2_cos2_eq_one (x : C) : sin x * sin x + cos x * cos x = 1 :=
 
 open Scalar in
 @[simp, simp_core]
-theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 :=
- sorry_proof
+theorem add_cos2_sin2_eq_one (x : C) : cos x * cos x + sin x * sin x = 1 := by
+  rw [add_comm]; exact add_sin2_cos2_eq_one x
 
 
 --------------------------------------------------------------------------------

@@ -1,9 +1,14 @@
-import SciLean.Data.ArrayOperations.Basic
-import SciLean.Analysis.AdjointSpace.Basic
-import SciLean.Analysis.AdjointSpace.Adjoint
-import SciLean.Data.IndexType.Basic
-import SciLean.Data.IndexType.Fold
-import SciLean.Data.IndexType.Operations
+module
+
+public import SciLean.Data.ArrayOperations.Basic
+public import SciLean.Analysis.AdjointSpace.Basic
+public import SciLean.Analysis.AdjointSpace.Adjoint
+public import SciLean.Data.IndexType.Basic
+public import SciLean.Data.IndexType.Fold
+public import SciLean.Data.IndexType.Operations
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -34,6 +39,15 @@ export IsSMulGetElem (getElem_smul)
 export IsInnerGetElem (inner_eq_sum_getElem)
 
 attribute [simp, simp_core] getElem_zero getElem_add getElem_neg getElem_smul
+
+/-- Element access commutes with finite sums. -/
+theorem getElem_finset_sum {X I Y : Type*} [GetElem' X I Y] [AddCommMonoid X] [AddCommMonoid Y]
+    [IsZeroGetElem X I] [IsAddGetElem X I] {J : Type*} (s : Finset J) (f : J → X) (i : I) :
+    (∑ j ∈ s, f j)[i] = ∑ j ∈ s, (f j)[i] := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp [getElem_zero]
+  | insert a s ha ih => simp [Finset.sum_insert ha, getElem_add, ih]
 
 class IsModuleGetElem (𝕜 : outParam Type*) (X I : Type*) {Y : outParam Type*} [GetElem' X I Y]
     [Ring 𝕜] [AddCommGroup X] [Module 𝕜 X] [AddCommGroup Y] [Module 𝕜 Y] : Prop

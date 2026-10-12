@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 namespace SciLean
 
 def has_limit {X} (lim : Nat → X) : Prop := sorry

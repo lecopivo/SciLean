@@ -1,6 +1,11 @@
-import SciLean.Probability.Rand
-import SciLean.Probability.Tactic
-import SciLean.Analysis.SpecialFunctions.Gaussian
+module
+
+public import SciLean.Probability.Rand
+public import SciLean.Probability.Tactic
+public import SciLean.Analysis.SpecialFunctions.Gaussian
+
+@[expose] public section
+
 
 open MeasureTheory ENNReal Finset
 
@@ -26,7 +31,7 @@ def boxMuller (u v : R) : R×R :=
 
 variable (R)
 
-private def generateNormalV1 : Rand R := do
+def generateNormalV1 : Rand R := do
   return (← go 12 0) - 6
 where
   go (n : Nat) (sum : R) : Rand R := do
@@ -35,7 +40,7 @@ where
     | n+1 => go n (sum + (← uniformI R))
 
 open Scalar RealScalar in
-private def generateNormalV2 : Rand R := do
+def generateNormalV2 : Rand R := do
   let u ← uniformI R
   let v ← uniformI R
   return sqrt (-2*log u) * cos (2*(pi:R)*v)
@@ -67,22 +72,28 @@ theorem normal.pdf (μ σ : R) :
 theorem normal.map_add_right (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => x + θ)
     =
-    (normal (μ+θ) σ) := sorry_proof
+    (normal (μ+θ) σ) := by simp only [bind_pure_comp]; ext x : 2; rfl
 
 @[simp, simp_core]
 theorem normal.map_add_left (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => θ + x)
     =
-    (normal (θ + μ) σ) := sorry_proof
+    (normal (θ + μ) σ) := by
+  have h : (fun x : R => θ + x) = (fun x : R => x + θ) := by funext x; rw [add_comm]
+  rw [h, normal.map_add_right, add_comm]
 
 @[simp, simp_core]
 theorem normal.map_sub_right (μ σ : R) (θ : R) :
     (normal μ σ).map (fun x => x - θ)
     =
-    (normal (μ-θ) σ) := sorry_proof
+    (normal (μ-θ) σ) := by
+  have h : (fun x : R => x - θ) = (fun x : R => x + (-θ)) := by funext x; rw [sub_eq_add_neg]
+  rw [h, normal.map_add_right, ← sub_eq_add_neg]
 
 theorem normal_reparameterize (μ σ : R) :
-    normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := sorry_proof
+    normal μ σ = (normal 0 1).map (fun x => σ • x + μ) := by
+  -- as in `normal.map_add_right`, both sides have the same (erased) specification
+  simp only [smul_eq_mul, bind_pure_comp]; ext x : 2; rfl
 
 
 -- ----------------------------------------------------------------------------------------------------

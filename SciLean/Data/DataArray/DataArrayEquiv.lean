@@ -1,5 +1,10 @@
-import SciLean.Data.DataArray.DataArray
-import SciLean.Data.ArrayOperations.Algebra
+module
+
+public import SciLean.Data.DataArray.DataArray
+public import SciLean.Data.ArrayOperations.Algebra
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -80,8 +85,8 @@ instance instDataArrayEquivInductive
     DataArrayEquiv (X^[I]) (I×J) K where
   toKn  x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
   fromKn x := cast sorry_proof x -- this is slow ⟨⟨x.1.1, sorry_proof⟩, sorry_proof⟩
-  right_inv := sorry_proof
-  left_inv := sorry_proof
+  right_inv := by grind
+  left_inv := by grind
 
 
 -- base case
@@ -101,7 +106,9 @@ instance instDataArrayEquivSelf
   toKn := fun x => (⊞ (_ : Unit) => x : K^[Unit])
   fromKn := fun x => x[()]
   left_inv := by intro; simp
-  right_inv := by intro; simp; sorry_proof
+  right_inv := by
+    intro x; ext i
+    exact LawfulOfFn.getElem_ofFn (coll := K^[Unit]) (fun _ => x[()]) i
 
 
 
@@ -146,9 +153,14 @@ instance instInjectiveGetElemUncurry
     {X} [PlainDataType X] [DataArrayEquiv X J K] :
     InjectiveGetElem (X^[I]) (I×J) where
   getElem_injective := by
-    -- this should be an easy proof if we use that `I×J → K ≃ I → J → K`
-    -- and that `fun x i => x[i]` and `∀ i, fun x j => x[i][j]` are injective
-    sorry_proof
+    -- element access goes through `toKn` which is injective as it has a left inverse
+    intro x y h
+    have h' : toKn (I×J) K x = toKn (I×J) K y := by
+      apply getElem_injective (idx:=I×J)
+      funext ij; exact congrFun h ij
+    calc x = fromKn _ (toKn (I×J) K x) := (DataArrayEquiv.left_inv x).symm
+      _ = fromKn _ (toKn (I×J) K y) := by rw [h']
+      _ = y := DataArrayEquiv.left_inv y
 
 
 ----------------------------------------------------------------------------------------------------
@@ -170,8 +182,23 @@ instance instLawfulSetElemUncurry
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulSetElem (X^[I]) (I×J) where
-  getElem_setElem_eq := sorry_proof
-  getElem_setElem_neq := sorry_proof
+  getElem_setElem_eq := by
+    intro xs i v _
+    show (toKn (I×J) K (fromKn _ (setElem (toKn (I×J) K xs) i v .intro)))[i] = v
+    have hr := DataArrayEquiv.right_inv (X:=X^[I]) (I:=I×J) (K:=K)
+      (setElem (toKn (I×J) K xs) i v True.intro)
+    simp only [toKn, fromKn] at hr ⊢
+    rw [hr]
+    exact getElem_setElem_eq _ i v True.intro
+  getElem_setElem_neq := by
+    intro xs i j v _ _ hij
+    show (toKn (I×J) K (fromKn _ (setElem (toKn (I×J) K xs) i v .intro)))[j]
+         = (toKn (I×J) K xs)[j]
+    have hr := DataArrayEquiv.right_inv (X:=X^[I]) (I:=I×J) (K:=K)
+      (setElem (toKn (I×J) K xs) i v True.intro)
+    simp only [toKn, fromKn] at hr ⊢
+    rw [hr]
+    exact getElem_setElem_neq _ i j v True.intro True.intro hij
 
 
 ----------------------------------------------------------------------------------------------------
@@ -190,4 +217,10 @@ instance instLawfulOfFnUncurry
     {K} [PlainDataType K]
     {X} [PlainDataType X] [DataArrayEquiv X J K] [GetElem X J K (fun _ _ => True)] :
     LawfulOfFn (X^[I]) (I×J) where
-  getElem_ofFn := sorry_proof
+  getElem_ofFn := by
+    intro f ij
+    show (toKn (I×J) K (fromKn _ (⊞ ij => f ij)))[ij] = f ij
+    have hr := DataArrayEquiv.right_inv (X:=X^[I]) (I:=I×J) (K:=K) (⊞ ij => f ij : K^[I×J])
+    simp only [toKn, fromKn] at hr ⊢
+    rw [hr]
+    exact getElem_ofFn (coll:=K^[I×J]) f ij

@@ -1,5 +1,10 @@
-import SciLean.Data.Mesh.PrismaticMesh
-import SciLean.Data.DataArray
+module
+
+public import SciLean.Data.Mesh.PrismaticMesh
+public import SciLean.Data.DataArray
+
+@[expose] public section
+
 
 namespace SciLean
 
@@ -110,7 +115,7 @@ def TriangularSet (data : TriangularSet.FaceData) : PrismaticSet :=
 
     | _, _, _ =>
       /- In all remaining cases `e` is an element of `Empty` -/
-      absurd (a:=True) sorry_proof sorry_proof
+      absurd (a:=True) trivial sorry_proof
 
 
   face_comp := sorry_proof
@@ -145,7 +150,7 @@ instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Cof
     match Q, P with
 
     | ⟨.point, _⟩, ⟨.point, _⟩ =>
-      (⟨.point, sorry_proof, sorry_proof⟩, e)
+      (⟨.point, rfl, by show PrismRepr.point.toCanonical = .point; rw [PrismRepr.toCanonical]⟩, e)
     | ⟨.point, _⟩, ⟨.cone .point, _⟩ =>
       data.pointEdges[reduce_type_of e][id]
     | ⟨.point, _⟩, ⟨.cone (.cone .point), _⟩ =>
@@ -153,17 +158,17 @@ instance (data : TriangularSet.CofaceData) : (TriangularSet data.toFaceData).Cof
 
     | ⟨.cone .point, _⟩, ⟨.cone .point, _⟩ =>
       let e : Fin data.edgeCount := e
-      (⟨.cone .point, sorry_proof, sorry_proof⟩, e)
+      (⟨.cone .point, rfl, by show (PrismRepr.cone .point).toCanonical = .cone .point; rw [PrismRepr.toCanonical, PrismRepr.toCanonical]⟩, e)
     | ⟨.cone .point, _⟩, ⟨.cone (.cone .point), _⟩ =>
       data.edgeTriangles[reduce_type_of e][id]
 
     | ⟨.cone (.cone .point), _⟩, ⟨.cone (.cone .point), _⟩ =>
       let e : Fin data.triangleCount := e
-      (⟨.cone (.cone .point), sorry_proof, sorry_proof⟩, e)
+      (⟨.cone (.cone .point), rfl, by show (PrismRepr.cone (.cone .point)).toCanonical = .cone (.cone .point); rw [PrismRepr.toCanonical, PrismRepr.toCanonical, PrismRepr.toCanonical]⟩, e)
 
     | _, _ =>
       /- In all remaining cases `id` is an element of `Empty` -/
-      absurd (a:=True) sorry_proof sorry_proof
+      absurd (a:=True) trivial sorry_proof
 
   face_coface := sorry_proof
 

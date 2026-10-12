@@ -1,4 +1,9 @@
-import SciLean.Tactic.StructuralInverse
+module
+
+public import SciLean.Tactic.StructuralInverse
+
+@[expose] public section
+
 -- import SciLean.Data.Idx
 
 open SciLean

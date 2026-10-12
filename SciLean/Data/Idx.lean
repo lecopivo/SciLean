@@ -1,2 +1,7 @@
-import SciLean.Data.Idx.Basic
-import SciLean.Data.Idx.Idx2
+module
+
+public import SciLean.Data.Idx.Basic
+public import SciLean.Data.Idx.Idx2
+
+@[expose] public section
+

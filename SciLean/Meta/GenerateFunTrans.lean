@@ -1,9 +1,21 @@
-import SciLean.Lean.Array
-import SciLean.Lean.Meta.Basic
-import SciLean.Meta.GenerateFunProp
-import SciLean.Tactic.Autodiff
-import SciLean.Tactic.FunTrans.Core
-import SciLean.Util.RewriteBy
+module
+
+public import SciLean.Lean.Array
+
+public meta import SciLean.Lean.Array
+public import SciLean.Lean.Meta.Basic
+public meta import SciLean.Lean.Meta.Basic
+public import SciLean.Meta.GenerateFunProp
+public meta import SciLean.Meta.GenerateFunProp
+public import SciLean.Tactic.Autodiff
+public meta import SciLean.Tactic.Autodiff
+public import SciLean.Tactic.FunTrans.Core
+public meta import SciLean.Tactic.FunTrans.Core
+public import SciLean.Util.RewriteBy
+public meta import SciLean.Util.RewriteBy
+
+@[expose] public meta section
+
 
 open Lean Meta Elab Term Command Mathlib.Meta
 
